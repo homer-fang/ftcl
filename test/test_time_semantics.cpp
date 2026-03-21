@@ -1,5 +1,6 @@
 #include "commands.hpp"
 
+#include <chrono>
 #include <cctype>
 #include <cstdlib>
 #include <iostream>
@@ -69,11 +70,33 @@ TEST(time_error_propagation)
     ASSERT_EQ(err.error().value().as_string(), "boom", "time should return original error message");
 END_TEST
 
+TEST(sleep_semantics)
+    auto interp = new_interp_with_stdlib();
+
+    auto start = std::chrono::steady_clock::now();
+    ASSERT_EQ(eval_ok(interp, "sleep 20; set done ok", "sleep basic").as_string(),
+              "ok",
+              "sleep should return after delay and keep script flow");
+    auto end = std::chrono::steady_clock::now();
+
+    const auto elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+    ASSERT_TRUE(elapsed_ms >= 10, "sleep 20 should delay execution by around 20ms");
+
+    ASSERT_EQ(eval_ok(interp,
+                      "set code [catch {sleep -1} msg]; "
+                      "list $code [string first {expected non-negative integer but got \"-1\"} $msg]",
+                      "sleep negative")
+                  .as_string(),
+              "1 0",
+              "sleep should reject negative durations");
+END_TEST
+
 int main() {
     std::cout << "=== Testing Time Semantics ===" << std::endl << std::endl;
 
     test_time_output_and_count_semantics();
     test_time_error_propagation();
+    test_sleep_semantics();
 
     std::cout << "=== All tests passed! ===" << std::endl;
     return 0;

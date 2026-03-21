@@ -95,3 +95,8 @@ cmake --build build -j4
 wsl bash -lc 'cd /mnt/d/ftcl/ftcl && cmake --build build -j4 && cd build && ctest --output-on-failure'
 ```
 
+## 9. Let's play a game 
+
+``` bash
+./build/test/test_ftcl_suite /mnt/d/ftcl/ftcl/game.tcl
+```

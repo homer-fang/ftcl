@@ -131,6 +131,29 @@ TEST(thread_channel_fifo_and_errors)
               "thread channel recv should fail for unknown channel ids");
 END_TEST
 
+TEST(thread_channel_try_recv_non_blocking)
+    auto interp = new_interp_with_stdlib();
+
+    ASSERT_EQ(eval_ok(interp,
+                      "set ch [thread channel create]; "
+                      "set a [thread channel try_recv $ch]; "
+                      "thread channel send $ch hi; "
+                      "set b [thread channel try_recv $ch]; "
+                      "list [string length $a] $b",
+                      "thread channel try_recv semantics")
+                  .as_string(),
+              "0 hi",
+              "thread channel try_recv should return empty when queue is empty and value when available");
+
+    ASSERT_EQ(eval_ok(interp,
+                      "set code [catch {thread channel try_recv 999999} msg]; "
+                      "list $code [string first {unknown thread channel \"} $msg]",
+                      "thread channel try_recv unknown id")
+                  .as_string(),
+              "1 0",
+              "thread channel try_recv should fail for unknown channel ids");
+END_TEST
+
 int main() {
     std::cout << "=== Testing Thread Semantics ===" << std::endl << std::endl;
 
@@ -139,6 +162,7 @@ int main() {
     test_thread_error_propagation_and_missing_handle();
     test_thread_channel_send_recv_across_threads();
     test_thread_channel_fifo_and_errors();
+    test_thread_channel_try_recv_non_blocking();
 
     std::cout << "=== All tests passed! ===" << std::endl;
     return 0;

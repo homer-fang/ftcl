@@ -20,8 +20,17 @@
 #include <mutex>
 #include <string>
 #include <string_view>
+#include <thread>
 #include <unordered_map>
 #include <vector>
+
+#if defined(_WIN32)
+#include <conio.h>
+#else
+#include <fcntl.h>
+#include <termios.h>
+#include <unistd.h>
+#endif
 
 namespace ftcl {
 
@@ -201,6 +210,181 @@ inline ftclResult cmd_puts(Interp*, ContextID, const std::vector<Value>& argv) {
     return ftcl_ok();
 }
 
+inline ftclResult cmd_gets(Interp* interp, ContextID, const std::vector<Value>& argv) {
+    auto chk = check_args(1, argv, 2, 3, "channelId ?varName?");
+    if (!chk.has_value()) {
+        return chk;
+    }
+
+    const std::string channel = argv[1].as_string();
+    if (channel != "stdin") {
+        return ftcl_err("can not find channel named \"" + channel + "\"");
+    }
+
+    std::string line;
+    const bool ok = static_cast<bool>(std::getline(std::cin, line));
+
+    if (argv.size() == 3) {
+        auto set = interp->set_var(argv[2], Value(ok ? line : std::string()));
+        if (!set.has_value()) {
+            return ftcl::unexpected(set.error());
+        }
+        if (!ok) {
+            return ftcl_ok(static_cast<ftclInt>(-1));
+        }
+        return ftcl_ok(static_cast<ftclInt>(line.size()));
+    }
+
+    if (!ok) {
+        return ftcl_ok(static_cast<ftclInt>(-1));
+    }
+    return ftcl_ok(line);
+}
+
+class ScopedStdinRawMode {
+public:
+    ScopedStdinRawMode() {
+#if defined(_WIN32)
+        active_ = false;
+#else
+        if (::isatty(STDIN_FILENO) == 0) {
+            return;
+        }
+
+        if (::tcgetattr(STDIN_FILENO, &saved_) != 0) {
+            return;
+        }
+
+        termios raw = saved_;
+        raw.c_lflag &= static_cast<tcflag_t>(~(ICANON | ECHO));
+        raw.c_cc[VMIN] = 1;
+        raw.c_cc[VTIME] = 0;
+
+        if (::tcsetattr(STDIN_FILENO, TCSANOW, &raw) == 0) {
+            active_ = true;
+        }
+#endif
+    }
+
+    ~ScopedStdinRawMode() {
+#if defined(_WIN32)
+        (void)active_;
+#else
+        if (active_) {
+            (void)::tcsetattr(STDIN_FILENO, TCSANOW, &saved_);
+        }
+#endif
+    }
+
+private:
+    bool active_ = false;
+#if !defined(_WIN32)
+    termios saved_{};
+#endif
+};
+
+enum class ReadCharStatus {
+    GotChar,
+    WouldBlock,
+    Eof,
+};
+
+inline ReadCharStatus read_one_char(char& ch, bool non_blocking) {
+#if defined(_WIN32)
+    if (non_blocking && ::_kbhit() == 0) {
+        return ReadCharStatus::WouldBlock;
+    }
+
+    const int code = ::_getch();
+    if (code == EOF) {
+        return ReadCharStatus::Eof;
+    }
+    ch = static_cast<char>(code);
+    return ReadCharStatus::GotChar;
+#else
+    ScopedStdinRawMode raw_mode;
+
+    if (non_blocking) {
+        const int old_flags = ::fcntl(STDIN_FILENO, F_GETFL, 0);
+        const bool can_restore = old_flags != -1;
+        if (can_restore) {
+            (void)::fcntl(STDIN_FILENO, F_SETFL, old_flags | O_NONBLOCK);
+        }
+
+        unsigned char c = 0;
+        const ssize_t n = ::read(STDIN_FILENO, &c, 1);
+
+        if (can_restore) {
+            (void)::fcntl(STDIN_FILENO, F_SETFL, old_flags);
+        }
+
+        if (n == 1) {
+            ch = static_cast<char>(c);
+            return ReadCharStatus::GotChar;
+        }
+        if (n == 0) {
+            return ReadCharStatus::Eof;
+        }
+        if (errno == EAGAIN || errno == EWOULDBLOCK) {
+            return ReadCharStatus::WouldBlock;
+        }
+        return ReadCharStatus::Eof;
+    }
+
+    const int code = std::cin.get();
+    if (code == EOF) {
+        return ReadCharStatus::Eof;
+    }
+    ch = static_cast<char>(code);
+    return ReadCharStatus::GotChar;
+#endif
+}
+
+inline ftclResult cmd_getch(Interp* interp, ContextID, const std::vector<Value>& argv) {
+    bool non_blocking = false;
+    std::size_t idx = 1;
+
+    if (idx < argv.size() && argv[idx].as_string() == "-noblock") {
+        non_blocking = true;
+        ++idx;
+    }
+
+    if (idx < argv.size() && argv[idx].as_string() == "--") {
+        ++idx;
+    }
+
+    if (argv.size() - idx > 1) {
+        return ftcl_err("wrong # args: should be \"getch ?-noblock? ?varName?\"");
+    }
+
+    char ch = '\0';
+    const ReadCharStatus status = read_one_char(ch, non_blocking);
+    const bool has_char = status == ReadCharStatus::GotChar;
+    const std::string one = has_char ? std::string(1, ch) : std::string();
+    const bool has_var = idx < argv.size();
+
+    if (has_var) {
+        auto set = interp->set_var(argv[idx], Value(one));
+        if (!set.has_value()) {
+            return ftcl::unexpected(set.error());
+        }
+
+        if (status == ReadCharStatus::WouldBlock) {
+            return ftcl_ok(static_cast<ftclInt>(0));
+        }
+        if (status == ReadCharStatus::Eof) {
+            return ftcl_ok(static_cast<ftclInt>(-1));
+        }
+        return ftcl_ok(static_cast<ftclInt>(1));
+    }
+
+    if (status != ReadCharStatus::GotChar) {
+        return ftcl_ok(Value::empty());
+    }
+
+    return ftcl_ok(one);
+}
+
 inline ftclResult cmd_rename(Interp* interp, ContextID, const std::vector<Value>& argv) {
     auto chk = check_args(1, argv, 3, 3, "oldName newName");
     if (!chk.has_value()) {
@@ -268,6 +452,24 @@ inline ftclResult cmd_time(Interp* interp, ContextID, const std::vector<Value>& 
     const auto elapsed_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
     const ftclInt avg_ns = count > 0 ? static_cast<ftclInt>(elapsed_ns / static_cast<long long>(count)) : 0;
     return ftcl_ok(std::to_string(avg_ns) + " nanoseconds per iteration");
+}
+
+inline ftclResult cmd_sleep(Interp*, ContextID, const std::vector<Value>& argv) {
+    auto chk = check_args(1, argv, 2, 2, "milliseconds");
+    if (!chk.has_value()) {
+        return chk;
+    }
+
+    auto parsed = parse_int(argv[1]);
+    if (!parsed.has_value()) {
+        return ftcl_err(parsed.error());
+    }
+    if (*parsed < 0) {
+        return ftcl_err("expected non-negative integer but got \"" + argv[1].as_string() + "\"");
+    }
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(*parsed));
+    return ftcl_ok();
 }
 
 class ThreadTaskManager {
@@ -401,6 +603,22 @@ public:
         return value;
     }
 
+    ftcl::expected<std::optional<std::string>, Exception> try_recv(ftclInt id) {
+        auto channel = get(id);
+        if (!channel.has_value()) {
+            return ftcl::unexpected(channel.error());
+        }
+
+        std::lock_guard<std::mutex> lock((*channel)->mu);
+        if ((*channel)->queue.empty()) {
+            return std::optional<std::string>{};
+        }
+
+        std::string value = std::move((*channel)->queue.front());
+        (*channel)->queue.pop_front();
+        return std::optional<std::string>(std::move(value));
+    }
+
     std::mutex mu_;
     std::unordered_map<ftclInt, std::shared_ptr<Channel>> channels_;
     std::atomic<ftclInt> next_id_{1};
@@ -476,11 +694,35 @@ inline ftclResult cmd_thread_channel_recv(Interp*, ContextID, const std::vector<
     return ftcl_ok(*value);
 }
 
+inline ftclResult cmd_thread_channel_try_recv(Interp*, ContextID, const std::vector<Value>& argv) {
+    auto chk = check_args(3, argv, 4, 4, "channelId");
+    if (!chk.has_value()) {
+        return chk;
+    }
+
+    auto id = parse_thread_channel_id(argv[3]);
+    if (!id.has_value()) {
+        return ftcl::unexpected(id.error());
+    }
+
+    auto value = thread_channel_manager().try_recv(*id);
+    if (!value.has_value()) {
+        return ftcl::unexpected(value.error());
+    }
+
+    if (!value->has_value()) {
+        return ftcl_ok(Value::empty());
+    }
+
+    return ftcl_ok(value->value());
+}
+
 inline ftclResult cmd_thread_channel(Interp* interp, ContextID context_id, const std::vector<Value>& argv) {
     std::vector<Subcommand> subs = {
         Subcommand("create", cmd_thread_channel_create),
         Subcommand("send", cmd_thread_channel_send),
         Subcommand("recv", cmd_thread_channel_recv),
+        Subcommand("try_recv", cmd_thread_channel_try_recv),
     };
     return interp->call_subcommand(context_id, argv, 2, subs);
 }
@@ -1944,7 +2186,9 @@ inline void install_core_commands(Interp& interp) {
     interp.add_command("expr", cmd_expr);
     interp.add_command("for", cmd_for);
     interp.add_command("foreach", cmd_foreach);
+    interp.add_command("getch", cmd_getch);
     interp.add_command("global", cmd_global);
+    interp.add_command("gets", cmd_gets);
     interp.add_command("if", cmd_if);
     interp.add_command("incr", cmd_incr);
     interp.add_command("info", cmd_info);
@@ -1965,6 +2209,7 @@ inline void install_core_commands(Interp& interp) {
     interp.add_command("thread", cmd_thread);
     interp.add_command("throw", cmd_throw);
     interp.add_command("time", cmd_time);
+    interp.add_command("sleep", cmd_sleep);
     interp.add_command("unset", cmd_unset);
     interp.add_command("while", cmd_while);
 }
