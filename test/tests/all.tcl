@@ -30,6 +30,7 @@ source return.tcl
 source set.tcl
 source string.tcl
 source test.tcl
+source thread.tcl
 source throw.tcl
 source unset.tcl
 source while.tcl

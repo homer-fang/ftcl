@@ -7,17 +7,25 @@
 #include "util.hpp"
 
 #include <algorithm>
+#include <atomic>
+#include <condition_variable>
 #include <chrono>
 #include <cerrno>
 #include <cstring>
+#include <deque>
 #include <filesystem>
 #include <fstream>
+#include <future>
 #include <iostream>
+#include <mutex>
 #include <string>
 #include <string_view>
+#include <unordered_map>
 #include <vector>
 
 namespace ftcl {
+
+inline Interp new_interp_with_stdlib();
 
 inline std::string command_name(const std::vector<Value>& argv, std::size_t namec) {
     std::string out;
@@ -260,6 +268,297 @@ inline ftclResult cmd_time(Interp* interp, ContextID, const std::vector<Value>& 
     const auto elapsed_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
     const ftclInt avg_ns = count > 0 ? static_cast<ftclInt>(elapsed_ns / static_cast<long long>(count)) : 0;
     return ftcl_ok(std::to_string(avg_ns) + " nanoseconds per iteration");
+}
+
+class ThreadTaskManager {
+public:
+    ftclInt spawn(std::string script) {
+        const ftclInt id = next_id_.fetch_add(1);
+        auto future = std::async(std::launch::async, [script = std::move(script)]() -> ftclResult {
+            try {
+                auto worker = new_interp_with_stdlib();
+                return worker.eval(script);
+            } catch (const std::exception& ex) {
+                return ftcl_err("thread worker exception: " + std::string(ex.what()));
+            } catch (...) {
+                return ftcl_err("thread worker exception: unknown");
+            }
+        });
+
+        std::lock_guard<std::mutex> lock(mu_);
+        tasks_.emplace(id, std::move(future));
+        return id;
+    }
+
+    ftcl::expected<bool, Exception> ready(ftclInt id) {
+        std::lock_guard<std::mutex> lock(mu_);
+        auto it = tasks_.find(id);
+        if (it == tasks_.end()) {
+            return ftcl::unexpected(Exception::ftcl_err(Value("unknown thread task \"" + std::to_string(id) + "\"")));
+        }
+
+        return it->second.wait_for(std::chrono::seconds(0)) == std::future_status::ready;
+    }
+
+    ftcl::expected<ftclResult, Exception> await(ftclInt id) {
+        std::future<ftclResult> future;
+        {
+            std::lock_guard<std::mutex> lock(mu_);
+            auto it = tasks_.find(id);
+            if (it == tasks_.end()) {
+                return ftcl::unexpected(Exception::ftcl_err(Value("unknown thread task \"" + std::to_string(id) + "\"")));
+            }
+            future = std::move(it->second);
+            tasks_.erase(it);
+        }
+
+        try {
+            return future.get();
+        } catch (const std::exception& ex) {
+            return ftcl::unexpected(Exception::ftcl_err(Value("thread await failed: " + std::string(ex.what()))));
+        } catch (...) {
+            return ftcl::unexpected(Exception::ftcl_err(Value("thread await failed: unknown exception")));
+        }
+    }
+
+    std::vector<ftclInt> ids() {
+        std::lock_guard<std::mutex> lock(mu_);
+        std::vector<ftclInt> out;
+        out.reserve(tasks_.size());
+        for (const auto& [id, _] : tasks_) {
+            out.push_back(id);
+        }
+        std::sort(out.begin(), out.end());
+        return out;
+    }
+
+private:
+    std::mutex mu_;
+    std::unordered_map<ftclInt, std::future<ftclResult>> tasks_;
+    std::atomic<ftclInt> next_id_{1};
+};
+
+inline ThreadTaskManager& thread_task_manager() {
+    static ThreadTaskManager manager;
+    return manager;
+}
+
+class ThreadChannelManager {
+private:
+    struct Channel {
+        std::mutex mu;
+        std::condition_variable cv;
+        std::deque<std::string> queue;
+    };
+
+public:
+    ftclInt create() {
+        const ftclInt id = next_id_.fetch_add(1);
+        auto channel = std::make_shared<Channel>();
+
+        std::lock_guard<std::mutex> lock(mu_);
+        channels_.emplace(id, std::move(channel));
+        return id;
+    }
+
+    ftcl::expected<std::shared_ptr<Channel>, Exception> get(ftclInt id) {
+        std::lock_guard<std::mutex> lock(mu_);
+        auto it = channels_.find(id);
+        if (it == channels_.end()) {
+            return ftcl::unexpected(
+                Exception::ftcl_err(Value("unknown thread channel \"" + std::to_string(id) + "\"")));
+        }
+        return it->second;
+    }
+
+    ftclResult send(ftclInt id, std::string payload) {
+        auto channel = get(id);
+        if (!channel.has_value()) {
+            return ftcl::unexpected(channel.error());
+        }
+
+        {
+            std::lock_guard<std::mutex> lock((*channel)->mu);
+            (*channel)->queue.push_back(std::move(payload));
+        }
+        (*channel)->cv.notify_one();
+        return ftcl_ok();
+    }
+
+    ftcl::expected<std::string, Exception> recv(ftclInt id) {
+        auto channel = get(id);
+        if (!channel.has_value()) {
+            return ftcl::unexpected(channel.error());
+        }
+
+        std::unique_lock<std::mutex> lock((*channel)->mu);
+        while ((*channel)->queue.empty()) {
+            (*channel)->cv.wait(lock);
+        }
+
+        std::string value = std::move((*channel)->queue.front());
+        (*channel)->queue.pop_front();
+        return value;
+    }
+
+    std::mutex mu_;
+    std::unordered_map<ftclInt, std::shared_ptr<Channel>> channels_;
+    std::atomic<ftclInt> next_id_{1};
+};
+
+inline ThreadChannelManager& thread_channel_manager() {
+    static ThreadChannelManager manager;
+    return manager;
+}
+
+inline ftcl::expected<ftclInt, Exception> parse_thread_task_id(const Value& v) {
+    auto parsed = parse_int(v);
+    if (!parsed.has_value()) {
+        return ftcl::unexpected(Exception::ftcl_err(Value(parsed.error())));
+    }
+    if (*parsed <= 0) {
+        return ftcl::unexpected(Exception::ftcl_err(Value("invalid thread task id \"" + v.as_string() + "\"")));
+    }
+    return *parsed;
+}
+
+inline ftcl::expected<ftclInt, Exception> parse_thread_channel_id(const Value& v) {
+    auto parsed = parse_int(v);
+    if (!parsed.has_value()) {
+        return ftcl::unexpected(Exception::ftcl_err(Value(parsed.error())));
+    }
+    if (*parsed <= 0) {
+        return ftcl::unexpected(Exception::ftcl_err(Value("invalid thread channel id \"" + v.as_string() + "\"")));
+    }
+    return *parsed;
+}
+
+inline ftclResult cmd_thread_channel_create(Interp*, ContextID, const std::vector<Value>& argv) {
+    auto chk = check_args(3, argv, 3, 3, "");
+    if (!chk.has_value()) {
+        return chk;
+    }
+
+    const ftclInt id = thread_channel_manager().create();
+    return ftcl_ok(id);
+}
+
+inline ftclResult cmd_thread_channel_send(Interp*, ContextID, const std::vector<Value>& argv) {
+    auto chk = check_args(3, argv, 5, 5, "channelId value");
+    if (!chk.has_value()) {
+        return chk;
+    }
+
+    auto id = parse_thread_channel_id(argv[3]);
+    if (!id.has_value()) {
+        return ftcl::unexpected(id.error());
+    }
+
+    return thread_channel_manager().send(*id, argv[4].as_string());
+}
+
+inline ftclResult cmd_thread_channel_recv(Interp*, ContextID, const std::vector<Value>& argv) {
+    auto chk = check_args(3, argv, 4, 4, "channelId");
+    if (!chk.has_value()) {
+        return chk;
+    }
+
+    auto id = parse_thread_channel_id(argv[3]);
+    if (!id.has_value()) {
+        return ftcl::unexpected(id.error());
+    }
+
+    auto value = thread_channel_manager().recv(*id);
+    if (!value.has_value()) {
+        return ftcl::unexpected(value.error());
+    }
+
+    return ftcl_ok(*value);
+}
+
+inline ftclResult cmd_thread_channel(Interp* interp, ContextID context_id, const std::vector<Value>& argv) {
+    std::vector<Subcommand> subs = {
+        Subcommand("create", cmd_thread_channel_create),
+        Subcommand("send", cmd_thread_channel_send),
+        Subcommand("recv", cmd_thread_channel_recv),
+    };
+    return interp->call_subcommand(context_id, argv, 2, subs);
+}
+
+inline ftclResult cmd_thread_spawn(Interp*, ContextID, const std::vector<Value>& argv) {
+    auto chk = check_args(2, argv, 3, 3, "script");
+    if (!chk.has_value()) {
+        return chk;
+    }
+
+    const ftclInt id = thread_task_manager().spawn(argv[2].as_string());
+    return ftcl_ok(id);
+}
+
+inline ftclResult cmd_thread_ready(Interp*, ContextID, const std::vector<Value>& argv) {
+    auto chk = check_args(2, argv, 3, 3, "taskId");
+    if (!chk.has_value()) {
+        return chk;
+    }
+
+    auto id = parse_thread_task_id(argv[2]);
+    if (!id.has_value()) {
+        return ftcl::unexpected(id.error());
+    }
+
+    auto ready = thread_task_manager().ready(*id);
+    if (!ready.has_value()) {
+        return ftcl::unexpected(ready.error());
+    }
+
+    return ftcl_ok(*ready);
+}
+
+inline ftclResult cmd_thread_await(Interp*, ContextID, const std::vector<Value>& argv) {
+    auto chk = check_args(2, argv, 3, 3, "taskId");
+    if (!chk.has_value()) {
+        return chk;
+    }
+
+    auto id = parse_thread_task_id(argv[2]);
+    if (!id.has_value()) {
+        return ftcl::unexpected(id.error());
+    }
+
+    auto result = thread_task_manager().await(*id);
+    if (!result.has_value()) {
+        return ftcl::unexpected(result.error());
+    }
+
+    if (!result->has_value()) {
+        return ftcl::unexpected(result->error());
+    }
+
+    return result->value();
+}
+
+inline ftclResult cmd_thread_ids(Interp*, ContextID, const std::vector<Value>& argv) {
+    auto chk = check_args(2, argv, 2, 2, "");
+    if (!chk.has_value()) {
+        return chk;
+    }
+
+    std::vector<Value> out;
+    for (ftclInt id : thread_task_manager().ids()) {
+        out.emplace_back(id);
+    }
+    return ftcl_ok(Value::from_list(out));
+}
+
+inline ftclResult cmd_thread(Interp* interp, ContextID context_id, const std::vector<Value>& argv) {
+    std::vector<Subcommand> subs = {
+        Subcommand("spawn", cmd_thread_spawn),
+        Subcommand("ready", cmd_thread_ready),
+        Subcommand("await", cmd_thread_await),
+        Subcommand("ids", cmd_thread_ids),
+        Subcommand("channel", cmd_thread_channel),
+    };
+    return interp->call_subcommand(context_id, argv, 1, subs);
 }
 
 inline ftclResult cmd_throw(Interp*, ContextID, const std::vector<Value>& argv) {
@@ -1663,6 +1962,7 @@ inline void install_core_commands(Interp& interp) {
     interp.add_command("set", cmd_set);
     interp.add_command("source", cmd_source);
     interp.add_command("string", cmd_string);
+    interp.add_command("thread", cmd_thread);
     interp.add_command("throw", cmd_throw);
     interp.add_command("time", cmd_time);
     interp.add_command("unset", cmd_unset);
@@ -1676,4 +1976,3 @@ inline Interp new_interp_with_stdlib() {
 }
 
 }  // namespace ftcl
-

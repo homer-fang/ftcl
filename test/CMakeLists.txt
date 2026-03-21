@@ -85,6 +85,11 @@ add_executable(test_expr_semantics test_expr_semantics.cpp)
 target_link_libraries(test_expr_semantics PRIVATE ftcl)
 add_test(NAME ExprSemanticsTest COMMAND test_expr_semantics)
 
+# Thread/concurrency regression tests
+add_executable(test_thread_semantics test_thread_semantics.cpp)
+target_link_libraries(test_thread_semantics PRIVATE ftcl)
+add_test(NAME ThreadSemanticsTest COMMAND test_thread_semantics)
+
 # Run original ftcl Tcl test suite via ftcl test_harness.
 add_executable(test_ftcl_suite test_ftcl_suite.cpp)
 target_link_libraries(test_ftcl_suite PRIVATE ftcl)

@@ -19,7 +19,8 @@ int main(int argc, char** argv) {
         "dict.tcl",      "error.tcl",    "exit.tcl",      "for.tcl",     "foreach.tcl", "global.tcl",
         "if.tcl",        "incr.tcl",     "info.tcl",      "interp.tcl",  "join.tcl",    "lappend.tcl",
         "lindex.tcl",    "list.tcl",     "llength.tcl",   "parser.tcl",  "rename.tcl",  "return.tcl",
-        "set.tcl",       "string.tcl",   "test.tcl",      "throw.tcl",   "unset.tcl",   "while.tcl",
+        "set.tcl",       "string.tcl",   "test.tcl",      "thread.tcl",  "throw.tcl",   "unset.tcl",
+        "while.tcl",
     };
 
     std::size_t passed = 0;
