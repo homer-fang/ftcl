@@ -83,17 +83,33 @@ TEST(expr_bitwise_and_ternary_short_circuit)
     ASSERT_EQ(eval_ok(interp,
                       "set a 0; set b 0; "
                       "set bit [expr {6 & 3 | 8 ^ 1}]; "
+                      "set sh [expr {(1 << 4) + (16 >> 2)}]; "
                       "set t1 [expr {1 ? [set a 11] : [set b 22]}]; "
                       "set t2 [expr {0 ? [set a 33] : [set b 22]}]; "
-                      "list $bit $t1 $t2 $a $b",
+                      "list $bit $sh $t1 $t2 $a $b",
                       "bitwise precedence and ternary short-circuit")
                   .as_string(),
-              "11 11 22 11 22",
+              "11 20 11 22 11 22",
               "bitwise operators and ternary should match ftcl semantics");
 
     ASSERT_EQ(eval_ok(interp, "catch {expr {1.0 & 1}} msg; set msg", "bitwise float operand error").as_string(),
               "can't use floating-point value as operand of \"&\"",
               "bitwise operators should reject floating-point operands");
+
+    ASSERT_EQ(eval_ok(interp, "catch {expr {1 << -1}} msg; set msg", "negative shift should error").as_string(),
+              "negative shift argument",
+              "bitwise shift should reject negative shift counts");
+
+    ASSERT_EQ(eval_ok(interp,
+                      "list [expr {-8 >> 1}] [expr {-1 >> 200}] [expr {1 >> 200}] [expr {0 << 1000}]",
+                      "right shift sign extension and wide shift behavior")
+                  .as_string(),
+              "-4 -1 0 0",
+              "bitwise shifts should keep sign and handle wide counts");
+
+    ASSERT_EQ(eval_ok(interp, "catch {expr {1 << 63}} msg; set msg", "left shift overflow").as_string(),
+              "integer overflow",
+              "left shift overflow should be detected for int64 range");
 END_TEST
 
 TEST(expr_logical_short_circuit_skips_command_substitution)
@@ -139,6 +155,32 @@ TEST(expr_integer_div_mod_and_overflow_semantics)
               "integer division overflow should be detected");
 END_TEST
 
+TEST(expr_string_relational_and_membership_semantics)
+    auto interp = new_interp_with_stdlib();
+
+    ASSERT_EQ(eval_ok(interp,
+                      "list [expr {\"a\" < \"b\"}] [expr {\"b\" > \"a\"}] [expr {2 < \"10\"}] [expr {2 > \"10\"}]",
+                      "string-aware relational operators")
+                  .as_string(),
+              "1 1 0 1",
+              "relational operators should follow Molt string-vs-number coercion rules");
+
+    ASSERT_EQ(eval_ok(interp,
+                      "list [expr {1 == \"1\"}] [expr {1 == \"01\"}] [expr {1 != \"01\"}]",
+                      "mixed equality semantics")
+                  .as_string(),
+              "1 0 1",
+              "equality should compare as strings when either operand is string-typed");
+
+    ASSERT_EQ(eval_ok(interp,
+                      "list [expr {\"a\" in {a b c}}] [expr {\"d\" ni {a b c}}] "
+                      "[expr {1 in {1 2 3}}] [expr {1 in {01 2 3}}]",
+                      "in/ni membership with braced list literals")
+                  .as_string(),
+              "1 1 1 0",
+              "in/ni should accept braced list literals and compare by string value");
+END_TEST
+
 int main() {
     std::cout << "=== Testing Expr Semantics ===" << std::endl << std::endl;
 
@@ -148,6 +190,7 @@ int main() {
     test_expr_bitwise_and_ternary_short_circuit();
     test_expr_logical_short_circuit_skips_command_substitution();
     test_expr_integer_div_mod_and_overflow_semantics();
+    test_expr_string_relational_and_membership_semantics();
 
     std::cout << "=== All tests passed! ===" << std::endl;
     return 0;

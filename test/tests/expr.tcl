@@ -237,6 +237,18 @@ test expr-4.7 {comparisons} {
     lexpr {1.1 == 1.1} {1.1 != 1.1} {1.1 < 1.1} {1.1 <= 1.1} {1.1 > 1.1} {1.1 >= 1.1}
 } -ok {1 0 0 1 0 1}
 
+test expr-4.8 {comparisons string-vs-number} {
+    lexpr {"a" < "b"} {"b" > "a"} {2 < "10"} {2 > "10"}
+} -ok {1 1 0 1}
+
+test expr-4.9 {comparisons mixed equality} {
+    lexpr {1 == "1"} {1 == "01"} {1 != "01"}
+} -ok {1 0 1}
+
+test expr-4.10 {comparisons string operators} {
+    lexpr {"1" eq "01"} {"1" ne "01"} {"a" in {a b c}} {"d" ni {a b c}} {1 in {1 2 3}} {1 in {01 2 3}}
+} -ok {0 1 1 1 1 0}
+
 # expr-5.*: bitwise operators
 
 test expr-5.1 {bit-wise} {
@@ -250,6 +262,22 @@ test expr-5.2 {bit-wise} {
 test expr-5.3 {bit-wise} {
     lexpr {~1} {~0}
 } -ok {-2 -1}
+
+test expr-5.4 {bit-wise shifts} {
+    lexpr {1 << 4} {16 >> 2} {-8 >> 1} {1 >> 200} {0 << 1000}
+} -ok {16 4 -4 0 0}
+
+test expr-5.5 {bit-wise shifts error} {
+    expr {1 << -1}
+} -error {negative shift argument}
+
+test expr-5.6 {bit-wise shifts error} {
+    expr {1 >> -1}
+} -error {negative shift argument}
+
+test expr-5.7 {bit-wise shift precedence} {
+    lexpr {1 << 1 < 3} {8 >> 1 > 3}
+} -ok {1 1}
 
 # expr-6.*: ?: operator
 

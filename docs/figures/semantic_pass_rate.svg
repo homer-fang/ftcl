@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="620" viewBox="0 0 1100 620" role="img">
+<style>text{font-family:Arial,sans-serif;fill:#1f2937;}.title{font-size:22px;font-weight:700;}.axis{font-size:12px;}.small{font-size:11px;}</style>
+<rect x="0" y="0" width="1100" height="620" fill="#ffffff"/>
+<text class="title" x="90" y="42">Semantic Pass Rate by Suite (%)</text>
+<text class="small" x="90" y="62">Source: semantic_pass_rate.csv</text>
+<line x1="90" y1="500.00" x2="1060" y2="500.00" stroke="#e5e7eb" stroke-width="1"/>
+<text class="axis" x="80" y="504.00" text-anchor="end">0</text>
+<line x1="90" y1="416.00" x2="1060" y2="416.00" stroke="#e5e7eb" stroke-width="1"/>
+<text class="axis" x="80" y="420.00" text-anchor="end">20</text>
+<line x1="90" y1="332.00" x2="1060" y2="332.00" stroke="#e5e7eb" stroke-width="1"/>
+<text class="axis" x="80" y="336.00" text-anchor="end">40</text>
+<line x1="90" y1="248.00" x2="1060" y2="248.00" stroke="#e5e7eb" stroke-width="1"/>
+<text class="axis" x="80" y="252.00" text-anchor="end">60</text>
+<line x1="90" y1="164.00" x2="1060" y2="164.00" stroke="#e5e7eb" stroke-width="1"/>
+<text class="axis" x="80" y="168.00" text-anchor="end">80</text>
+<line x1="90" y1="80.00" x2="1060" y2="80.00" stroke="#e5e7eb" stroke-width="1"/>
+<text class="axis" x="80" y="84.00" text-anchor="end">100</text>
+<line x1="90" y1="80" x2="90" y2="500" stroke="#374151" stroke-width="1.5"/>
+<line x1="90" y1="500" x2="1060" y2="500" stroke="#374151" stroke-width="1.5"/>
+<rect x="90.00" y="80.00" width="179.60" height="420.00" fill="#2563eb"/>
+<text class="axis" x="179.80" y="74.00" text-anchor="middle">100.00</text>
+<text class="axis" x="179.80" y="518.00" text-anchor="middle">core</text>
+<rect x="287.60" y="80.00" width="179.60" height="420.00" fill="#2563eb"/>
+<text class="axis" x="377.40" y="74.00" text-anchor="middle">100.00</text>
+<text class="axis" x="377.40" y="518.00" text-anchor="middle">collections</text>
+<rect x="485.20" y="80.00" width="179.60" height="420.00" fill="#2563eb"/>
+<text class="axis" x="575.00" y="74.00" text-anchor="middle">100.00</text>
+<text class="axis" x="575.00" y="518.00" text-anchor="middle">control_flow</text>
+<rect x="682.80" y="164.00" width="179.60" height="336.00" fill="#2563eb"/>
+<text class="axis" x="772.60" y="158.00" text-anchor="middle">80.00</text>
+<text class="axis" x="772.60" y="518.00" text-anchor="middle">expr</text>
+<rect x="880.40" y="80.00" width="179.60" height="420.00" fill="#2563eb"/>
+<text class="axis" x="970.20" y="74.00" text-anchor="middle">100.00</text>
+<text class="axis" x="970.20" y="518.00" text-anchor="middle">threading</text>
+</svg>

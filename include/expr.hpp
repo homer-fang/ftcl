@@ -7,6 +7,7 @@
 #include <limits>
 #include <string>
 #include <string_view>
+#include <type_traits>
 
 namespace ftcl {
 
@@ -146,6 +147,42 @@ private:
         }
 
         return Datum::from_string(value.as_string());
+    }
+
+    static int compare_for_relational(const Datum& lhs, const Datum& rhs) {
+        if (lhs.type == DatumType::String || rhs.type == DatumType::String) {
+            const std::string ls = lhs.as_string();
+            const std::string rs = rhs.as_string();
+            if (ls < rs) {
+                return -1;
+            }
+            if (ls > rs) {
+                return 1;
+            }
+            return 0;
+        }
+
+        if (lhs.type == DatumType::Float || rhs.type == DatumType::Float) {
+            const ftclFloat lf = lhs.as_float();
+            const ftclFloat rf = rhs.as_float();
+            if (lf < rf) {
+                return -1;
+            }
+            if (lf > rf) {
+                return 1;
+            }
+            return 0;
+        }
+
+        const ftclInt li = lhs.as_int();
+        const ftclInt ri = rhs.as_int();
+        if (li < ri) {
+            return -1;
+        }
+        if (li > ri) {
+            return 1;
+        }
+        return 0;
     }
 
     static bool is_var_char(char ch) {
@@ -375,6 +412,39 @@ private:
         return out;
     }
 
+    ftcl::expected<std::string, Exception> parse_braced_string() {
+        ++pos_;  // consume '{'
+        int depth = 1;
+        std::string out;
+
+        while (!at_end() && depth > 0) {
+            const char ch = peek();
+            ++pos_;
+
+            if (ch == '{') {
+                ++depth;
+                out.push_back(ch);
+                continue;
+            }
+
+            if (ch == '}') {
+                --depth;
+                if (depth > 0) {
+                    out.push_back(ch);
+                }
+                continue;
+            }
+
+            out.push_back(ch);
+        }
+
+        if (depth != 0) {
+            return ftcl::unexpected(Exception::ftcl_err(Value("missing close brace in expression")));
+        }
+
+        return out;
+    }
+
     static ftcl::expected<ftclInt, Exception> int_for_bitwise(const Datum& value, const char* op) {
         if (value.type == DatumType::Float) {
             return ftcl::unexpected(
@@ -471,6 +541,61 @@ private:
             return static_cast<ftclInt>(0);
         }
         return a % b;
+    }
+
+    static ftcl::expected<ftclInt, Exception> checked_lshift(ftclInt value, ftclInt shift) {
+        if (shift < 0) {
+            return ftcl::unexpected(Exception::ftcl_err(Value("negative shift argument")));
+        }
+
+        using UInt = std::make_unsigned_t<ftclInt>;
+        constexpr ftclInt bit_width = static_cast<ftclInt>(std::numeric_limits<UInt>::digits);
+        if (shift >= bit_width) {
+            if (value == 0) {
+                return static_cast<ftclInt>(0);
+            }
+            return ftcl::unexpected(Exception::ftcl_err(Value("integer overflow")));
+        }
+
+#if defined(__SIZEOF_INT128__)
+        const __int128 shifted = static_cast<__int128>(value) << static_cast<unsigned int>(shift);
+        if (shifted > static_cast<__int128>(std::numeric_limits<ftclInt>::max()) ||
+            shifted < static_cast<__int128>(std::numeric_limits<ftclInt>::min())) {
+            return ftcl::unexpected(Exception::ftcl_err(Value("integer overflow")));
+        }
+        return static_cast<ftclInt>(shifted);
+#else
+        ftclInt out = value;
+        for (ftclInt i = 0; i < shift; ++i) {
+            auto doubled = checked_mul(out, 2);
+            if (!doubled.has_value()) {
+                return ftcl::unexpected(doubled.error());
+            }
+            out = *doubled;
+        }
+        return out;
+#endif
+    }
+
+    static ftcl::expected<ftclInt, Exception> checked_rshift(ftclInt value, ftclInt shift) {
+        if (shift < 0) {
+            return ftcl::unexpected(Exception::ftcl_err(Value("negative shift argument")));
+        }
+
+        using UInt = std::make_unsigned_t<ftclInt>;
+        constexpr ftclInt bit_width = static_cast<ftclInt>(std::numeric_limits<UInt>::digits);
+        if (shift >= bit_width) {
+            return value < 0 ? static_cast<ftclInt>(-1) : static_cast<ftclInt>(0);
+        }
+
+        UInt bits = static_cast<UInt>(value);
+        bits >>= static_cast<unsigned int>(shift);
+        if (value < 0 && shift > 0) {
+            const UInt sign_fill = (~UInt{0}) << static_cast<unsigned int>(bit_width - shift);
+            bits |= sign_fill;
+        }
+
+        return static_cast<ftclInt>(bits);
     }
 
     ftcl::expected<Datum, Exception> parse_conditional() {
@@ -832,61 +957,107 @@ private:
         return lhs;
     }
 
-    ftcl::expected<Datum, Exception> parse_relational() {
+    ftcl::expected<Datum, Exception> parse_shift() {
         auto lhs = parse_additive();
         if (!lhs.has_value()) {
             return lhs;
         }
 
         while (true) {
+            bool is_left_shift = false;
+            if (match2('<', '<')) {
+                is_left_shift = true;
+            } else if (match2('>', '>')) {
+                is_left_shift = false;
+            } else {
+                break;
+            }
+
+            auto rhs = parse_additive();
+            if (!rhs.has_value()) {
+                return rhs;
+            }
+
+            if (!evaluate_) {
+                lhs = Datum::from_int(0);
+                continue;
+            }
+
+            auto li = int_for_bitwise(*lhs, is_left_shift ? "<<" : ">>");
+            if (!li.has_value()) {
+                return ftcl::unexpected(li.error());
+            }
+            auto ri = int_for_bitwise(*rhs, is_left_shift ? "<<" : ">>");
+            if (!ri.has_value()) {
+                return ftcl::unexpected(ri.error());
+            }
+
+            ftcl::expected<ftclInt, Exception> shifted = is_left_shift ? checked_lshift(*li, *ri) : checked_rshift(*li, *ri);
+            if (!shifted.has_value()) {
+                return ftcl::unexpected(shifted.error());
+            }
+
+            lhs = Datum::from_int(*shifted);
+        }
+
+        return lhs;
+    }
+
+    ftcl::expected<Datum, Exception> parse_relational() {
+        auto lhs = parse_shift();
+        if (!lhs.has_value()) {
+            return lhs;
+        }
+
+        while (true) {
             if (match2('<', '=')) {
-                auto rhs = parse_additive();
+                auto rhs = parse_shift();
                 if (!rhs.has_value()) {
                     return rhs;
                 }
                 if (!evaluate_) {
                     lhs = Datum::from_int(0);
                 } else {
-                    lhs = Datum::from_int(lhs->as_float() <= rhs->as_float() ? 1 : 0);
+                    lhs = Datum::from_int(compare_for_relational(*lhs, *rhs) <= 0 ? 1 : 0);
                 }
                 continue;
             }
 
             if (match2('>', '=')) {
-                auto rhs = parse_additive();
+                auto rhs = parse_shift();
                 if (!rhs.has_value()) {
                     return rhs;
                 }
                 if (!evaluate_) {
                     lhs = Datum::from_int(0);
                 } else {
-                    lhs = Datum::from_int(lhs->as_float() >= rhs->as_float() ? 1 : 0);
+                    lhs = Datum::from_int(compare_for_relational(*lhs, *rhs) >= 0 ? 1 : 0);
                 }
                 continue;
             }
 
             if (match('<')) {
-                auto rhs = parse_additive();
+                auto rhs = parse_shift();
                 if (!rhs.has_value()) {
                     return rhs;
                 }
                 if (!evaluate_) {
                     lhs = Datum::from_int(0);
                 } else {
-                    lhs = Datum::from_int(lhs->as_float() < rhs->as_float() ? 1 : 0);
+                    lhs = Datum::from_int(compare_for_relational(*lhs, *rhs) < 0 ? 1 : 0);
                 }
                 continue;
             }
 
             if (match('>')) {
-                auto rhs = parse_additive();
+                auto rhs = parse_shift();
                 if (!rhs.has_value()) {
                     return rhs;
                 }
                 if (!evaluate_) {
                     lhs = Datum::from_int(0);
                 } else {
-                    lhs = Datum::from_int(lhs->as_float() > rhs->as_float() ? 1 : 0);
+                    lhs = Datum::from_int(compare_for_relational(*lhs, *rhs) > 0 ? 1 : 0);
                 }
                 continue;
             }
@@ -1177,6 +1348,15 @@ private:
             return Datum::from_string(*quoted);
         }
 
+        // Braced string literal, typically used for list constants in "in"/"ni".
+        if (peek() == '{') {
+            auto braced = parse_braced_string();
+            if (!braced.has_value()) {
+                return ftcl::unexpected(braced.error());
+            }
+            return Datum::from_string(*braced);
+        }
+
         // bareword
         std::string bare;
         while (!at_end()) {
@@ -1230,4 +1410,3 @@ inline ftclResult expr(Interp* interp, const Value& expression) {
 }
 
 }  // namespace ftcl
-

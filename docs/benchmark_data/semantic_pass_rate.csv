@@ -1,0 +1,6 @@
+suite,total,passed,pass_rate_pct
+core,4,4,100.00
+collections,5,5,100.00
+control_flow,4,4,100.00
+expr,5,5,100.00
+threading,4,4,100.00

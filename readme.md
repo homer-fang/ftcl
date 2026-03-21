@@ -1,102 +1,134 @@
-# Build Guide (WSL + CMake)
+# FTCL (C++ Tcl-like Interpreter)
 
-This project is developed and tested with **WSL** and **CMake**.
+FTCL is a C++23, header-only Tcl-like interpreter project focused on semantic alignment with Molt while keeping development practical in WSL + CMake.
 
-## 1. Prerequisites
+## Highlights
 
-- WSL installed (Ubuntu or similar)
-- `cmake` (3.15+)
-- `g++` or `clang++` with C++23 support
-- `make` (or Ninja if you prefer)
+- Header-only interpreter/library (`include/`)
+- Core Tcl-style language features (eval, proc, scope, list/dict/string/array basics)
+- `expr` coverage including bitwise ops, shifts, ternary, short-circuit logic, and overflow checks
+- Concurrency primitives:
+  - `thread spawn`
+  - `thread await`
+  - `thread channel create/send/recv/try_recv`
+- Real-time keyboard input with `getch` (`-noblock` supported)
+- Test harness for Tcl test scripts (`test/tests/*.tcl`)
+- Non-interactive benchmarking executable (`bench_ftcl`)
 
-Install common tools on Ubuntu:
+## Environment
+
+Recommended environment:
+
+- WSL (Ubuntu)
+- CMake 3.15+
+- GCC/Clang with C++23 support
+
+Install common tools:
 
 ```bash
 sudo apt update
 sudo apt install -y build-essential cmake
 ```
 
-## 2. Project Root
-
-Use this directory as the project root:
+Project root:
 
 ```bash
 /mnt/d/ftcl/ftcl
 ```
 
-## 3. Configure
-
-From WSL:
+## Build
 
 ```bash
 cd /mnt/d/ftcl/ftcl
-cmake -S . -B build
-```
-
-## 4. Build
-
-```bash
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build -j4
 ```
 
-You can increase `-j4` depending on your CPU.
+## Run Tests
 
-## 5. Run All Registered Tests
-
-```bash
-cd /mnt/d/ftcl/ftcl/build
-ctest --output-on-failure
-```
-
-List tests without running:
+Run all registered tests:
 
 ```bash
-ctest -N
+ctest --test-dir build/test --output-on-failure
 ```
 
-## 6. Tcl Suite Tests
-
-The CTest suite includes:
-
-- `ftclSuiteTest` (runs `test/tests/all.tcl`)
-- `ftclSubsetTest` (runs selected passing subset)
-
-Run full Tcl suite directly:
+List tests:
 
 ```bash
-cd /mnt/d/ftcl/ftcl
-./build/test/test_ftcl_tcl_suite /mnt/d/ftcl/ftcl/test/tests/all.tcl
+ctest --test-dir build/test -N
 ```
 
-Run only expression tests directly:
+Run a specific test group (example):
 
 ```bash
-./build/test/test_ftcl_tcl_suite /mnt/d/ftcl/ftcl/test/tests/expr.tcl
+ctest --test-dir build/test -R ExprSemanticsTest --output-on-failure
 ```
 
-## 7. Clean Rebuild
+## Run Tcl Test Scripts
+
+Run full Tcl suite:
 
 ```bash
-cd /mnt/d/ftcl/ftcl
-cmake --build build --clean-first -j4
+./build/test/test_ftcl_suite ./test/tests/all.tcl
 ```
 
-Or remove the build directory and reconfigure:
+Run a single Tcl file:
 
 ```bash
-rm -rf build
-cmake -S . -B build
-cmake --build build -j4
+./build/test/test_ftcl_suite ./test/tests/expr.tcl
 ```
 
-## 8. Optional: Run from Windows PowerShell
+Run passing subset runner:
 
-```powershell
-wsl bash -lc 'cd /mnt/d/ftcl/ftcl && cmake --build build -j4 && cd build && ctest --output-on-failure'
+```bash
+./build/test/test_ftcl_subset ./test/tests
 ```
 
-## 9. Let's play a game 
+## Real-Time Game Demo
 
-``` bash
-./build/test/test_ftcl_suite /mnt/d/ftcl/ftcl/game.tcl
+Run:
+
+```bash
+./build/test/test_ftcl_suite ./game.tcl
 ```
+
+Controls:
+
+- `W/A/S/D`: move
+- `F`: fire
+- `Q`: quit
+
+The demo uses real-time `getch -noblock`, autonomous enemies, bullet-wall interaction, and thread-based concurrent updates.
+
+## Benchmark
+
+Run benchmark:
+
+```bash
+./build/test/bench_ftcl ./docs/benchmark_data
+```
+
+Generate figures:
+
+```bash
+python3 ./docs/plot_benchmarks.py ./docs/benchmark_data ./docs/figures
+```
+
+See detailed benchmark interpretation:
+
+- `docs/benchmark.md`
+
+## Repository Layout
+
+- `include/`: FTCL headers (interpreter, commands, parser, expr, runtime)
+- `test/`: C++ semantic tests, Tcl harness, benchmark executable
+- `test/tests/`: Tcl test files
+- `docs/benchmark.md`: benchmark definitions and interpretation guide
+- `docs/benchmark_data/`: generated CSV metrics
+- `docs/figures/`: generated benchmark SVG charts
+- `game.tcl`: real-time demo script
+
+## Notes
+
+- Development and validation are performed in WSL.
+- The project currently prioritizes semantic correctness and regression coverage.

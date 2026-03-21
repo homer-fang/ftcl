@@ -100,6 +100,10 @@ add_executable(test_getch_semantics test_getch_semantics.cpp)
 target_link_libraries(test_getch_semantics PRIVATE ftcl)
 add_test(NAME GetchSemanticsTest COMMAND test_getch_semantics)
 
+# Non-interactive benchmark executable
+add_executable(bench_ftcl bench_ftcl.cpp)
+target_link_libraries(bench_ftcl PRIVATE ftcl)
+
 # Run original ftcl Tcl test suite via ftcl test_harness.
 add_executable(test_ftcl_suite test_ftcl_suite.cpp)
 target_link_libraries(test_ftcl_suite PRIVATE ftcl)
