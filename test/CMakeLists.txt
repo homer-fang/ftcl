@@ -35,6 +35,11 @@ add_executable(test_parser_subst test_parser_subst.cpp)
 target_link_libraries(test_parser_subst PRIVATE ftcl)
 add_test(NAME ParserSubstTest COMMAND test_parser_subst)
 
+# Parser backend migration tests (legacy vs token-stream adapter)
+add_executable(test_parser_backend test_parser_backend.cpp)
+target_link_libraries(test_parser_backend PRIVATE ftcl)
+add_test(NAME ParserBackendTest COMMAND test_parser_backend)
+
 # Return/catch regression tests (P0-2)
 add_executable(test_return_catch test_return_catch.cpp)
 target_link_libraries(test_return_catch PRIVATE ftcl)

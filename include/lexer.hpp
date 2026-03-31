@@ -70,6 +70,11 @@ public:
                 column_);
         }
 
+        if (escape_pending_) {
+            escape_pending_ = false;
+            return scan_escaped_word_text();
+        }
+
         if (state_ == LexState::Default) {
             if (peek_is_line_white()) {
                 return scan_line_white();
@@ -87,7 +92,7 @@ public:
                 return scan_comment();
             }
 
-            if (peek_is(U'"')) {
+            if (peek_is(U'"') && brace_depth_ == 0) {
                 return scan_quote();
             }
 
@@ -163,8 +168,11 @@ private:
     }
 
     bool is_default_break_char(char32_t ch) const {
-        if (ch == U'\n' || ch == U';' || ch == U'"' || ch == U'{' || ch == U'}' || ch == U'[' || ch == U']' ||
-            ch == U'(' || ch == U')' || ch == U'$' || ch == U'\\') {
+        if (ch == U'\n' || ch == U';' || ch == U'{' || ch == U'}' || ch == U'[' || ch == U']' || ch == U'(' ||
+            ch == U')' || ch == U'$' || ch == U'\\') {
+            return true;
+        }
+        if (ch == U'"' && brace_depth_ == 0) {
             return true;
         }
         if (ch == U' ' || ch == U'\t' || ch == U'\r' || ch == U'\f' || ch == U'\v') {
@@ -222,9 +230,9 @@ private:
         const std::size_t start_line = line_;
         const std::size_t start_column = column_;
 
-        while (peek_is_line_white()) {
-            consume_one();
-        }
+        // Emit one whitespace code point per token. This avoids ambiguity when a
+        // backslash substitution consumes part of a run (e.g. "\\  ").
+        consume_one();
 
         return make_token(
             LexTokenType::WhiteSpace,
@@ -326,9 +334,40 @@ private:
 
         consume_one();
         at_command_start_ = false;
+        if (type == LexTokenType::Backslash) {
+            escape_pending_ = true;
+        }
+        if (state_ == LexState::Default) {
+            if (type == LexTokenType::LBrace) {
+                ++brace_depth_;
+            } else if (type == LexTokenType::RBrace && brace_depth_ > 0) {
+                --brace_depth_;
+            }
+        }
 
         return make_token(
             type,
+            start_offset,
+            start_line,
+            start_column,
+            tok_.mark(),
+            line_,
+            column_);
+    }
+
+    LexToken scan_escaped_word_text() {
+        const std::size_t start_offset = tok_.mark();
+        const std::size_t start_line = line_;
+        const std::size_t start_column = column_;
+
+        if (!tok_.at_end()) {
+            consume_one();
+        }
+
+        at_command_start_ = false;
+
+        return make_token(
+            LexTokenType::WordText,
             start_offset,
             start_line,
             start_column,
@@ -375,6 +414,8 @@ private:
     Tokenizer tok_;
     LexState state_ = LexState::Default;
     bool at_command_start_ = true;
+    bool escape_pending_ = false;
+    std::size_t brace_depth_ = 0;
     std::size_t line_ = 1;
     std::size_t column_ = 1;
 };

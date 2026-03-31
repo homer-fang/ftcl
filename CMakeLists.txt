@@ -13,6 +13,7 @@ option(BUILD_SHARED_LIBS "Build shared library" ON)
 # BUILD_SHARED_LIBS选项对INTERFACE库无效（纯头文件库不生成库文件）
 option(BUILD_TESTS "Build tests" ON)
 option(BUILD_EXAMPLES "Build examples" ON)
+set(FTCL_PARSER_DEFAULT_BACKEND "0" CACHE STRING "Default parser backend: 0=legacy, 1=token_stream, 2=shadow")
 # 测试，示例可开关控制。
 
 
@@ -26,6 +27,7 @@ target_include_directories(ftcl INTERFACE
     $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
 )
+target_compile_definitions(ftcl INTERFACE FTCL_PARSER_DEFAULT_BACKEND=${FTCL_PARSER_DEFAULT_BACKEND})
 
 # 在源码树/构建树使用时，头文件从include找
 # 安装后，从安装前缀下的include找。
