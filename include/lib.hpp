@@ -5,6 +5,7 @@
 #include "eval_ptr.hpp"
 #include "expr.hpp"
 #include "interp.hpp"
+#include "lexer.hpp"
 #include "list.hpp"
 #include "macros.hpp"
 #include "parser.hpp"
@@ -24,4 +25,3 @@ using ::ftcl::ResultCode;
 using ::ftcl::Value;
 
 }  // namespace ftcl
-

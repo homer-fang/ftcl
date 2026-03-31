@@ -20,6 +20,11 @@ target_link_libraries(test_eval_ptr PRIVATE ftcl)
 # Add test
 add_test(NAME EvalPtrTest COMMAND test_eval_ptr)
 
+# Test executable for Lexer
+add_executable(test_lexer test_lexer.cpp)
+target_link_libraries(test_lexer PRIVATE ftcl)
+add_test(NAME LexerTest COMMAND test_lexer)
+
 # Smoke test: include and compile the full header surface.
 add_executable(test_all_headers test_all_headers.cpp)
 target_link_libraries(test_all_headers PRIVATE ftcl)
