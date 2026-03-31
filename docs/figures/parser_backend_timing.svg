@@ -1,0 +1,93 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="680" viewBox="0 0 1100 680" role="img">
+<style>text{font-family:Arial,sans-serif;fill:#111827;}.title{font-size:24px;font-weight:700;}.subtitle{font-size:13px;fill:#4b5563;}.axis{font-size:12px;}.tick{font-size:11px;fill:#374151;}</style>
+<rect x="0" y="0" width="1100" height="680" fill="#ffffff"/>
+<text class="title" x="100" y="44">Parser Backend Runtime Comparison</text>
+<text class="subtitle" x="100" y="66">Workload: test_ftcl_subset; rounds per backend: 24; lower is better</text>
+<line x1="100" y1="570.00" x2="1060" y2="570.00" stroke="#e5e7eb" stroke-width="1"/>
+<text class="tick" x="88" y="574.00" text-anchor="end">0</text>
+<line x1="100" y1="510.00" x2="1060" y2="510.00" stroke="#e5e7eb" stroke-width="1"/>
+<text class="tick" x="88" y="514.00" text-anchor="end">23</text>
+<line x1="100" y1="450.00" x2="1060" y2="450.00" stroke="#e5e7eb" stroke-width="1"/>
+<text class="tick" x="88" y="454.00" text-anchor="end">46</text>
+<line x1="100" y1="390.00" x2="1060" y2="390.00" stroke="#e5e7eb" stroke-width="1"/>
+<text class="tick" x="88" y="394.00" text-anchor="end">69</text>
+<line x1="100" y1="330.00" x2="1060" y2="330.00" stroke="#e5e7eb" stroke-width="1"/>
+<text class="tick" x="88" y="334.00" text-anchor="end">92</text>
+<line x1="100" y1="270.00" x2="1060" y2="270.00" stroke="#e5e7eb" stroke-width="1"/>
+<text class="tick" x="88" y="274.00" text-anchor="end">115</text>
+<line x1="100" y1="210.00" x2="1060" y2="210.00" stroke="#e5e7eb" stroke-width="1"/>
+<text class="tick" x="88" y="214.00" text-anchor="end">138</text>
+<line x1="100" y1="150.00" x2="1060" y2="150.00" stroke="#e5e7eb" stroke-width="1"/>
+<text class="tick" x="88" y="154.00" text-anchor="end">161</text>
+<line x1="100" y1="90.00" x2="1060" y2="90.00" stroke="#e5e7eb" stroke-width="1"/>
+<text class="tick" x="88" y="94.00" text-anchor="end">184</text>
+<line x1="100" y1="90" x2="100" y2="570" stroke="#111827" stroke-width="1.4"/>
+<line x1="100" y1="570" x2="1060" y2="570" stroke="#111827" stroke-width="1.4"/>
+<text class="axis" x="26" y="330.00" transform="rotate(-90 26 330.00)">Elapsed time (ms)</text>
+<rect x="317.20" y="205.82" width="180.00" height="364.18" fill="#2563eb" opacity="0.86"/>
+<line x1="407.20" y1="210.35" x2="407.20" y2="201.30" stroke="#111827" stroke-width="2"/>
+<line x1="395.20" y1="210.35" x2="419.20" y2="210.35" stroke="#111827" stroke-width="2"/>
+<line x1="395.20" y1="201.30" x2="419.20" y2="201.30" stroke="#111827" stroke-width="2"/>
+<circle cx="429.11" cy="229.44" r="3.2" fill="#0f172a" opacity="0.45"/>
+<circle cx="438.93" cy="200.63" r="3.2" fill="#0f172a" opacity="0.45"/>
+<circle cx="435.76" cy="208.80" r="3.2" fill="#0f172a" opacity="0.45"/>
+<circle cx="436.66" cy="213.11" r="3.2" fill="#0f172a" opacity="0.45"/>
+<circle cx="442.13" cy="204.18" r="3.2" fill="#0f172a" opacity="0.45"/>
+<circle cx="441.83" cy="198.18" r="3.2" fill="#0f172a" opacity="0.45"/>
+<circle cx="369.55" cy="202.47" r="3.2" fill="#0f172a" opacity="0.45"/>
+<circle cx="457.24" cy="193.91" r="3.2" fill="#0f172a" opacity="0.45"/>
+<circle cx="398.36" cy="222.17" r="3.2" fill="#0f172a" opacity="0.45"/>
+<circle cx="391.22" cy="183.44" r="3.2" fill="#0f172a" opacity="0.45"/>
+<circle cx="425.12" cy="200.40" r="3.2" fill="#0f172a" opacity="0.45"/>
+<circle cx="398.61" cy="204.33" r="3.2" fill="#0f172a" opacity="0.45"/>
+<circle cx="362.44" cy="200.39" r="3.2" fill="#0f172a" opacity="0.45"/>
+<circle cx="440.82" cy="223.38" r="3.2" fill="#0f172a" opacity="0.45"/>
+<circle cx="362.87" cy="229.28" r="3.2" fill="#0f172a" opacity="0.45"/>
+<circle cx="432.63" cy="208.67" r="3.2" fill="#0f172a" opacity="0.45"/>
+<circle cx="371.75" cy="216.22" r="3.2" fill="#0f172a" opacity="0.45"/>
+<circle cx="433.40" cy="199.21" r="3.2" fill="#0f172a" opacity="0.45"/>
+<circle cx="442.83" cy="204.77" r="3.2" fill="#0f172a" opacity="0.45"/>
+<circle cx="404.82" cy="201.51" r="3.2" fill="#0f172a" opacity="0.45"/>
+<circle cx="386.14" cy="195.06" r="3.2" fill="#0f172a" opacity="0.45"/>
+<circle cx="407.68" cy="199.49" r="3.2" fill="#0f172a" opacity="0.45"/>
+<circle cx="441.33" cy="201.13" r="3.2" fill="#0f172a" opacity="0.45"/>
+<circle cx="357.88" cy="199.60" r="3.2" fill="#0f172a" opacity="0.45"/>
+<text class="axis" x="407.20" y="598.00" text-anchor="middle">legacy</text>
+<text class="tick" x="407.20" y="197.82" text-anchor="middle">mean=139.93 ms</text>
+<rect x="662.80" y="189.05" width="180.00" height="380.95" fill="#f59e0b" opacity="0.86"/>
+<line x1="752.80" y1="194.46" x2="752.80" y2="183.64" stroke="#111827" stroke-width="2"/>
+<line x1="740.80" y1="194.46" x2="764.80" y2="194.46" stroke="#111827" stroke-width="2"/>
+<line x1="740.80" y1="183.64" x2="764.80" y2="183.64" stroke="#111827" stroke-width="2"/>
+<circle cx="790.25" cy="185.45" r="3.2" fill="#0f172a" opacity="0.45"/>
+<circle cx="751.49" cy="194.01" r="3.2" fill="#0f172a" opacity="0.45"/>
+<circle cx="771.98" cy="189.63" r="3.2" fill="#0f172a" opacity="0.45"/>
+<circle cx="800.82" cy="201.70" r="3.2" fill="#0f172a" opacity="0.45"/>
+<circle cx="704.75" cy="175.43" r="3.2" fill="#0f172a" opacity="0.45"/>
+<circle cx="702.77" cy="163.22" r="3.2" fill="#0f172a" opacity="0.45"/>
+<circle cx="727.80" cy="184.56" r="3.2" fill="#0f172a" opacity="0.45"/>
+<circle cx="711.42" cy="176.90" r="3.2" fill="#0f172a" opacity="0.45"/>
+<circle cx="705.20" cy="164.33" r="3.2" fill="#0f172a" opacity="0.45"/>
+<circle cx="726.90" cy="203.24" r="3.2" fill="#0f172a" opacity="0.45"/>
+<circle cx="782.88" cy="182.60" r="3.2" fill="#0f172a" opacity="0.45"/>
+<circle cx="750.15" cy="181.96" r="3.2" fill="#0f172a" opacity="0.45"/>
+<circle cx="734.63" cy="176.84" r="3.2" fill="#0f172a" opacity="0.45"/>
+<circle cx="741.81" cy="192.18" r="3.2" fill="#0f172a" opacity="0.45"/>
+<circle cx="759.32" cy="199.83" r="3.2" fill="#0f172a" opacity="0.45"/>
+<circle cx="752.32" cy="200.83" r="3.2" fill="#0f172a" opacity="0.45"/>
+<circle cx="746.04" cy="181.30" r="3.2" fill="#0f172a" opacity="0.45"/>
+<circle cx="712.51" cy="211.97" r="3.2" fill="#0f172a" opacity="0.45"/>
+<circle cx="759.42" cy="212.29" r="3.2" fill="#0f172a" opacity="0.45"/>
+<circle cx="767.93" cy="206.05" r="3.2" fill="#0f172a" opacity="0.45"/>
+<circle cx="770.62" cy="183.12" r="3.2" fill="#0f172a" opacity="0.45"/>
+<circle cx="728.10" cy="199.91" r="3.2" fill="#0f172a" opacity="0.45"/>
+<circle cx="700.04" cy="190.90" r="3.2" fill="#0f172a" opacity="0.45"/>
+<circle cx="754.33" cy="178.92" r="3.2" fill="#0f172a" opacity="0.45"/>
+<text class="axis" x="752.80" y="598.00" text-anchor="middle">token_stream</text>
+<text class="tick" x="752.80" y="181.05" text-anchor="middle">mean=146.38 ms</text>
+<rect x="780" y="102" width="16" height="12" fill="#2563eb" opacity="0.86"/>
+<text class="tick" x="804" y="113">legacy</text>
+<rect x="780" y="122" width="16" height="12" fill="#f59e0b" opacity="0.86"/>
+<text class="tick" x="804" y="133">token_stream</text>
+<text class="tick" x="780" y="154">error bar: 95% CI</text>
+<text class="tick" x="780" y="171">dot: one trial</text>
+</svg>

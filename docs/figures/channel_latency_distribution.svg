@@ -5,78 +5,76 @@
 <text class="small" x="90" y="62">Histogram with percentile markers (P50/P95/P99)</text>
 <line x1="90" y1="500.00" x2="1060" y2="500.00" stroke="#e5e7eb" stroke-width="1"/>
 <text class="axis" x="80" y="504.00" text-anchor="end">0</text>
-<line x1="90" y1="420.15" x2="1060" y2="420.15" stroke="#e5e7eb" stroke-width="1"/>
-<text class="axis" x="80" y="424.15" text-anchor="end">500</text>
-<line x1="90" y1="340.30" x2="1060" y2="340.30" stroke="#e5e7eb" stroke-width="1"/>
-<text class="axis" x="80" y="344.30" text-anchor="end">1000</text>
-<line x1="90" y1="260.46" x2="1060" y2="260.46" stroke="#e5e7eb" stroke-width="1"/>
-<text class="axis" x="80" y="264.46" text-anchor="end">1500</text>
-<line x1="90" y1="180.61" x2="1060" y2="180.61" stroke="#e5e7eb" stroke-width="1"/>
-<text class="axis" x="80" y="184.61" text-anchor="end">2000</text>
-<line x1="90" y1="100.76" x2="1060" y2="100.76" stroke="#e5e7eb" stroke-width="1"/>
-<text class="axis" x="80" y="104.76" text-anchor="end">2500</text>
-<line x1="90" y1="20.91" x2="1060" y2="20.91" stroke="#e5e7eb" stroke-width="1"/>
-<text class="axis" x="80" y="24.91" text-anchor="end">3000</text>
+<line x1="90" y1="426.13" x2="1060" y2="426.13" stroke="#e5e7eb" stroke-width="1"/>
+<text class="axis" x="80" y="430.13" text-anchor="end">500</text>
+<line x1="90" y1="352.27" x2="1060" y2="352.27" stroke="#e5e7eb" stroke-width="1"/>
+<text class="axis" x="80" y="356.27" text-anchor="end">1000</text>
+<line x1="90" y1="278.40" x2="1060" y2="278.40" stroke="#e5e7eb" stroke-width="1"/>
+<text class="axis" x="80" y="282.40" text-anchor="end">1500</text>
+<line x1="90" y1="204.54" x2="1060" y2="204.54" stroke="#e5e7eb" stroke-width="1"/>
+<text class="axis" x="80" y="208.54" text-anchor="end">2000</text>
+<line x1="90" y1="130.67" x2="1060" y2="130.67" stroke="#e5e7eb" stroke-width="1"/>
+<text class="axis" x="80" y="134.67" text-anchor="end">2500</text>
+<line x1="90" y1="56.81" x2="1060" y2="56.81" stroke="#e5e7eb" stroke-width="1"/>
+<text class="axis" x="80" y="60.81" text-anchor="end">3000</text>
 <line x1="90" y1="80" x2="90" y2="500" stroke="#374151" stroke-width="1.5"/>
 <line x1="90" y1="500" x2="1060" y2="500" stroke="#374151" stroke-width="1.5"/>
-<rect x="90.00" y="498.56" width="23.65" height="1.44" fill="#0ea5e9" opacity="0.75"/>
-<rect x="114.25" y="499.04" width="23.65" height="0.96" fill="#0ea5e9" opacity="0.75"/>
-<rect x="138.50" y="478.92" width="23.65" height="21.08" fill="#0ea5e9" opacity="0.75"/>
-<rect x="162.75" y="80.00" width="23.65" height="420.00" fill="#0ea5e9" opacity="0.75"/>
-<rect x="187.00" y="300.38" width="23.65" height="199.62" fill="#0ea5e9" opacity="0.75"/>
-<rect x="211.25" y="437.40" width="23.65" height="62.60" fill="#0ea5e9" opacity="0.75"/>
-<rect x="235.50" y="448.10" width="23.65" height="51.90" fill="#0ea5e9" opacity="0.75"/>
-<rect x="259.75" y="476.21" width="23.65" height="23.79" fill="#0ea5e9" opacity="0.75"/>
-<rect x="284.00" y="491.22" width="23.65" height="8.78" fill="#0ea5e9" opacity="0.75"/>
-<rect x="308.25" y="497.60" width="23.65" height="2.40" fill="#0ea5e9" opacity="0.75"/>
-<rect x="332.50" y="498.72" width="23.65" height="1.28" fill="#0ea5e9" opacity="0.75"/>
-<rect x="356.75" y="498.88" width="23.65" height="1.12" fill="#0ea5e9" opacity="0.75"/>
-<rect x="381.00" y="499.68" width="23.65" height="0.32" fill="#0ea5e9" opacity="0.75"/>
-<rect x="405.25" y="499.68" width="23.65" height="0.32" fill="#0ea5e9" opacity="0.75"/>
-<rect x="429.50" y="499.84" width="23.65" height="0.16" fill="#0ea5e9" opacity="0.75"/>
-<rect x="453.75" y="499.36" width="23.65" height="0.64" fill="#0ea5e9" opacity="0.75"/>
+<rect x="90.00" y="496.90" width="23.65" height="3.10" fill="#0ea5e9" opacity="0.75"/>
+<rect x="114.25" y="335.58" width="23.65" height="164.42" fill="#0ea5e9" opacity="0.75"/>
+<rect x="138.50" y="80.00" width="23.65" height="420.00" fill="#0ea5e9" opacity="0.75"/>
+<rect x="162.75" y="394.67" width="23.65" height="105.33" fill="#0ea5e9" opacity="0.75"/>
+<rect x="187.00" y="466.47" width="23.65" height="33.53" fill="#0ea5e9" opacity="0.75"/>
+<rect x="211.25" y="493.94" width="23.65" height="6.06" fill="#0ea5e9" opacity="0.75"/>
+<rect x="235.50" y="497.49" width="23.65" height="2.51" fill="#0ea5e9" opacity="0.75"/>
+<rect x="259.75" y="499.70" width="23.65" height="0.30" fill="#0ea5e9" opacity="0.75"/>
+<rect x="284.00" y="499.56" width="23.65" height="0.44" fill="#0ea5e9" opacity="0.75"/>
+<rect x="308.25" y="499.26" width="23.65" height="0.74" fill="#0ea5e9" opacity="0.75"/>
+<rect x="332.50" y="499.26" width="23.65" height="0.74" fill="#0ea5e9" opacity="0.75"/>
+<rect x="356.75" y="499.85" width="23.65" height="0.15" fill="#0ea5e9" opacity="0.75"/>
+<rect x="381.00" y="499.85" width="23.65" height="0.15" fill="#0ea5e9" opacity="0.75"/>
+<rect x="405.25" y="500.00" width="23.65" height="0.00" fill="#0ea5e9" opacity="0.75"/>
+<rect x="429.50" y="499.85" width="23.65" height="0.15" fill="#0ea5e9" opacity="0.75"/>
+<rect x="453.75" y="500.00" width="23.65" height="0.00" fill="#0ea5e9" opacity="0.75"/>
 <rect x="478.00" y="500.00" width="23.65" height="0.00" fill="#0ea5e9" opacity="0.75"/>
 <rect x="502.25" y="500.00" width="23.65" height="0.00" fill="#0ea5e9" opacity="0.75"/>
-<rect x="526.50" y="499.68" width="23.65" height="0.32" fill="#0ea5e9" opacity="0.75"/>
-<rect x="550.75" y="499.68" width="23.65" height="0.32" fill="#0ea5e9" opacity="0.75"/>
+<rect x="526.50" y="499.85" width="23.65" height="0.15" fill="#0ea5e9" opacity="0.75"/>
+<rect x="550.75" y="500.00" width="23.65" height="0.00" fill="#0ea5e9" opacity="0.75"/>
 <rect x="575.00" y="500.00" width="23.65" height="0.00" fill="#0ea5e9" opacity="0.75"/>
-<rect x="599.25" y="500.00" width="23.65" height="0.00" fill="#0ea5e9" opacity="0.75"/>
-<rect x="623.50" y="500.00" width="23.65" height="0.00" fill="#0ea5e9" opacity="0.75"/>
+<rect x="599.25" y="499.85" width="23.65" height="0.15" fill="#0ea5e9" opacity="0.75"/>
+<rect x="623.50" y="499.56" width="23.65" height="0.44" fill="#0ea5e9" opacity="0.75"/>
 <rect x="647.75" y="500.00" width="23.65" height="0.00" fill="#0ea5e9" opacity="0.75"/>
-<rect x="672.00" y="499.84" width="23.65" height="0.16" fill="#0ea5e9" opacity="0.75"/>
-<rect x="696.25" y="500.00" width="23.65" height="0.00" fill="#0ea5e9" opacity="0.75"/>
+<rect x="672.00" y="500.00" width="23.65" height="0.00" fill="#0ea5e9" opacity="0.75"/>
+<rect x="696.25" y="499.85" width="23.65" height="0.15" fill="#0ea5e9" opacity="0.75"/>
 <rect x="720.50" y="500.00" width="23.65" height="0.00" fill="#0ea5e9" opacity="0.75"/>
 <rect x="744.75" y="500.00" width="23.65" height="0.00" fill="#0ea5e9" opacity="0.75"/>
 <rect x="769.00" y="500.00" width="23.65" height="0.00" fill="#0ea5e9" opacity="0.75"/>
-<rect x="793.25" y="499.84" width="23.65" height="0.16" fill="#0ea5e9" opacity="0.75"/>
+<rect x="793.25" y="500.00" width="23.65" height="0.00" fill="#0ea5e9" opacity="0.75"/>
 <rect x="817.50" y="500.00" width="23.65" height="0.00" fill="#0ea5e9" opacity="0.75"/>
-<rect x="841.75" y="499.84" width="23.65" height="0.16" fill="#0ea5e9" opacity="0.75"/>
+<rect x="841.75" y="500.00" width="23.65" height="0.00" fill="#0ea5e9" opacity="0.75"/>
 <rect x="866.00" y="500.00" width="23.65" height="0.00" fill="#0ea5e9" opacity="0.75"/>
-<rect x="890.25" y="499.84" width="23.65" height="0.16" fill="#0ea5e9" opacity="0.75"/>
-<rect x="914.50" y="499.84" width="23.65" height="0.16" fill="#0ea5e9" opacity="0.75"/>
-<rect x="938.75" y="499.84" width="23.65" height="0.16" fill="#0ea5e9" opacity="0.75"/>
+<rect x="890.25" y="500.00" width="23.65" height="0.00" fill="#0ea5e9" opacity="0.75"/>
+<rect x="914.50" y="500.00" width="23.65" height="0.00" fill="#0ea5e9" opacity="0.75"/>
+<rect x="938.75" y="500.00" width="23.65" height="0.00" fill="#0ea5e9" opacity="0.75"/>
 <rect x="963.00" y="500.00" width="23.65" height="0.00" fill="#0ea5e9" opacity="0.75"/>
 <rect x="987.25" y="500.00" width="23.65" height="0.00" fill="#0ea5e9" opacity="0.75"/>
-<rect x="1011.50" y="499.68" width="23.65" height="0.32" fill="#0ea5e9" opacity="0.75"/>
-<rect x="1035.75" y="499.84" width="23.65" height="0.16" fill="#0ea5e9" opacity="0.75"/>
-<line x1="87.20" y1="500" x2="87.20" y2="506" stroke="#374151"/>
-<text class="axis" x="87.20" y="522" text-anchor="middle">0.0</text>
-<line x1="252.28" y1="500" x2="252.28" y2="506" stroke="#374151"/>
-<text class="axis" x="252.28" y="522" text-anchor="middle">50.0</text>
-<line x1="417.35" y1="500" x2="417.35" y2="506" stroke="#374151"/>
-<text class="axis" x="417.35" y="522" text-anchor="middle">100.0</text>
-<line x1="582.43" y1="500" x2="582.43" y2="506" stroke="#374151"/>
-<text class="axis" x="582.43" y="522" text-anchor="middle">150.0</text>
-<line x1="747.50" y1="500" x2="747.50" y2="506" stroke="#374151"/>
-<text class="axis" x="747.50" y="522" text-anchor="middle">200.0</text>
-<line x1="912.58" y1="500" x2="912.58" y2="506" stroke="#374151"/>
-<text class="axis" x="912.58" y="522" text-anchor="middle">250.0</text>
-<line x1="184.16" y1="80" x2="184.16" y2="500" stroke="#16a34a" stroke-width="2"/>
-<text class="axis" x="188.16" y="94.00" text-anchor="start" fill="#16a34a">P50 29.37 us</text>
-<line x1="260.04" y1="80" x2="260.04" y2="500" stroke="#f59e0b" stroke-width="2"/>
-<text class="axis" x="264.04" y="94.00" text-anchor="start" fill="#f59e0b">P95 52.35 us</text>
-<line x1="311.56" y1="80" x2="311.56" y2="500" stroke="#dc2626" stroke-width="2"/>
-<text class="axis" x="315.56" y="94.00" text-anchor="start" fill="#dc2626">P99 67.96 us</text>
+<rect x="1011.50" y="500.00" width="23.65" height="0.00" fill="#0ea5e9" opacity="0.75"/>
+<rect x="1035.75" y="499.85" width="23.65" height="0.15" fill="#0ea5e9" opacity="0.75"/>
+<line x1="88.24" y1="500" x2="88.24" y2="506" stroke="#374151"/>
+<text class="axis" x="88.24" y="522" text-anchor="middle">0.0</text>
+<line x1="328.16" y1="500" x2="328.16" y2="506" stroke="#374151"/>
+<text class="axis" x="328.16" y="522" text-anchor="middle">100.0</text>
+<line x1="568.08" y1="500" x2="568.08" y2="506" stroke="#374151"/>
+<text class="axis" x="568.08" y="522" text-anchor="middle">200.0</text>
+<line x1="808.00" y1="500" x2="808.00" y2="506" stroke="#374151"/>
+<text class="axis" x="808.00" y="522" text-anchor="middle">300.0</text>
+<line x1="1047.93" y1="500" x2="1047.93" y2="506" stroke="#374151"/>
+<text class="axis" x="1047.93" y="522" text-anchor="middle">400.0</text>
+<line x1="147.94" y1="80" x2="147.94" y2="500" stroke="#16a34a" stroke-width="2"/>
+<text class="axis" x="151.94" y="94.00" text-anchor="start" fill="#16a34a">P50 24.89 us</text>
+<line x1="191.12" y1="80" x2="191.12" y2="500" stroke="#f59e0b" stroke-width="2"/>
+<text class="axis" x="195.12" y="94.00" text-anchor="start" fill="#f59e0b">P95 42.88 us</text>
+<line x1="223.70" y1="80" x2="223.70" y2="500" stroke="#dc2626" stroke-width="2"/>
+<text class="axis" x="227.70" y="94.00" text-anchor="start" fill="#dc2626">P99 56.46 us</text>
 <text class="axis" x="575.00" y="590" text-anchor="middle">Latency (microseconds, one-way)</text>
 <text class="axis" x="26" y="290.00" transform="rotate(-90 26 290.00)">Count</text>
 </svg>

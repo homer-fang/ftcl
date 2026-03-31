@@ -26,8 +26,8 @@
 <rect x="485.20" y="80.00" width="179.60" height="420.00" fill="#2563eb"/>
 <text class="axis" x="575.00" y="74.00" text-anchor="middle">100.00</text>
 <text class="axis" x="575.00" y="518.00" text-anchor="middle">control_flow</text>
-<rect x="682.80" y="164.00" width="179.60" height="336.00" fill="#2563eb"/>
-<text class="axis" x="772.60" y="158.00" text-anchor="middle">80.00</text>
+<rect x="682.80" y="80.00" width="179.60" height="420.00" fill="#2563eb"/>
+<text class="axis" x="772.60" y="74.00" text-anchor="middle">100.00</text>
 <text class="axis" x="772.60" y="518.00" text-anchor="middle">expr</text>
 <rect x="880.40" y="80.00" width="179.60" height="420.00" fill="#2563eb"/>
 <text class="axis" x="970.20" y="74.00" text-anchor="middle">100.00</text>
