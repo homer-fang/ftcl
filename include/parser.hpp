@@ -8,6 +8,7 @@
 #include <cctype>
 #include <cstdlib>
 #include <memory>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -20,6 +21,7 @@ enum class WordType {
     VarRef,
     ArrayRef,
     Script,
+    NumericBracket,
     Tokens,
     Expand,
     String,
@@ -48,6 +50,12 @@ public:
 
     static Word script(std::string script_text) {
         return Word(WordType::Script, Value(std::move(script_text)));
+    }
+
+    static Word numeric_bracket(Word inner, std::string script_text) {
+        Word out(WordType::NumericBracket, Value(std::move(script_text)));
+        out.child_ = std::make_shared<Word>(std::move(inner));
+        return out;
     }
 
     static Word tokens(std::vector<Word> words) {
@@ -468,6 +476,42 @@ inline ftcl::expected<Word, Exception> parse_braced_word(EvalPtr& ctx) {
     return word_error("missing close-brace");
 }
 
+inline bool is_numeric_bracket_candidate_inner_word(const Word& word) {
+    switch (word.type()) {
+        case WordType::Value:
+        case WordType::String:
+        case WordType::VarRef:
+        case WordType::ArrayRef:
+            return true;
+        default:
+            return false;
+    }
+}
+
+inline std::optional<Word> parse_numeric_bracket_candidate_word(std::string_view script_text) {
+    EvalPtr inner(script_text);
+    inner.skip_line_white();
+    if (inner.at_end()) {
+        return std::nullopt;
+    }
+
+    auto inner_word = parse_next_word(inner);
+    if (!inner_word.has_value()) {
+        return std::nullopt;
+    }
+
+    inner.skip_line_white();
+    if (!inner.at_end()) {
+        return std::nullopt;
+    }
+
+    if (!is_numeric_bracket_candidate_inner_word(*inner_word)) {
+        return std::nullopt;
+    }
+
+    return Word::numeric_bracket(*inner_word, std::string(script_text));
+}
+
 inline ftcl::expected<Word, Exception> parse_quoted_word(EvalPtr& ctx) {
     ctx.skip_char(U'"');
 
@@ -487,7 +531,12 @@ inline ftcl::expected<Word, Exception> parse_quoted_word(EvalPtr& ctx) {
             if (!nested.has_value()) {
                 return ftcl::unexpected(nested.error());
             }
-            tokens.push(*nested);
+            if (auto bracket_literal = parse_numeric_bracket_candidate_word(nested->value().as_string());
+                bracket_literal.has_value()) {
+                tokens.push(*bracket_literal);
+            } else {
+                tokens.push(*nested);
+            }
             start = ctx.mark();
             continue;
         }
@@ -547,7 +596,12 @@ inline ftcl::expected<Word, Exception> parse_bare_word(EvalPtr& ctx, bool index_
             if (!nested.has_value()) {
                 return ftcl::unexpected(nested.error());
             }
-            tokens.push(*nested);
+            if (auto bracket_literal = parse_numeric_bracket_candidate_word(nested->value().as_string());
+                bracket_literal.has_value()) {
+                tokens.push(*bracket_literal);
+            } else {
+                tokens.push(*nested);
+            }
             start = ctx.mark();
             continue;
         }
@@ -735,6 +789,12 @@ inline bool parser_words_equal(const Word& lhs, const Word& rhs) {
 
         case WordType::ArrayRef:
             if (lhs.name() != rhs.name() || lhs.has_child() != rhs.has_child()) {
+                return false;
+            }
+            return !lhs.has_child() || parser_words_equal(lhs.child(), rhs.child());
+
+        case WordType::NumericBracket:
+            if (lhs.value().as_string() != rhs.value().as_string() || lhs.has_child() != rhs.has_child()) {
                 return false;
             }
             return !lhs.has_child() || parser_words_equal(lhs.child(), rhs.child());
@@ -1215,7 +1275,12 @@ inline ftcl::expected<Word, Exception> parse_quoted_word_token_stream(const Pars
             if (!nested.has_value()) {
                 return ftcl::unexpected(nested.error());
             }
-            tokens.push(*nested);
+            if (auto bracket_literal = parse_numeric_bracket_candidate_word(nested->value().as_string());
+                bracket_literal.has_value()) {
+                tokens.push(*bracket_literal);
+            } else {
+                tokens.push(*nested);
+            }
             start = token_cursor_offset(adapter, cursor);
             continue;
         }
@@ -1285,7 +1350,12 @@ inline ftcl::expected<Word, Exception> parse_bare_word_token_stream(const Parser
             if (!nested.has_value()) {
                 return ftcl::unexpected(nested.error());
             }
-            tokens.push(*nested);
+            if (auto bracket_literal = parse_numeric_bracket_candidate_word(nested->value().as_string());
+                bracket_literal.has_value()) {
+                tokens.push(*bracket_literal);
+            } else {
+                tokens.push(*nested);
+            }
             start = token_cursor_offset(adapter, cursor);
             continue;
         }

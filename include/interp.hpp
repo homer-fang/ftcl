@@ -596,6 +596,39 @@ private:
                 return *result;
             }
 
+            case WordType::NumericBracket: {
+                if (!word.has_child()) {
+                    return ftcl::unexpected(Exception::ftcl_err(Value("missing numeric bracket expression")));
+                }
+
+                auto inner = eval_word(word.child());
+                if (!inner.has_value()) {
+                    return ftcl::unexpected(inner.error());
+                }
+
+                const auto is_decimal_literal_text = [](std::string_view text) {
+                    if (text.empty()) {
+                        return false;
+                    }
+                    for (char ch : text) {
+                        if (std::isdigit(static_cast<unsigned char>(ch)) == 0) {
+                            return false;
+                        }
+                    }
+                    return true;
+                };
+
+                if (is_decimal_literal_text(inner->as_string())) {
+                    return Value("[" + inner->as_string() + "]");
+                }
+
+                auto fallback = eval_value(word.value());
+                if (!fallback.has_value()) {
+                    return ftcl::unexpected(fallback.error());
+                }
+                return *fallback;
+            }
+
             case WordType::Tokens: {
                 std::string out;
                 for (const auto& token : word.words()) {
@@ -906,4 +939,3 @@ inline ftcl::expected<Value, Exception> expr_eval_script(Interp* interp, const s
 }
 
 }  // namespace ftcl
-

@@ -70,6 +70,41 @@ TEST(command_substitution_in_words)
               "quoted word should support [script] substitution");
 END_TEST
 
+TEST(numeric_bracket_literal_compatibility)
+    auto interp = new_interp_with_stdlib();
+
+    ASSERT_EQ(eval_ok(interp, "set y a[10]; set y", "bare numeric bracket literal").as_string(),
+              "a[10]",
+              "a[10] should be treated as numeric bracket literal text");
+
+    ASSERT_EQ(eval_ok(interp, "set i 10; set y a[$i]; set y", "bare variable numeric bracket literal").as_string(),
+              "a[10]",
+              "a[$i] should resolve numeric variable and keep bracket literal text");
+
+    ASSERT_EQ(eval_ok(interp, "set y a[{10}]; set y", "braced numeric bracket literal").as_string(),
+              "a[10]",
+              "a[{10}] should be treated as numeric bracket literal text");
+
+    ASSERT_EQ(eval_ok(interp, "set y \"a[10]\"; set y", "quoted numeric bracket literal").as_string(),
+              "a[10]",
+              "\"a[10]\" should preserve bracket literal text inside quotes");
+
+    ASSERT_EQ(eval_ok(interp, "set i list; set y a[$i]; set y", "non-numeric fallback").as_string(),
+              "a",
+              "a[$i] should fall back to command substitution semantics when i is non-numeric");
+
+    auto non_numeric_error = interp.eval("set i abc; set y a[$i]");
+    ASSERT_TRUE(!non_numeric_error.has_value(), "non-numeric fallback should preserve command-substitution errors");
+    ASSERT_TRUE(non_numeric_error.error().value().as_string().find("invalid command name \"abc\"") != std::string::npos,
+                "non-numeric fallback error should come from command substitution");
+
+    auto nested_command = interp.eval("set y a[{{10}}]");
+    ASSERT_TRUE(!nested_command.has_value(), "a[{{10}}] should still parse as command substitution");
+    ASSERT_TRUE(
+        nested_command.error().value().as_string().find("invalid command name \"{10}\"") != std::string::npos,
+        "a[{{10}}] should fail with invalid command name {10}");
+END_TEST
+
 TEST(braced_words_disable_substitution)
     auto interp = new_interp_with_stdlib();
 
@@ -129,6 +164,7 @@ int main() {
 
     test_bare_and_quoted_variable_substitution();
     test_command_substitution_in_words();
+    test_numeric_bracket_literal_compatibility();
     test_braced_words_disable_substitution();
     test_array_substitution();
     test_expand_operator();
