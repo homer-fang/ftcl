@@ -2,7 +2,8 @@ cmake_minimum_required(VERSION 3.15)# CMake >= 3.15
 project(ftcl VERSION 0.1.0 LANGUAGES CXX)
 # 项目名称是ftcl,项目版本0.1.0，使用C++
 
-set(CMAKE_CXX_STANDARD 23)
+set(FTCL_CXX_STANDARD "20" CACHE STRING "C++ standard used to build FTCL")
+set(CMAKE_CXX_STANDARD ${FTCL_CXX_STANDARD})
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 #使用C++ 23
@@ -13,6 +14,7 @@ option(BUILD_SHARED_LIBS "Build shared library" ON)
 # BUILD_SHARED_LIBS选项对INTERFACE库无效（纯头文件库不生成库文件）
 option(BUILD_TESTS "Build tests" ON)
 option(BUILD_EXAMPLES "Build examples" ON)
+option(FTCL_ENABLE_CUDA "Enable CUDA-backed UVec storage" OFF)
 set(FTCL_PARSER_DEFAULT_BACKEND "0" CACHE STRING "Default parser backend: 0=legacy, 1=token_stream, 2=shadow")
 # 测试，示例可开关控制。
 
@@ -20,6 +22,10 @@ set(FTCL_PARSER_DEFAULT_BACKEND "0" CACHE STRING "Default parser backend: 0=lega
 # All code is header-only (inline implementations)
 # Create an INTERFACE library since there are no source files
 add_library(ftcl INTERFACE)
+find_package(Threads REQUIRED)
+if(FTCL_ENABLE_CUDA)
+    find_package(CUDAToolkit REQUIRED)
+endif()
 
 # 创建一个名为ftcl的接口库目标（纯头文件库）
 
@@ -28,6 +34,13 @@ target_include_directories(ftcl INTERFACE
     $<INSTALL_INTERFACE:include>
 )
 target_compile_definitions(ftcl INTERFACE FTCL_PARSER_DEFAULT_BACKEND=${FTCL_PARSER_DEFAULT_BACKEND})
+if(FTCL_ENABLE_CUDA)
+    target_compile_definitions(ftcl INTERFACE FTCL_ENABLE_CUDA=1)
+endif()
+target_link_libraries(ftcl INTERFACE Threads::Threads)
+if(FTCL_ENABLE_CUDA)
+    target_link_libraries(ftcl INTERFACE CUDA::cudart)
+endif()
 
 # 在源码树/构建树使用时，头文件从include找
 # 安装后，从安装前缀下的include找。

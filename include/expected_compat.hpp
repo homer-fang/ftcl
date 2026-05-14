@@ -65,7 +65,6 @@ template <class T, class E>
 class expected {
 public:
     expected()
-        requires std::is_default_constructible_v<T>
         : storage_(T{}) {}
 
     expected(const T& value)
@@ -76,12 +75,10 @@ public:
 
     template <class U>
     expected(const unexpected_holder<U>& error)
-        requires std::is_constructible_v<E, const U&>
         : storage_(E(error.error())) {}
 
     template <class U>
     expected(unexpected_holder<U>&& error)
-        requires std::is_constructible_v<E, U&&>
         : storage_(E(std::move(error).error())) {}
 
     bool has_value() const {
@@ -139,4 +136,3 @@ private:
 #endif
 
 }  // namespace ftcl
-

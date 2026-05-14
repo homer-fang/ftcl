@@ -13,6 +13,7 @@
 #include "test_harness.hpp"
 #include "tokenizer.hpp"
 #include "type.hpp"
+#include "uvec.hpp"
 #include "util.hpp"
 #include "value.hpp"
 

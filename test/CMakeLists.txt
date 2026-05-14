@@ -30,6 +30,11 @@ add_executable(test_all_headers test_all_headers.cpp)
 target_link_libraries(test_all_headers PRIVATE ftcl)
 add_test(NAME AllHeadersTest COMMAND test_all_headers)
 
+# Cross-device vector storage tests
+add_executable(test_uvec test_uvec.cpp)
+target_link_libraries(test_uvec PRIVATE ftcl)
+add_test(NAME UVecTest COMMAND test_uvec)
+
 # Parser/substitution regression tests (P0-1)
 add_executable(test_parser_subst test_parser_subst.cpp)
 target_link_libraries(test_parser_subst PRIVATE ftcl)

@@ -269,13 +269,6 @@ private:
             return *best;
         }
 
-        // Fallback: if available, use floating-point to_chars.
-        std::array<char, 128> buffer{};
-        auto [end, ec] = std::to_chars(buffer.data(), buffer.data() + buffer.size(), value, std::chars_format::general);
-        if (ec == std::errc{}) {
-            return std::string(buffer.data(), static_cast<std::size_t>(end - buffer.data()));
-        }
-
         std::ostringstream oss;
         oss.imbue(std::locale::classic());
         oss << std::setprecision(17) << std::defaultfloat << value;
@@ -653,4 +646,3 @@ struct hash<ftcl::Value> {
     }
 };
 }  // namespace std
-
