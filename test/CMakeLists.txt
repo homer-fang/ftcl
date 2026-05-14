@@ -35,6 +35,11 @@ add_executable(test_uvec test_uvec.cpp)
 target_link_libraries(test_uvec PRIVATE ftcl)
 add_test(NAME UVecTest COMMAND test_uvec)
 
+# Script-level bridge between ftcl commands and UVec storage
+add_executable(test_uvec_command test_uvec_command.cpp)
+target_link_libraries(test_uvec_command PRIVATE ftcl)
+add_test(NAME UVecCommandTest COMMAND test_uvec_command)
+
 # Parser/substitution regression tests (P0-1)
 add_executable(test_parser_subst test_parser_subst.cpp)
 target_link_libraries(test_parser_subst PRIVATE ftcl)

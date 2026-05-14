@@ -5,18 +5,21 @@
 #include "list.hpp"
 #include "macros.hpp"
 #include "util.hpp"
+#include "uvec.hpp"
 
 #include <algorithm>
 #include <atomic>
 #include <condition_variable>
 #include <chrono>
 #include <cerrno>
+#include <cstdint>
 #include <cstring>
 #include <deque>
 #include <filesystem>
 #include <fstream>
 #include <future>
 #include <iostream>
+#include <sstream>
 #include <mutex>
 #include <string>
 #include <string_view>
@@ -2155,6 +2158,588 @@ inline ftclResult cmd_array(Interp* interp, ContextID context_id, const std::vec
     return interp->call_subcommand(context_id, argv, 1, subs);
 }
 
+
+// uvec subcommands: script-level bridge to cross-device vector storage.
+class UVecCommandManager {
+public:
+    ftclInt create(UVec<ftclFloat> vec) {
+        std::lock_guard<std::mutex> lock(mu_);
+        const ftclInt id = next_id_++;
+        vectors_.emplace(id, std::move(vec));
+        return id;
+    }
+
+    ftclResult destroy(ftclInt id) {
+        std::lock_guard<std::mutex> lock(mu_);
+        const auto erased = vectors_.erase(id);
+        if (erased == 0) {
+            return ftcl_err("unknown uvec handle \"" + std::to_string(id) + "\"");
+        }
+        return ftcl_ok();
+    }
+
+    std::vector<ftclInt> ids() const {
+        std::lock_guard<std::mutex> lock(mu_);
+        std::vector<ftclInt> out;
+        out.reserve(vectors_.size());
+        for (const auto& [id, _] : vectors_) {
+            out.push_back(id);
+        }
+        std::sort(out.begin(), out.end());
+        return out;
+    }
+
+    template <class Func>
+    ftclResult with_vec(ftclInt id, Func&& func) {
+        std::lock_guard<std::mutex> lock(mu_);
+        auto it = vectors_.find(id);
+        if (it == vectors_.end()) {
+            return ftcl_err("unknown uvec handle \"" + std::to_string(id) + "\"");
+        }
+        return func(it->second);
+    }
+
+    template <class Func>
+    ftclResult with_two(ftclInt dst_id, ftclInt src_id, Func&& func) {
+        std::lock_guard<std::mutex> lock(mu_);
+        auto dst = vectors_.find(dst_id);
+        if (dst == vectors_.end()) {
+            return ftcl_err("unknown uvec handle \"" + std::to_string(dst_id) + "\"");
+        }
+        auto src = vectors_.find(src_id);
+        if (src == vectors_.end()) {
+            return ftcl_err("unknown uvec handle \"" + std::to_string(src_id) + "\"");
+        }
+        return func(dst->second, src->second);
+    }
+
+private:
+    mutable std::mutex mu_;
+    std::unordered_map<ftclInt, UVec<ftclFloat>> vectors_;
+    ftclInt next_id_ = 1;
+};
+
+inline UVecCommandManager& uvec_command_manager() {
+    static UVecCommandManager manager;
+    return manager;
+}
+
+inline ftcl::expected<Device, Exception> parse_uvec_device(const Value& value) {
+    const std::string text = value.as_string();
+    if (text == "cpu" || text == "CPU") {
+        return Device::cpu();
+    }
+    if (text == "cuda" || text == "CUDA") {
+        return Device::cuda(0);
+    }
+
+    const std::string cuda_prefix = "cuda:";
+    const std::string cuda_upper_prefix = "CUDA:";
+    if (text.rfind(cuda_prefix, 0) == 0 || text.rfind(cuda_upper_prefix, 0) == 0) {
+        auto index = parse_int(Value(text.substr(cuda_prefix.size())));
+        if (!index.has_value()) {
+            return ftcl::unexpected(Exception::ftcl_err(Value(index.error())));
+        }
+        if (*index < 0) {
+            return ftcl::unexpected(Exception::ftcl_err(Value("invalid CUDA device \"" + text + "\"")));
+        }
+        return Device::cuda(static_cast<int>(*index));
+    }
+
+    if (text.rfind("cuda", 0) == 0 && text.size() > 4) {
+        auto index = parse_int(Value(text.substr(4)));
+        if (!index.has_value()) {
+            return ftcl::unexpected(Exception::ftcl_err(Value(index.error())));
+        }
+        if (*index < 0) {
+            return ftcl::unexpected(Exception::ftcl_err(Value("invalid CUDA device \"" + text + "\"")));
+        }
+        return Device::cuda(static_cast<int>(*index));
+    }
+
+    return ftcl::unexpected(Exception::ftcl_err(Value("bad device \"" + text + "\": must be cpu or cuda:N")));
+}
+
+inline ftcl::expected<ftclInt, Exception> parse_uvec_handle(const Value& value) {
+    auto id = parse_int(value);
+    if (!id.has_value()) {
+        return ftcl::unexpected(Exception::ftcl_err(Value(id.error())));
+    }
+    if (*id <= 0) {
+        return ftcl::unexpected(Exception::ftcl_err(Value("invalid uvec handle \"" + value.as_string() + "\"")));
+    }
+    return *id;
+}
+
+inline ftcl::expected<std::size_t, Exception> parse_uvec_index(const Value& value, const std::string& what) {
+    auto parsed = parse_int(value);
+    if (!parsed.has_value()) {
+        return ftcl::unexpected(Exception::ftcl_err(Value(parsed.error())));
+    }
+    if (*parsed < 0) {
+        return ftcl::unexpected(Exception::ftcl_err(Value("bad " + what + " \"" + value.as_string() + "\": must be non-negative")));
+    }
+    return static_cast<std::size_t>(*parsed);
+}
+
+inline ftcl::expected<ftclFloat, Exception> parse_uvec_float(const Value& value) {
+    auto parsed = parse_float(value);
+    if (!parsed.has_value()) {
+        return ftcl::unexpected(Exception::ftcl_err(Value(parsed.error())));
+    }
+    return *parsed;
+}
+
+inline ftcl::expected<std::vector<ftclFloat>, Exception> parse_uvec_value_list(const Value& value) {
+    auto list = value.as_list();
+    if (!list.has_value()) {
+        return ftcl::unexpected(Exception::ftcl_err(Value(list.error())));
+    }
+
+    std::vector<ftclFloat> out;
+    out.reserve(list->size());
+    for (const auto& item : *list) {
+        auto parsed = parse_uvec_float(item);
+        if (!parsed.has_value()) {
+            return ftcl::unexpected(parsed.error());
+        }
+        out.push_back(*parsed);
+    }
+    return out;
+}
+
+inline Value uvec_to_list_value(const UVec<ftclFloat>& vec) {
+    ftclList values;
+    values.reserve(vec.size());
+    for (const auto& item : vec.cpu_vector()) {
+        values.emplace_back(item);
+    }
+    return Value::from_list(values);
+}
+
+inline std::string uvec_pointer_address(const void* ptr) {
+    std::ostringstream oss;
+    oss << "0x" << std::hex << reinterpret_cast<std::uintptr_t>(ptr);
+    return oss.str();
+}
+
+inline ftclResult cmd_uvec_create(Interp*, ContextID, const std::vector<Value>& argv) {
+    auto chk = check_args(2, argv, 3, 4, "list ?device?");
+    if (!chk.has_value()) {
+        return chk;
+    }
+
+    Device device = Device::cpu();
+    if (argv.size() == 4) {
+        auto parsed_device = parse_uvec_device(argv[3]);
+        if (!parsed_device.has_value()) {
+            return ftcl::unexpected(parsed_device.error());
+        }
+        device = *parsed_device;
+    }
+
+    auto values = parse_uvec_value_list(argv[2]);
+    if (!values.has_value()) {
+        return ftcl::unexpected(values.error());
+    }
+
+    UVec<ftclFloat> vec = UVec<ftclFloat>::from_cpu(std::move(*values));
+    if (!device.is_cpu()) {
+        auto dst = vec.as_mut_uptr(device);
+        if (!dst.has_value()) {
+            return ftcl_err(dst.error());
+        }
+    }
+
+    return ftcl_ok(uvec_command_manager().create(std::move(vec)));
+}
+
+inline ftclResult cmd_uvec_filled(Interp*, ContextID, const std::vector<Value>& argv) {
+    auto chk = check_args(2, argv, 4, 5, "length value ?device?");
+    if (!chk.has_value()) {
+        return chk;
+    }
+
+    auto len = parse_uvec_index(argv[2], "length");
+    if (!len.has_value()) {
+        return ftcl::unexpected(len.error());
+    }
+    auto value = parse_uvec_float(argv[3]);
+    if (!value.has_value()) {
+        return ftcl::unexpected(value.error());
+    }
+
+    Device device = Device::cpu();
+    if (argv.size() == 5) {
+        auto parsed_device = parse_uvec_device(argv[4]);
+        if (!parsed_device.has_value()) {
+            return ftcl::unexpected(parsed_device.error());
+        }
+        device = *parsed_device;
+    }
+
+    auto vec = UVec<ftclFloat>::filled(*len, *value, device);
+    if (!vec.has_value()) {
+        return ftcl_err(vec.error());
+    }
+    return ftcl_ok(uvec_command_manager().create(std::move(*vec)));
+}
+
+inline ftclResult cmd_uvec_zeroed(Interp*, ContextID, const std::vector<Value>& argv) {
+    auto chk = check_args(2, argv, 3, 4, "length ?device?");
+    if (!chk.has_value()) {
+        return chk;
+    }
+
+    auto len = parse_uvec_index(argv[2], "length");
+    if (!len.has_value()) {
+        return ftcl::unexpected(len.error());
+    }
+
+    Device device = Device::cpu();
+    if (argv.size() == 4) {
+        auto parsed_device = parse_uvec_device(argv[3]);
+        if (!parsed_device.has_value()) {
+            return ftcl::unexpected(parsed_device.error());
+        }
+        device = *parsed_device;
+    }
+
+    auto vec = UVec<ftclFloat>::zeroed(*len, device);
+    if (!vec.has_value()) {
+        return ftcl_err(vec.error());
+    }
+    return ftcl_ok(uvec_command_manager().create(std::move(*vec)));
+}
+
+inline ftclResult cmd_uvec_destroy(Interp*, ContextID, const std::vector<Value>& argv) {
+    auto chk = check_args(2, argv, 3, 3, "handle");
+    if (!chk.has_value()) {
+        return chk;
+    }
+    auto id = parse_uvec_handle(argv[2]);
+    if (!id.has_value()) {
+        return ftcl::unexpected(id.error());
+    }
+    return uvec_command_manager().destroy(*id);
+}
+
+inline ftclResult cmd_uvec_ids(Interp*, ContextID, const std::vector<Value>& argv) {
+    auto chk = check_args(2, argv, 2, 2, "");
+    if (!chk.has_value()) {
+        return chk;
+    }
+
+    ftclList ids;
+    for (ftclInt id : uvec_command_manager().ids()) {
+        ids.emplace_back(id);
+    }
+    return ftcl_ok(Value::from_list(ids));
+}
+
+inline ftclResult cmd_uvec_len(Interp*, ContextID, const std::vector<Value>& argv) {
+    auto chk = check_args(2, argv, 3, 3, "handle");
+    if (!chk.has_value()) {
+        return chk;
+    }
+    auto id = parse_uvec_handle(argv[2]);
+    if (!id.has_value()) {
+        return ftcl::unexpected(id.error());
+    }
+
+    return uvec_command_manager().with_vec(*id, [](UVec<ftclFloat>& vec) {
+        return ftcl_ok(static_cast<ftclInt>(vec.size()));
+    });
+}
+
+inline ftclResult cmd_uvec_get(Interp*, ContextID, const std::vector<Value>& argv) {
+    auto chk = check_args(2, argv, 4, 5, "handle index ?syncDevice?");
+    if (!chk.has_value()) {
+        return chk;
+    }
+    auto id = parse_uvec_handle(argv[2]);
+    if (!id.has_value()) {
+        return ftcl::unexpected(id.error());
+    }
+    auto index = parse_uvec_index(argv[3], "index");
+    if (!index.has_value()) {
+        return ftcl::unexpected(index.error());
+    }
+
+    Device sync_device = Device::cpu();
+    if (argv.size() == 5) {
+        auto parsed_device = parse_uvec_device(argv[4]);
+        if (!parsed_device.has_value()) {
+            return ftcl::unexpected(parsed_device.error());
+        }
+        sync_device = *parsed_device;
+    }
+
+    return uvec_command_manager().with_vec(*id, [&](UVec<ftclFloat>& vec) {
+        if (*index >= vec.size()) {
+            return ftcl_err("uvec index out of range");
+        }
+        auto synced = vec.as_uptr(sync_device);
+        if (!synced.has_value()) {
+            return ftcl_err(synced.error());
+        }
+        auto cpu = vec.as_uptr(Device::cpu());
+        if (!cpu.has_value()) {
+            return ftcl_err(cpu.error());
+        }
+        return ftcl_ok(cpu->get()[*index]);
+    });
+}
+
+inline ftclResult cmd_uvec_set(Interp*, ContextID, const std::vector<Value>& argv) {
+    auto chk = check_args(2, argv, 5, 5, "handle index value");
+    if (!chk.has_value()) {
+        return chk;
+    }
+    auto id = parse_uvec_handle(argv[2]);
+    if (!id.has_value()) {
+        return ftcl::unexpected(id.error());
+    }
+    auto index = parse_uvec_index(argv[3], "index");
+    if (!index.has_value()) {
+        return ftcl::unexpected(index.error());
+    }
+    auto value = parse_uvec_float(argv[4]);
+    if (!value.has_value()) {
+        return ftcl::unexpected(value.error());
+    }
+
+    return uvec_command_manager().with_vec(*id, [&](UVec<ftclFloat>& vec) {
+        if (*index >= vec.size()) {
+            return ftcl_err("uvec index out of range");
+        }
+        vec[*index] = *value;
+        return ftcl_ok(*value);
+    });
+}
+
+inline ftclResult cmd_uvec_fill(Interp*, ContextID, const std::vector<Value>& argv) {
+    auto chk = check_args(2, argv, 4, 5, "handle value ?device?");
+    if (!chk.has_value()) {
+        return chk;
+    }
+    auto id = parse_uvec_handle(argv[2]);
+    if (!id.has_value()) {
+        return ftcl::unexpected(id.error());
+    }
+    auto value = parse_uvec_float(argv[3]);
+    if (!value.has_value()) {
+        return ftcl::unexpected(value.error());
+    }
+
+    Device device = Device::cpu();
+    if (argv.size() == 5) {
+        auto parsed_device = parse_uvec_device(argv[4]);
+        if (!parsed_device.has_value()) {
+            return ftcl::unexpected(parsed_device.error());
+        }
+        device = *parsed_device;
+    }
+
+    return uvec_command_manager().with_vec(*id, [&](UVec<ftclFloat>& vec) {
+        auto count = vec.fill(*value, device);
+        if (!count.has_value()) {
+            return ftcl_err(count.error());
+        }
+        return ftcl_ok(static_cast<ftclInt>(*count));
+    });
+}
+
+inline ftclResult cmd_uvec_copy(Interp*, ContextID, const std::vector<Value>& argv) {
+    auto chk = check_args(2, argv, 4, 7, "dstHandle srcHandle ?length? ?dstDevice? ?srcDevice?");
+    if (!chk.has_value()) {
+        return chk;
+    }
+    auto dst_id = parse_uvec_handle(argv[2]);
+    if (!dst_id.has_value()) {
+        return ftcl::unexpected(dst_id.error());
+    }
+    auto src_id = parse_uvec_handle(argv[3]);
+    if (!src_id.has_value()) {
+        return ftcl::unexpected(src_id.error());
+    }
+
+    std::optional<std::size_t> explicit_len;
+    if (argv.size() >= 5) {
+        auto len = parse_uvec_index(argv[4], "length");
+        if (!len.has_value()) {
+            return ftcl::unexpected(len.error());
+        }
+        explicit_len = *len;
+    }
+
+    Device dst_device = Device::cpu();
+    Device src_device = Device::cpu();
+    if (argv.size() >= 6) {
+        auto parsed = parse_uvec_device(argv[5]);
+        if (!parsed.has_value()) {
+            return ftcl::unexpected(parsed.error());
+        }
+        dst_device = *parsed;
+    }
+    if (argv.size() >= 7) {
+        auto parsed = parse_uvec_device(argv[6]);
+        if (!parsed.has_value()) {
+            return ftcl::unexpected(parsed.error());
+        }
+        src_device = *parsed;
+    }
+
+    return uvec_command_manager().with_two(*dst_id, *src_id, [&](UVec<ftclFloat>& dst, UVec<ftclFloat>& src) {
+        const std::size_t len = explicit_len.value_or(std::min(dst.size(), src.size()));
+        auto copied = dst.copy_from(src, dst_device, src_device, len);
+        if (!copied.has_value()) {
+            return ftcl_err(copied.error());
+        }
+        return ftcl_ok(static_cast<ftclInt>(*copied));
+    });
+}
+
+inline ftclResult cmd_uvec_to_list(Interp*, ContextID, const std::vector<Value>& argv) {
+    auto chk = check_args(2, argv, 3, 4, "handle ?syncDevice?");
+    if (!chk.has_value()) {
+        return chk;
+    }
+    auto id = parse_uvec_handle(argv[2]);
+    if (!id.has_value()) {
+        return ftcl::unexpected(id.error());
+    }
+
+    Device sync_device = Device::cpu();
+    if (argv.size() == 4) {
+        auto parsed_device = parse_uvec_device(argv[3]);
+        if (!parsed_device.has_value()) {
+            return ftcl::unexpected(parsed_device.error());
+        }
+        sync_device = *parsed_device;
+    }
+
+    return uvec_command_manager().with_vec(*id, [&](UVec<ftclFloat>& vec) {
+        auto synced = vec.as_uptr(sync_device);
+        if (!synced.has_value()) {
+            return ftcl_err(synced.error());
+        }
+        return ftcl_ok(uvec_to_list_value(vec));
+    });
+}
+
+inline ftclResult cmd_uvec_latest(Interp*, ContextID, const std::vector<Value>& argv) {
+    auto chk = check_args(2, argv, 3, 3, "handle");
+    if (!chk.has_value()) {
+        return chk;
+    }
+    auto id = parse_uvec_handle(argv[2]);
+    if (!id.has_value()) {
+        return ftcl::unexpected(id.error());
+    }
+
+    return uvec_command_manager().with_vec(*id, [](UVec<ftclFloat>& vec) {
+        return ftcl_ok(vec.latest_device().to_string());
+    });
+}
+
+inline ftclResult cmd_uvec_valid(Interp*, ContextID, const std::vector<Value>& argv) {
+    auto chk = check_args(2, argv, 4, 4, "handle device");
+    if (!chk.has_value()) {
+        return chk;
+    }
+    auto id = parse_uvec_handle(argv[2]);
+    if (!id.has_value()) {
+        return ftcl::unexpected(id.error());
+    }
+    auto device = parse_uvec_device(argv[3]);
+    if (!device.has_value()) {
+        return ftcl::unexpected(device.error());
+    }
+
+    return uvec_command_manager().with_vec(*id, [&](UVec<ftclFloat>& vec) {
+        return ftcl_ok(vec.valid_on(*device));
+    });
+}
+
+inline ftclResult cmd_uvec_ptr(Interp*, ContextID, const std::vector<Value>& argv) {
+    auto chk = check_args(2, argv, 3, 4, "handle ?device?");
+    if (!chk.has_value()) {
+        return chk;
+    }
+    auto id = parse_uvec_handle(argv[2]);
+    if (!id.has_value()) {
+        return ftcl::unexpected(id.error());
+    }
+
+    Device device = Device::cpu();
+    if (argv.size() == 4) {
+        auto parsed_device = parse_uvec_device(argv[3]);
+        if (!parsed_device.has_value()) {
+            return ftcl::unexpected(parsed_device.error());
+        }
+        device = *parsed_device;
+    }
+
+    return uvec_command_manager().with_vec(*id, [&](UVec<ftclFloat>& vec) {
+        auto ptr = vec.as_uptr(device);
+        if (!ptr.has_value()) {
+            return ftcl_err(ptr.error());
+        }
+        ftclList out;
+        out.emplace_back(ptr->device().to_string());
+        out.emplace_back(static_cast<ftclInt>(ptr->len()));
+        out.emplace_back(uvec_pointer_address(ptr->get()));
+        return ftcl_ok(Value::from_list(out));
+    });
+}
+
+inline ftclResult cmd_uvec_mut_ptr(Interp*, ContextID, const std::vector<Value>& argv) {
+    auto chk = check_args(2, argv, 3, 4, "handle ?device?");
+    if (!chk.has_value()) {
+        return chk;
+    }
+    auto id = parse_uvec_handle(argv[2]);
+    if (!id.has_value()) {
+        return ftcl::unexpected(id.error());
+    }
+
+    Device device = Device::cpu();
+    if (argv.size() == 4) {
+        auto parsed_device = parse_uvec_device(argv[3]);
+        if (!parsed_device.has_value()) {
+            return ftcl::unexpected(parsed_device.error());
+        }
+        device = *parsed_device;
+    }
+
+    return uvec_command_manager().with_vec(*id, [&](UVec<ftclFloat>& vec) {
+        auto ptr = vec.as_mut_uptr(device);
+        if (!ptr.has_value()) {
+            return ftcl_err(ptr.error());
+        }
+        ftclList out;
+        out.emplace_back(ptr->device().to_string());
+        out.emplace_back(static_cast<ftclInt>(ptr->len()));
+        out.emplace_back(uvec_pointer_address(ptr->get()));
+        return ftcl_ok(Value::from_list(out));
+    });
+}
+
+inline ftclResult cmd_uvec(Interp* interp, ContextID context_id, const std::vector<Value>& argv) {
+    std::vector<Subcommand> subs = {
+        Subcommand("copy", cmd_uvec_copy),       Subcommand("create", cmd_uvec_create),
+        Subcommand("destroy", cmd_uvec_destroy), Subcommand("fill", cmd_uvec_fill),
+        Subcommand("filled", cmd_uvec_filled),   Subcommand("get", cmd_uvec_get),
+        Subcommand("ids", cmd_uvec_ids),         Subcommand("latest", cmd_uvec_latest),
+        Subcommand("len", cmd_uvec_len),         Subcommand("mut_ptr", cmd_uvec_mut_ptr),
+        Subcommand("ptr", cmd_uvec_ptr),         Subcommand("set", cmd_uvec_set),
+        Subcommand("to_list", cmd_uvec_to_list), Subcommand("valid", cmd_uvec_valid),
+        Subcommand("zeroed", cmd_uvec_zeroed),
+    };
+    return interp->call_subcommand(context_id, argv, 1, subs);
+}
+
 inline ftclResult cmd_pdump(Interp* interp, ContextID, const std::vector<Value>& argv) {
     auto chk = check_args(1, argv, 1, 1, "");
     if (!chk.has_value()) {
@@ -2209,6 +2794,7 @@ inline void install_core_commands(Interp& interp) {
     interp.add_command("thread", cmd_thread);
     interp.add_command("throw", cmd_throw);
     interp.add_command("time", cmd_time);
+    interp.add_command("uvec", cmd_uvec);
     interp.add_command("sleep", cmd_sleep);
     interp.add_command("unset", cmd_unset);
     interp.add_command("while", cmd_while);
