@@ -215,6 +215,295 @@ TEST(geom_uvec_points_and_batch_distance)
 #endif
 END_TEST
 
+
+TEST(geom_batch_cpu_algorithms)
+    auto interp = new_interp_with_stdlib();
+
+    ASSERT_EQ(eval_ok(interp,
+                      "set a [geom uvec_points {{0 0} {3 4}}]; "
+                      "set b [geom uvec_points {{0 0} {0 4}}]; "
+                      "set out [geom batch_distance_matrix $a $b]; uvec to_list $out",
+                      "batch distance matrix cpu")
+                  .as_string(),
+              "0 4 5 3",
+              "batch_distance_matrix should return row-major distances");
+
+    ASSERT_EQ(eval_ok(interp,
+                      "set p [geom uvec_points {{0.5 0.5} {1 0.5} {2 2}}]; "
+                      "set out [geom batch_point_in_polygon $p {{0 0} {1 0} {1 1} {0 1}}]; uvec to_list $out",
+                      "batch point in polygon cpu")
+                  .as_string(),
+              "2 1 0",
+              "batch_point_in_polygon should encode inside/boundary/outside as 2/1/0");
+
+    ASSERT_EQ(eval_ok(interp,
+                      "set a [geom uvec_segments {{{0 0} {2 2}} {{0 0} {1 0}}}]; "
+                      "set b [geom uvec_segments {{{0 2} {2 0}} {{0 1} {1 1}}}]; "
+                      "set out [geom batch_segment_intersect $a $b]; uvec to_list $out",
+                      "batch segment intersect cpu")
+                  .as_string(),
+              "1 0",
+              "batch_segment_intersect should test segment pairs");
+
+    ASSERT_EQ(eval_ok(interp,
+                      "set p [geom uvec_points {{1 1} {3 0}}]; "
+                      "set s [geom uvec_segments {{{0 0} {2 0}} {{0 0} {2 0}}}]; "
+                      "set out [geom batch_point_segment_distance $p $s]; uvec to_list $out",
+                      "batch point segment distance cpu")
+                  .as_string(),
+              "1 1",
+              "batch_point_segment_distance should compute pairwise distances");
+
+    ASSERT_EQ(eval_ok(interp,
+                      "set data [geom uvec_points {{0 0} {5 0} {0 5}}]; "
+                      "set q [geom uvec_points {{4 0} {0 4}}]; "
+                      "set out [geom nearest_point $data $q]; uvec to_list $out",
+                      "nearest point cpu")
+                  .as_string(),
+              "1 1 2 1",
+              "nearest_point should return index/distance pairs");
+
+    ASSERT_EQ(eval_ok(interp,
+                      "set data [geom uvec_points {{0 0} {5 0} {0 5}}]; "
+                      "set q [geom uvec_points {{4 0}}]; "
+                      "set out [geom k_nearest $data $q 2]; uvec to_list $out",
+                      "k nearest cpu")
+                  .as_string(),
+              "1 1 0 4",
+              "k_nearest should return k index/distance pairs per query");
+
+    ASSERT_EQ(eval_ok(interp,
+                      "set p [geom uvec_points {{0 0} {1 0} {5 0}}]; "
+                      "set c [geom uvec_points {{0 0} {5 0}}]; "
+                      "set out [geom range_count_circle $p $c 1.1]; uvec to_list $out",
+                      "range count circle cpu")
+                  .as_string(),
+              "2 1",
+              "range_count_circle should count points inside each query circle");
+
+    ASSERT_EQ(eval_ok(interp,
+                      "set p [geom uvec_points {{0 0} {1 1} {3 3}}]; "
+                      "set r [geom uvec_aabbs {{{-0.5 -0.5} {1.5 1.5}} {{2 2} {4 4}}}]; "
+                      "set out [geom range_count_rect $p $r]; uvec to_list $out",
+                      "range count rect cpu")
+                  .as_string(),
+              "2 1",
+              "range_count_rect should count points inside each rectangle");
+
+    ASSERT_EQ(eval_ok(interp,
+                      "set p [geom uvec_points {{2 3} {-1 4} {0 -5}}]; geom bbox_reduce $p",
+                      "bbox reduce cpu")
+                  .as_string(),
+              "{-1 -5} {2 4}",
+              "bbox_reduce should return min/max points");
+
+    ASSERT_EQ(eval_ok(interp,
+                      "set p [geom uvec_points {{0 0} {2 0} {0 2} {2 2}}]; geom centroid $p",
+                      "centroid cpu")
+                  .as_string(),
+              "1 1",
+              "centroid should return arithmetic mean point");
+
+    ASSERT_EQ(eval_ok(interp,
+                      "set p [geom uvec_points {{0 0} {3 4}}]; "
+                      "set out [geom transform_points $p translate 1 2]; uvec to_list $out",
+                      "transform translate cpu")
+                  .as_string(),
+              "1 2 4 6",
+              "transform_points translate should move every point");
+
+    ASSERT_EQ(eval_ok(interp,
+                      "set p [geom uvec_points {{0 0} {3 4}}]; "
+                      "set out [geom transform_points $p scale 2 3]; uvec to_list $out",
+                      "transform scale cpu")
+                  .as_string(),
+              "0 0 6 12",
+              "transform_points scale should scale every point");
+
+    ASSERT_EQ(eval_ok(interp,
+                      "set t [geom uvec_points {{0 0} {1 0} {0 1} {0 0} {0 1} {1 0}}]; "
+                      "set out [geom batch_orientation $t]; uvec to_list $out",
+                      "batch orientation cpu")
+                  .as_string(),
+              "1 -1",
+              "batch_orientation should classify triples");
+
+    ASSERT_EQ(eval_ok(interp,
+                      "set a [geom uvec_aabbs {{{0 0} {1 1}} {{0 0} {1 1}}}]; "
+                      "set b [geom uvec_aabbs {{{0.5 0.5} {2 2}} {{2 2} {3 3}}}]; "
+                      "set out [geom collision_aabb $a $b]; uvec to_list $out",
+                      "collision aabb cpu")
+                  .as_string(),
+              "1 0",
+              "collision_aabb should test AABB pairs");
+
+    ASSERT_EQ(eval_ok(interp,
+                      "set p [geom uvec_points {{0 0} {1 0} {1 1} {0 1} {0 0} {2 0} {0 2}}]; "
+                      "set off [uvec create {0 4 7}]; "
+                      "set out [geom polygon_batch_area $p $off]; uvec to_list $out",
+                      "polygon batch area cpu")
+                  .as_string(),
+              "1 2",
+              "polygon_batch_area should use point offsets");
+
+    ASSERT_EQ(eval_ok(interp,
+                      "set p [geom uvec_points {{1 1} {3 0}}]; "
+                      "set out [geom distance_to_polyline $p {{0 0} {2 0}}]; uvec to_list $out",
+                      "distance to polyline cpu")
+                  .as_string(),
+              "1 1",
+              "distance_to_polyline should use the nearest polyline segment");
+
+    ASSERT_EQ(eval_ok(interp,
+                      "set p [geom uvec_points {{0.1 0.1} {1.2 0.2} {0.2 1.2}}]; "
+                      "set out [geom spatial_grid_build $p {0 0} 1 10]; uvec to_list $out",
+                      "spatial grid build cpu")
+                  .as_string(),
+              "0 1 10",
+              "spatial_grid_build should map points to row-major grid cells");
+END_TEST
+
+#ifdef FTCL_ENABLE_CUDA
+TEST(geom_batch_cuda_algorithms)
+    auto interp = new_interp_with_stdlib();
+
+    ASSERT_EQ(eval_ok(interp,
+                      "set a [geom uvec_points {{0 0} {3 4}} cuda:0]; "
+                      "set b [geom uvec_points {{0 0} {0 4}} cuda:0]; "
+                      "set out [geom batch_distance_matrix $a $b cuda:0]; list [uvec latest $out] [uvec to_list $out]",
+                      "batch distance matrix cuda")
+                  .as_string(),
+              "cuda:0 {0 4 5 3}",
+              "CUDA batch_distance_matrix should return row-major distances");
+
+    ASSERT_EQ(eval_ok(interp,
+                      "set p [geom uvec_points {{0.5 0.5} {1 0.5} {2 2}} cuda:0]; "
+                      "set out [geom batch_point_in_polygon $p {{0 0} {1 0} {1 1} {0 1}} cuda:0]; uvec to_list $out",
+                      "batch point in polygon cuda")
+                  .as_string(),
+              "2 1 0",
+              "CUDA batch_point_in_polygon should encode 2/1/0");
+
+    ASSERT_EQ(eval_ok(interp,
+                      "set a [geom uvec_segments {{{0 0} {2 2}} {{0 0} {1 0}}} cuda:0]; "
+                      "set b [geom uvec_segments {{{0 2} {2 0}} {{0 1} {1 1}}} cuda:0]; "
+                      "set out [geom batch_segment_intersect $a $b cuda:0]; uvec to_list $out",
+                      "batch segment intersect cuda")
+                  .as_string(),
+              "1 0",
+              "CUDA batch_segment_intersect should test segment pairs");
+
+    ASSERT_EQ(eval_ok(interp,
+                      "set p [geom uvec_points {{1 1} {3 0}} cuda:0]; "
+                      "set s [geom uvec_segments {{{0 0} {2 0}} {{0 0} {2 0}}} cuda:0]; "
+                      "set out [geom batch_point_segment_distance $p $s cuda:0]; uvec to_list $out",
+                      "batch point segment distance cuda")
+                  .as_string(),
+              "1 1",
+              "CUDA batch_point_segment_distance should compute pairwise distances");
+
+    ASSERT_EQ(eval_ok(interp,
+                      "set data [geom uvec_points {{0 0} {5 0} {0 5}} cuda:0]; "
+                      "set q [geom uvec_points {{4 0} {0 4}} cuda:0]; "
+                      "set out [geom nearest_point $data $q cuda:0]; uvec to_list $out",
+                      "nearest point cuda")
+                  .as_string(),
+              "1 1 2 1",
+              "CUDA nearest_point should return index/distance pairs");
+
+    ASSERT_EQ(eval_ok(interp,
+                      "set data [geom uvec_points {{0 0} {5 0} {0 5}} cuda:0]; "
+                      "set q [geom uvec_points {{4 0}} cuda:0]; "
+                      "set out [geom k_nearest $data $q 2 cuda:0]; uvec to_list $out",
+                      "k nearest cuda")
+                  .as_string(),
+              "1 1 0 4",
+              "CUDA k_nearest should return k pairs");
+
+    ASSERT_EQ(eval_ok(interp,
+                      "set p [geom uvec_points {{0 0} {1 0} {5 0}} cuda:0]; "
+                      "set c [geom uvec_points {{0 0} {5 0}} cuda:0]; "
+                      "set out [geom range_count_circle $p $c 1.1 cuda:0]; uvec to_list $out",
+                      "range count circle cuda")
+                  .as_string(),
+              "2 1",
+              "CUDA range_count_circle should count points");
+
+    ASSERT_EQ(eval_ok(interp,
+                      "set p [geom uvec_points {{0 0} {1 1} {3 3}} cuda:0]; "
+                      "set r [geom uvec_aabbs {{{-0.5 -0.5} {1.5 1.5}} {{2 2} {4 4}}} cuda:0]; "
+                      "set out [geom range_count_rect $p $r cuda:0]; uvec to_list $out",
+                      "range count rect cuda")
+                  .as_string(),
+              "2 1",
+              "CUDA range_count_rect should count points");
+
+    ASSERT_EQ(eval_ok(interp,
+                      "set p [geom uvec_points {{2 3} {-1 4} {0 -5}} cuda:0]; geom bbox_reduce $p cuda:0",
+                      "bbox reduce cuda")
+                  .as_string(),
+              "{-1 -5} {2 4}",
+              "CUDA bbox_reduce should return min/max points");
+
+    ASSERT_EQ(eval_ok(interp,
+                      "set p [geom uvec_points {{0 0} {2 0} {0 2} {2 2}} cuda:0]; geom centroid $p cuda:0",
+                      "centroid cuda")
+                  .as_string(),
+              "1 1",
+              "CUDA centroid should return arithmetic mean point");
+
+    ASSERT_EQ(eval_ok(interp,
+                      "set p [geom uvec_points {{0 0} {3 4}} cuda:0]; "
+                      "set out [geom transform_points $p translate 1 2 cuda:0]; uvec to_list $out",
+                      "transform translate cuda")
+                  .as_string(),
+              "1 2 4 6",
+              "CUDA transform_points should move every point");
+
+    ASSERT_EQ(eval_ok(interp,
+                      "set t [geom uvec_points {{0 0} {1 0} {0 1} {0 0} {0 1} {1 0}} cuda:0]; "
+                      "set out [geom batch_orientation $t cuda:0]; uvec to_list $out",
+                      "batch orientation cuda")
+                  .as_string(),
+              "1 -1",
+              "CUDA batch_orientation should classify triples");
+
+    ASSERT_EQ(eval_ok(interp,
+                      "set a [geom uvec_aabbs {{{0 0} {1 1}} {{0 0} {1 1}}} cuda:0]; "
+                      "set b [geom uvec_aabbs {{{0.5 0.5} {2 2}} {{2 2} {3 3}}} cuda:0]; "
+                      "set out [geom collision_aabb $a $b cuda:0]; uvec to_list $out",
+                      "collision aabb cuda")
+                  .as_string(),
+              "1 0",
+              "CUDA collision_aabb should test AABB pairs");
+
+    ASSERT_EQ(eval_ok(interp,
+                      "set p [geom uvec_points {{0 0} {1 0} {1 1} {0 1} {0 0} {2 0} {0 2}} cuda:0]; "
+                      "set off [uvec create {0 4 7} cuda:0]; "
+                      "set out [geom polygon_batch_area $p $off cuda:0]; uvec to_list $out",
+                      "polygon batch area cuda")
+                  .as_string(),
+              "1 2",
+              "CUDA polygon_batch_area should use point offsets");
+
+    ASSERT_EQ(eval_ok(interp,
+                      "set p [geom uvec_points {{1 1} {3 0}} cuda:0]; "
+                      "set out [geom distance_to_polyline $p {{0 0} {2 0}} cuda:0]; uvec to_list $out",
+                      "distance to polyline cuda")
+                  .as_string(),
+              "1 1",
+              "CUDA distance_to_polyline should use the nearest segment");
+
+    ASSERT_EQ(eval_ok(interp,
+                      "set p [geom uvec_points {{0.1 0.1} {1.2 0.2} {0.2 1.2}} cuda:0]; "
+                      "set out [geom spatial_grid_build $p {0 0} 1 10 cuda:0]; uvec to_list $out",
+                      "spatial grid build cuda")
+                  .as_string(),
+              "0 1 10",
+              "CUDA spatial_grid_build should map points to grid cells");
+END_TEST
+#endif
+
 int main() {
     std::cout << "=== Testing Geometry Semantics ===" << std::endl << std::endl;
 
@@ -224,6 +513,10 @@ int main() {
     test_geom_command_polygon_algorithms();
     test_geom_command_error_paths();
     test_geom_uvec_points_and_batch_distance();
+    test_geom_batch_cpu_algorithms();
+#ifdef FTCL_ENABLE_CUDA
+    test_geom_batch_cuda_algorithms();
+#endif
 
     std::cout << "=== All tests passed! ===" << std::endl;
     return 0;

@@ -15,6 +15,7 @@
 #include <atomic>
 #include <condition_variable>
 #include <chrono>
+#include <cmath>
 #include <cerrno>
 #include <cstdint>
 #include <cstring>
@@ -23,6 +24,7 @@
 #include <fstream>
 #include <future>
 #include <iostream>
+#include <limits>
 #include <sstream>
 #include <mutex>
 #include <string>
@@ -3103,6 +3105,518 @@ inline ftclResult cmd_geom_uvec_points(Interp*, ContextID, const std::vector<Val
     return ftcl_ok(uvec_command_manager().create(std::move(vec)));
 }
 
+
+inline ftcl::expected<geom::Segment, Exception> parse_geom_segment(const Value& value) {
+    auto parts = value.as_list();
+    if (!parts.has_value()) {
+        return ftcl::unexpected(Exception::ftcl_err(Value(parts.error())));
+    }
+
+    if (parts->size() == 2) {
+        auto a = parse_geom_point((*parts)[0]);
+        auto b = parse_geom_point((*parts)[1]);
+        if (!a.has_value()) {
+            return ftcl::unexpected(a.error());
+        }
+        if (!b.has_value()) {
+            return ftcl::unexpected(b.error());
+        }
+        return geom::Segment{*a, *b};
+    }
+
+    if (parts->size() == 4) {
+        auto x1 = parse_uvec_float((*parts)[0]);
+        auto y1 = parse_uvec_float((*parts)[1]);
+        auto x2 = parse_uvec_float((*parts)[2]);
+        auto y2 = parse_uvec_float((*parts)[3]);
+        if (!x1.has_value()) return ftcl::unexpected(x1.error());
+        if (!y1.has_value()) return ftcl::unexpected(y1.error());
+        if (!x2.has_value()) return ftcl::unexpected(x2.error());
+        if (!y2.has_value()) return ftcl::unexpected(y2.error());
+        return geom::Segment{geom::Point{*x1, *y1}, geom::Point{*x2, *y2}};
+    }
+
+    return ftcl::unexpected(Exception::ftcl_err(Value("expected segment as {{x1 y1} {x2 y2}} or {x1 y1 x2 y2}")));
+}
+
+inline ftcl::expected<std::vector<geom::Segment>, Exception> parse_geom_segments(const Value& value) {
+    auto list = value.as_list();
+    if (!list.has_value()) {
+        return ftcl::unexpected(Exception::ftcl_err(Value(list.error())));
+    }
+
+    std::vector<geom::Segment> segments;
+    segments.reserve(list->size());
+    for (const auto& item : *list) {
+        auto segment = parse_geom_segment(item);
+        if (!segment.has_value()) {
+            return ftcl::unexpected(segment.error());
+        }
+        segments.push_back(*segment);
+    }
+    return segments;
+}
+
+inline ftcl::expected<geom::BoundingBox, Exception> parse_geom_aabb(const Value& value) {
+    auto parts = value.as_list();
+    if (!parts.has_value()) {
+        return ftcl::unexpected(Exception::ftcl_err(Value(parts.error())));
+    }
+
+    geom::Point lo;
+    geom::Point hi;
+    if (parts->size() == 2) {
+        auto a = parse_geom_point((*parts)[0]);
+        auto b = parse_geom_point((*parts)[1]);
+        if (!a.has_value()) return ftcl::unexpected(a.error());
+        if (!b.has_value()) return ftcl::unexpected(b.error());
+        lo = *a;
+        hi = *b;
+    } else if (parts->size() == 4) {
+        auto x1 = parse_uvec_float((*parts)[0]);
+        auto y1 = parse_uvec_float((*parts)[1]);
+        auto x2 = parse_uvec_float((*parts)[2]);
+        auto y2 = parse_uvec_float((*parts)[3]);
+        if (!x1.has_value()) return ftcl::unexpected(x1.error());
+        if (!y1.has_value()) return ftcl::unexpected(y1.error());
+        if (!x2.has_value()) return ftcl::unexpected(x2.error());
+        if (!y2.has_value()) return ftcl::unexpected(y2.error());
+        lo = geom::Point{*x1, *y1};
+        hi = geom::Point{*x2, *y2};
+    } else {
+        return ftcl::unexpected(Exception::ftcl_err(Value("expected aabb as {{minX minY} {maxX maxY}} or {minX minY maxX maxY}")));
+    }
+
+    return geom::BoundingBox{geom::Point{std::min(lo.x, hi.x), std::min(lo.y, hi.y)},
+                             geom::Point{std::max(lo.x, hi.x), std::max(lo.y, hi.y)}};
+}
+
+inline ftcl::expected<std::vector<geom::BoundingBox>, Exception> parse_geom_aabbs(const Value& value) {
+    auto list = value.as_list();
+    if (!list.has_value()) {
+        return ftcl::unexpected(Exception::ftcl_err(Value(list.error())));
+    }
+
+    std::vector<geom::BoundingBox> boxes;
+    boxes.reserve(list->size());
+    for (const auto& item : *list) {
+        auto box = parse_geom_aabb(item);
+        if (!box.has_value()) {
+            return ftcl::unexpected(box.error());
+        }
+        boxes.push_back(*box);
+    }
+    return boxes;
+}
+
+inline std::vector<ftclFloat> flatten_geom_segments(const std::vector<geom::Segment>& segments) {
+    std::vector<ftclFloat> out;
+    out.reserve(segments.size() * 4);
+    for (const auto& segment : segments) {
+        out.push_back(segment.a.x);
+        out.push_back(segment.a.y);
+        out.push_back(segment.b.x);
+        out.push_back(segment.b.y);
+    }
+    return out;
+}
+
+inline std::vector<ftclFloat> flatten_geom_aabbs(const std::vector<geom::BoundingBox>& boxes) {
+    std::vector<ftclFloat> out;
+    out.reserve(boxes.size() * 4);
+    for (const auto& box : boxes) {
+        out.push_back(box.min.x);
+        out.push_back(box.min.y);
+        out.push_back(box.max.x);
+        out.push_back(box.max.y);
+    }
+    return out;
+}
+
+inline ftcl::expected<std::vector<geom::Point>, Exception> geom_points_from_flat(const std::vector<ftclFloat>& flat,
+                                                                                const std::string& what) {
+    if (flat.size() % 2 != 0) {
+        return ftcl::unexpected(Exception::ftcl_err(Value(what + " must contain an even number of coordinates")));
+    }
+    std::vector<geom::Point> points;
+    points.reserve(flat.size() / 2);
+    for (std::size_t i = 0; i < flat.size(); i += 2) {
+        points.push_back(geom::Point{flat[i], flat[i + 1]});
+    }
+    return points;
+}
+
+inline ftcl::expected<std::vector<geom::Segment>, Exception> geom_segments_from_flat(const std::vector<ftclFloat>& flat,
+                                                                                    const std::string& what) {
+    if (flat.size() % 4 != 0) {
+        return ftcl::unexpected(Exception::ftcl_err(Value(what + " must contain 4 coordinates per segment")));
+    }
+    std::vector<geom::Segment> segments;
+    segments.reserve(flat.size() / 4);
+    for (std::size_t i = 0; i < flat.size(); i += 4) {
+        segments.push_back(geom::Segment{geom::Point{flat[i], flat[i + 1]}, geom::Point{flat[i + 2], flat[i + 3]}});
+    }
+    return segments;
+}
+
+inline ftcl::expected<std::vector<geom::BoundingBox>, Exception> geom_aabbs_from_flat(const std::vector<ftclFloat>& flat,
+                                                                                     const std::string& what) {
+    if (flat.size() % 4 != 0) {
+        return ftcl::unexpected(Exception::ftcl_err(Value(what + " must contain 4 coordinates per aabb")));
+    }
+    std::vector<geom::BoundingBox> boxes;
+    boxes.reserve(flat.size() / 4);
+    for (std::size_t i = 0; i < flat.size(); i += 4) {
+        boxes.push_back(geom::BoundingBox{geom::Point{std::min(flat[i], flat[i + 2]), std::min(flat[i + 1], flat[i + 3])},
+                                          geom::Point{std::max(flat[i], flat[i + 2]), std::max(flat[i + 1], flat[i + 3])}});
+    }
+    return boxes;
+}
+
+inline ftclResult geom_load_uvec_cpu(ftclInt id, Device device, std::vector<ftclFloat>& out) {
+    return uvec_command_manager().with_vec(id, [&](UVec<ftclFloat>& vec) {
+        auto synced = vec.as_uptr(device);
+        if (!synced.has_value()) {
+            return ftcl_err(synced.error());
+        }
+        const auto& cpu = vec.cpu_vector();
+        out.assign(cpu.begin(), cpu.end());
+        return ftcl_ok();
+    });
+}
+
+inline ftclResult geom_create_uvec_from_cpu(std::vector<ftclFloat> values, Device device) {
+    UVec<ftclFloat> out = UVec<ftclFloat>::from_cpu(std::move(values));
+    if (!device.is_cpu()) {
+        auto ptr = out.as_mut_uptr(device);
+        if (!ptr.has_value()) {
+            return ftcl_err(ptr.error());
+        }
+    }
+    return ftcl_ok(uvec_command_manager().create(std::move(out)));
+}
+
+inline ftcl::expected<Device, Exception> geom_parse_optional_device(const std::vector<Value>& argv,
+                                                                    std::size_t index,
+                                                                    Device fallback = Device::cpu()) {
+    if (argv.size() <= index) {
+        return fallback;
+    }
+    return parse_uvec_device(argv[index]);
+}
+
+inline ftcl::expected<std::size_t, Exception> geom_parse_positive_size(const Value& value, const std::string& what) {
+    auto parsed = parse_uvec_index(value, what);
+    if (!parsed.has_value()) {
+        return ftcl::unexpected(parsed.error());
+    }
+    if (*parsed == 0) {
+        return ftcl::unexpected(Exception::ftcl_err(Value(what + " must be positive")));
+    }
+    return *parsed;
+}
+
+inline ftclResult cmd_geom_uvec_segments(Interp*, ContextID, const std::vector<Value>& argv) {
+    auto chk = check_args(2, argv, 3, 4, "segments ?device?");
+    if (!chk.has_value()) return chk;
+    auto segments = parse_geom_segments(argv[2]);
+    if (!segments.has_value()) return ftcl::unexpected(segments.error());
+    auto device = geom_parse_optional_device(argv, 3);
+    if (!device.has_value()) return ftcl::unexpected(device.error());
+    return geom_create_uvec_from_cpu(flatten_geom_segments(*segments), *device);
+}
+
+inline ftclResult cmd_geom_uvec_aabbs(Interp*, ContextID, const std::vector<Value>& argv) {
+    auto chk = check_args(2, argv, 3, 4, "aabbs ?device?");
+    if (!chk.has_value()) return chk;
+    auto boxes = parse_geom_aabbs(argv[2]);
+    if (!boxes.has_value()) return ftcl::unexpected(boxes.error());
+    auto device = geom_parse_optional_device(argv, 3);
+    if (!device.has_value()) return ftcl::unexpected(device.error());
+    return geom_create_uvec_from_cpu(flatten_geom_aabbs(*boxes), *device);
+}
+
+inline ftclResult cmd_geom_batch_distance_matrix(Interp*, ContextID, const std::vector<Value>& argv) {
+    auto chk = check_args(2, argv, 4, 5, "pointsAHandle pointsBHandle ?device?");
+    if (!chk.has_value()) return chk;
+    auto lhs_id = parse_uvec_handle(argv[2]);
+    auto rhs_id = parse_uvec_handle(argv[3]);
+    if (!lhs_id.has_value()) return ftcl::unexpected(lhs_id.error());
+    if (!rhs_id.has_value()) return ftcl::unexpected(rhs_id.error());
+    auto device = geom_parse_optional_device(argv, 4);
+    if (!device.has_value()) return ftcl::unexpected(device.error());
+
+#ifdef FTCL_GEOMETRY_CUDA
+    if (device->is_cuda()) {
+        UVec<ftclFloat> out;
+        auto ran = uvec_command_manager().with_two(*lhs_id, *rhs_id, [&](UVec<ftclFloat>& lhs, UVec<ftclFloat>& rhs) {
+            if (lhs.size() % 2 != 0 || rhs.size() % 2 != 0) return ftcl_err("geom point UVec must contain an even number of coordinates");
+            const std::size_t lhs_count = lhs.size() / 2;
+            const std::size_t rhs_count = rhs.size() / 2;
+            auto lhs_ptr = lhs.as_uptr(*device);
+            auto rhs_ptr = rhs.as_uptr(*device);
+            if (!lhs_ptr.has_value()) return ftcl_err(lhs_ptr.error());
+            if (!rhs_ptr.has_value()) return ftcl_err(rhs_ptr.error());
+            auto values = UVec<ftclFloat>::zeroed(lhs_count * rhs_count, *device);
+            if (!values.has_value()) return ftcl_err(values.error());
+            out = std::move(*values);
+            auto dst = out.as_mut_uptr(*device);
+            if (!dst.has_value()) return ftcl_err(dst.error());
+            auto launched = geom::batch_distance_matrix_cuda(*dst, *lhs_ptr, *rhs_ptr, lhs_count, rhs_count);
+            if (!launched.has_value()) return ftcl_err(launched.error());
+            return ftcl_ok();
+        });
+        if (!ran.has_value()) return ran;
+        return ftcl_ok(uvec_command_manager().create(std::move(out)));
+    }
+#endif
+
+    std::vector<ftclFloat> lhs_flat, rhs_flat;
+    auto lhs_load = geom_load_uvec_cpu(*lhs_id, *device, lhs_flat);
+    if (!lhs_load.has_value()) return lhs_load;
+    auto rhs_load = geom_load_uvec_cpu(*rhs_id, *device, rhs_flat);
+    if (!rhs_load.has_value()) return rhs_load;
+    auto lhs = geom_points_from_flat(lhs_flat, "pointsA UVec");
+    auto rhs = geom_points_from_flat(rhs_flat, "pointsB UVec");
+    if (!lhs.has_value()) return ftcl::unexpected(lhs.error());
+    if (!rhs.has_value()) return ftcl::unexpected(rhs.error());
+    return geom_create_uvec_from_cpu(geom::batch_distance_matrix(*lhs, *rhs), *device);
+}
+
+inline ftclResult cmd_geom_batch_point_in_polygon(Interp*, ContextID, const std::vector<Value>& argv) {
+    auto chk = check_args(2, argv, 4, 5, "pointsHandle polygon ?device?");
+    if (!chk.has_value()) return chk;
+    auto points_id = parse_uvec_handle(argv[2]);
+    if (!points_id.has_value()) return ftcl::unexpected(points_id.error());
+    auto polygon = parse_geom_points(argv[3]);
+    if (!polygon.has_value()) return ftcl::unexpected(polygon.error());
+    auto device = geom_parse_optional_device(argv, 4);
+    if (!device.has_value()) return ftcl::unexpected(device.error());
+
+#ifdef FTCL_GEOMETRY_CUDA
+    if (device->is_cuda()) {
+        UVec<ftclFloat> out;
+        UVec<ftclFloat> polygon_vec = UVec<ftclFloat>::from_cpu(flatten_geom_points(*polygon));
+        auto poly_mut = polygon_vec.as_mut_uptr(*device);
+        if (!poly_mut.has_value()) return ftcl_err(poly_mut.error());
+        auto poly_ptr = polygon_vec.as_uptr(*device);
+        if (!poly_ptr.has_value()) return ftcl_err(poly_ptr.error());
+        auto ran = uvec_command_manager().with_vec(*points_id, [&](UVec<ftclFloat>& points_vec) {
+            if (points_vec.size() % 2 != 0) return ftcl_err("points UVec must contain an even number of coordinates");
+            const std::size_t point_count = points_vec.size() / 2;
+            auto src = points_vec.as_uptr(*device);
+            if (!src.has_value()) return ftcl_err(src.error());
+            auto values = UVec<ftclFloat>::zeroed(point_count, *device);
+            if (!values.has_value()) return ftcl_err(values.error());
+            out = std::move(*values);
+            auto dst = out.as_mut_uptr(*device);
+            if (!dst.has_value()) return ftcl_err(dst.error());
+            auto launched = geom::batch_point_in_polygon_cuda(*dst, *src, *poly_ptr, point_count, polygon->size());
+            if (!launched.has_value()) return ftcl_err(launched.error());
+            return ftcl_ok();
+        });
+        if (!ran.has_value()) return ran;
+        return ftcl_ok(uvec_command_manager().create(std::move(out)));
+    }
+#endif
+
+    std::vector<ftclFloat> points_flat;
+    auto load = geom_load_uvec_cpu(*points_id, *device, points_flat);
+    if (!load.has_value()) return load;
+    auto points = geom_points_from_flat(points_flat, "points UVec");
+    if (!points.has_value()) return ftcl::unexpected(points.error());
+    return geom_create_uvec_from_cpu(geom::batch_point_in_polygon(*points, *polygon), *device);
+}
+
+inline ftclResult cmd_geom_batch_segment_intersect(Interp*, ContextID, const std::vector<Value>& argv) {
+    auto chk = check_args(2, argv, 4, 5, "segmentsAHandle segmentsBHandle ?device?");
+    if (!chk.has_value()) return chk;
+    auto lhs_id = parse_uvec_handle(argv[2]);
+    auto rhs_id = parse_uvec_handle(argv[3]);
+    if (!lhs_id.has_value()) return ftcl::unexpected(lhs_id.error());
+    if (!rhs_id.has_value()) return ftcl::unexpected(rhs_id.error());
+    auto device = geom_parse_optional_device(argv, 4);
+    if (!device.has_value()) return ftcl::unexpected(device.error());
+#ifdef FTCL_GEOMETRY_CUDA
+    if (device->is_cuda()) {
+        UVec<ftclFloat> out;
+        auto ran = uvec_command_manager().with_two(*lhs_id, *rhs_id, [&](UVec<ftclFloat>& lhs, UVec<ftclFloat>& rhs) {
+            if (lhs.size() % 4 != 0 || rhs.size() % 4 != 0) return ftcl_err("segment UVec must contain 4 coordinates per segment");
+            if (lhs.size() != rhs.size()) return ftcl_err("segment UVec inputs must have the same number of segments");
+            const std::size_t count = lhs.size() / 4;
+            auto lhs_ptr = lhs.as_uptr(*device);
+            auto rhs_ptr = rhs.as_uptr(*device);
+            if (!lhs_ptr.has_value()) return ftcl_err(lhs_ptr.error());
+            if (!rhs_ptr.has_value()) return ftcl_err(rhs_ptr.error());
+            auto values = UVec<ftclFloat>::zeroed(count, *device);
+            if (!values.has_value()) return ftcl_err(values.error());
+            out = std::move(*values);
+            auto dst = out.as_mut_uptr(*device);
+            if (!dst.has_value()) return ftcl_err(dst.error());
+            auto launched = geom::batch_segment_intersect_cuda(*dst, *lhs_ptr, *rhs_ptr, count);
+            if (!launched.has_value()) return ftcl_err(launched.error());
+            return ftcl_ok();
+        });
+        if (!ran.has_value()) return ran;
+        return ftcl_ok(uvec_command_manager().create(std::move(out)));
+    }
+#endif
+    std::vector<ftclFloat> lhs_flat, rhs_flat;
+    auto lhs_load = geom_load_uvec_cpu(*lhs_id, *device, lhs_flat);
+    if (!lhs_load.has_value()) return lhs_load;
+    auto rhs_load = geom_load_uvec_cpu(*rhs_id, *device, rhs_flat);
+    if (!rhs_load.has_value()) return rhs_load;
+    auto lhs = geom_segments_from_flat(lhs_flat, "segmentsA UVec");
+    auto rhs = geom_segments_from_flat(rhs_flat, "segmentsB UVec");
+    if (!lhs.has_value()) return ftcl::unexpected(lhs.error());
+    if (!rhs.has_value()) return ftcl::unexpected(rhs.error());
+    if (lhs->size() != rhs->size()) return ftcl_err("segment UVec inputs must have the same number of segments");
+    return geom_create_uvec_from_cpu(geom::batch_segment_intersect(*lhs, *rhs), *device);
+}
+
+inline ftclResult cmd_geom_batch_point_segment_distance(Interp*, ContextID, const std::vector<Value>& argv) {
+    auto chk = check_args(2, argv, 4, 5, "pointsHandle segmentsHandle ?device?");
+    if (!chk.has_value()) return chk;
+    auto points_id = parse_uvec_handle(argv[2]);
+    auto segments_id = parse_uvec_handle(argv[3]);
+    if (!points_id.has_value()) return ftcl::unexpected(points_id.error());
+    if (!segments_id.has_value()) return ftcl::unexpected(segments_id.error());
+    auto device = geom_parse_optional_device(argv, 4);
+    if (!device.has_value()) return ftcl::unexpected(device.error());
+#ifdef FTCL_GEOMETRY_CUDA
+    if (device->is_cuda()) {
+        UVec<ftclFloat> out;
+        auto ran = uvec_command_manager().with_two(*points_id, *segments_id, [&](UVec<ftclFloat>& points, UVec<ftclFloat>& segments) {
+            if (points.size() % 2 != 0) return ftcl_err("points UVec must contain an even number of coordinates");
+            if (segments.size() % 4 != 0) return ftcl_err("segments UVec must contain 4 coordinates per segment");
+            if (points.size() / 2 != segments.size() / 4) return ftcl_err("points and segments UVec inputs must have the same count");
+            const std::size_t count = points.size() / 2;
+            auto points_ptr = points.as_uptr(*device);
+            auto segments_ptr = segments.as_uptr(*device);
+            if (!points_ptr.has_value()) return ftcl_err(points_ptr.error());
+            if (!segments_ptr.has_value()) return ftcl_err(segments_ptr.error());
+            auto values = UVec<ftclFloat>::zeroed(count, *device);
+            if (!values.has_value()) return ftcl_err(values.error());
+            out = std::move(*values);
+            auto dst = out.as_mut_uptr(*device);
+            if (!dst.has_value()) return ftcl_err(dst.error());
+            auto launched = geom::batch_point_segment_distance_cuda(*dst, *points_ptr, *segments_ptr, count);
+            if (!launched.has_value()) return ftcl_err(launched.error());
+            return ftcl_ok();
+        });
+        if (!ran.has_value()) return ran;
+        return ftcl_ok(uvec_command_manager().create(std::move(out)));
+    }
+#endif
+    std::vector<ftclFloat> points_flat, segments_flat;
+    auto p_load = geom_load_uvec_cpu(*points_id, *device, points_flat);
+    if (!p_load.has_value()) return p_load;
+    auto s_load = geom_load_uvec_cpu(*segments_id, *device, segments_flat);
+    if (!s_load.has_value()) return s_load;
+    auto points = geom_points_from_flat(points_flat, "points UVec");
+    auto segments = geom_segments_from_flat(segments_flat, "segments UVec");
+    if (!points.has_value()) return ftcl::unexpected(points.error());
+    if (!segments.has_value()) return ftcl::unexpected(segments.error());
+    if (points->size() != segments->size()) return ftcl_err("points and segments UVec inputs must have the same count");
+    return geom_create_uvec_from_cpu(geom::batch_point_segment_distance(*points, *segments), *device);
+}
+
+inline ftclResult cmd_geom_nearest_point(Interp*, ContextID, const std::vector<Value>& argv) {
+    auto chk = check_args(2, argv, 4, 5, "datasetHandle queryHandle ?device?");
+    if (!chk.has_value()) return chk;
+    auto dataset_id = parse_uvec_handle(argv[2]);
+    auto query_id = parse_uvec_handle(argv[3]);
+    if (!dataset_id.has_value()) return ftcl::unexpected(dataset_id.error());
+    if (!query_id.has_value()) return ftcl::unexpected(query_id.error());
+    auto device = geom_parse_optional_device(argv, 4);
+    if (!device.has_value()) return ftcl::unexpected(device.error());
+#ifdef FTCL_GEOMETRY_CUDA
+    if (device->is_cuda()) {
+        UVec<ftclFloat> out;
+        auto ran = uvec_command_manager().with_two(*dataset_id, *query_id, [&](UVec<ftclFloat>& dataset, UVec<ftclFloat>& queries) {
+            if (dataset.size() % 2 != 0 || queries.size() % 2 != 0) return ftcl_err("point UVec must contain an even number of coordinates");
+            if (dataset.size() == 0) return ftcl_err("nearest_point requires a non-empty dataset");
+            const std::size_t dataset_count = dataset.size() / 2;
+            const std::size_t query_count = queries.size() / 2;
+            auto dataset_ptr = dataset.as_uptr(*device);
+            auto query_ptr = queries.as_uptr(*device);
+            if (!dataset_ptr.has_value()) return ftcl_err(dataset_ptr.error());
+            if (!query_ptr.has_value()) return ftcl_err(query_ptr.error());
+            auto values = UVec<ftclFloat>::zeroed(query_count * 2, *device);
+            if (!values.has_value()) return ftcl_err(values.error());
+            out = std::move(*values);
+            auto dst = out.as_mut_uptr(*device);
+            if (!dst.has_value()) return ftcl_err(dst.error());
+            auto launched = geom::nearest_point_cuda(*dst, *dataset_ptr, *query_ptr, dataset_count, query_count);
+            if (!launched.has_value()) return ftcl_err(launched.error());
+            return ftcl_ok();
+        });
+        if (!ran.has_value()) return ran;
+        return ftcl_ok(uvec_command_manager().create(std::move(out)));
+    }
+#endif
+    std::vector<ftclFloat> dataset_flat, query_flat;
+    auto d_load = geom_load_uvec_cpu(*dataset_id, *device, dataset_flat);
+    if (!d_load.has_value()) return d_load;
+    auto q_load = geom_load_uvec_cpu(*query_id, *device, query_flat);
+    if (!q_load.has_value()) return q_load;
+    auto dataset = geom_points_from_flat(dataset_flat, "dataset UVec");
+    auto queries = geom_points_from_flat(query_flat, "query UVec");
+    if (!dataset.has_value()) return ftcl::unexpected(dataset.error());
+    if (!queries.has_value()) return ftcl::unexpected(queries.error());
+    if (dataset->empty()) return ftcl_err("nearest_point requires a non-empty dataset");
+    return geom_create_uvec_from_cpu(geom::nearest_point(*dataset, *queries), *device);
+}
+
+inline ftclResult cmd_geom_k_nearest(Interp*, ContextID, const std::vector<Value>& argv) {
+    auto chk = check_args(2, argv, 5, 6, "datasetHandle queryHandle k ?device?");
+    if (!chk.has_value()) return chk;
+    auto dataset_id = parse_uvec_handle(argv[2]);
+    auto query_id = parse_uvec_handle(argv[3]);
+    auto k = geom_parse_positive_size(argv[4], "k");
+    if (!dataset_id.has_value()) return ftcl::unexpected(dataset_id.error());
+    if (!query_id.has_value()) return ftcl::unexpected(query_id.error());
+    if (!k.has_value()) return ftcl::unexpected(k.error());
+    auto device = geom_parse_optional_device(argv, 5);
+    if (!device.has_value()) return ftcl::unexpected(device.error());
+#ifdef FTCL_GEOMETRY_CUDA
+    if (device->is_cuda()) {
+        UVec<ftclFloat> out;
+        auto ran = uvec_command_manager().with_two(*dataset_id, *query_id, [&](UVec<ftclFloat>& dataset, UVec<ftclFloat>& queries) {
+            if (dataset.size() % 2 != 0 || queries.size() % 2 != 0) return ftcl_err("point UVec must contain an even number of coordinates");
+            if (dataset.size() == 0) return ftcl_err("k_nearest requires a non-empty dataset");
+            const std::size_t dataset_count = dataset.size() / 2;
+            const std::size_t query_count = queries.size() / 2;
+            auto dataset_ptr = dataset.as_uptr(*device);
+            auto query_ptr = queries.as_uptr(*device);
+            if (!dataset_ptr.has_value()) return ftcl_err(dataset_ptr.error());
+            if (!query_ptr.has_value()) return ftcl_err(query_ptr.error());
+            auto values = UVec<ftclFloat>::zeroed(query_count * (*k) * 2, *device);
+            if (!values.has_value()) return ftcl_err(values.error());
+            out = std::move(*values);
+            auto dst = out.as_mut_uptr(*device);
+            if (!dst.has_value()) return ftcl_err(dst.error());
+            auto launched = geom::k_nearest_points_cuda(*dst, *dataset_ptr, *query_ptr, dataset_count, query_count, *k);
+            if (!launched.has_value()) return ftcl_err(launched.error());
+            return ftcl_ok();
+        });
+        if (!ran.has_value()) return ran;
+        return ftcl_ok(uvec_command_manager().create(std::move(out)));
+    }
+#endif
+    std::vector<ftclFloat> dataset_flat, query_flat;
+    auto d_load = geom_load_uvec_cpu(*dataset_id, *device, dataset_flat);
+    if (!d_load.has_value()) return d_load;
+    auto q_load = geom_load_uvec_cpu(*query_id, *device, query_flat);
+    if (!q_load.has_value()) return q_load;
+    auto dataset = geom_points_from_flat(dataset_flat, "dataset UVec");
+    auto queries = geom_points_from_flat(query_flat, "query UVec");
+    if (!dataset.has_value()) return ftcl::unexpected(dataset.error());
+    if (!queries.has_value()) return ftcl::unexpected(queries.error());
+    if (dataset->empty()) return ftcl_err("k_nearest requires a non-empty dataset");
+    return geom_create_uvec_from_cpu(geom::k_nearest_points(*dataset, *queries, *k), *device);
+}
+
 inline ftclResult cmd_geom_batch_distance(Interp*, ContextID, const std::vector<Value>& argv) {
     auto chk = check_args(2, argv, 4, 5, "pointsHandle queryPoint ?device?");
     if (!chk.has_value()) {
@@ -3195,25 +3709,529 @@ inline ftclResult cmd_geom_batch_distance(Interp*, ContextID, const std::vector<
     return ftcl_ok(uvec_command_manager().create(std::move(out)));
 }
 
+
+inline ftclResult cmd_geom_range_count_circle(Interp*, ContextID, const std::vector<Value>& argv) {
+    auto chk = check_args(2, argv, 5, 6, "pointsHandle centersHandle radius ?device?");
+    if (!chk.has_value()) return chk;
+    auto points_id = parse_uvec_handle(argv[2]);
+    auto centers_id = parse_uvec_handle(argv[3]);
+    auto radius = parse_uvec_float(argv[4]);
+    if (!points_id.has_value()) return ftcl::unexpected(points_id.error());
+    if (!centers_id.has_value()) return ftcl::unexpected(centers_id.error());
+    if (!radius.has_value()) return ftcl::unexpected(radius.error());
+    if (*radius < 0.0) return ftcl_err("radius must be non-negative");
+    auto device = geom_parse_optional_device(argv, 5);
+    if (!device.has_value()) return ftcl::unexpected(device.error());
+#ifdef FTCL_GEOMETRY_CUDA
+    if (device->is_cuda()) {
+        UVec<ftclFloat> out;
+        auto ran = uvec_command_manager().with_two(*points_id, *centers_id, [&](UVec<ftclFloat>& points, UVec<ftclFloat>& centers) {
+            if (points.size() % 2 != 0 || centers.size() % 2 != 0) return ftcl_err("point UVec must contain an even number of coordinates");
+            const std::size_t point_count = points.size() / 2;
+            const std::size_t center_count = centers.size() / 2;
+            auto points_ptr = points.as_uptr(*device);
+            auto centers_ptr = centers.as_uptr(*device);
+            if (!points_ptr.has_value()) return ftcl_err(points_ptr.error());
+            if (!centers_ptr.has_value()) return ftcl_err(centers_ptr.error());
+            auto values = UVec<ftclFloat>::zeroed(center_count, *device);
+            if (!values.has_value()) return ftcl_err(values.error());
+            out = std::move(*values);
+            auto dst = out.as_mut_uptr(*device);
+            if (!dst.has_value()) return ftcl_err(dst.error());
+            auto launched = geom::range_count_circle_cuda(*dst, *points_ptr, *centers_ptr, point_count, center_count, *radius);
+            if (!launched.has_value()) return ftcl_err(launched.error());
+            return ftcl_ok();
+        });
+        if (!ran.has_value()) return ran;
+        return ftcl_ok(uvec_command_manager().create(std::move(out)));
+    }
+#endif
+    std::vector<ftclFloat> points_flat, centers_flat;
+    auto p_load = geom_load_uvec_cpu(*points_id, *device, points_flat);
+    if (!p_load.has_value()) return p_load;
+    auto c_load = geom_load_uvec_cpu(*centers_id, *device, centers_flat);
+    if (!c_load.has_value()) return c_load;
+    auto points = geom_points_from_flat(points_flat, "points UVec");
+    auto centers = geom_points_from_flat(centers_flat, "centers UVec");
+    if (!points.has_value()) return ftcl::unexpected(points.error());
+    if (!centers.has_value()) return ftcl::unexpected(centers.error());
+    return geom_create_uvec_from_cpu(geom::range_count_circle(*points, *centers, *radius), *device);
+}
+
+inline ftclResult cmd_geom_range_count_rect(Interp*, ContextID, const std::vector<Value>& argv) {
+    auto chk = check_args(2, argv, 4, 5, "pointsHandle rectsHandle ?device?");
+    if (!chk.has_value()) return chk;
+    auto points_id = parse_uvec_handle(argv[2]);
+    auto rects_id = parse_uvec_handle(argv[3]);
+    if (!points_id.has_value()) return ftcl::unexpected(points_id.error());
+    if (!rects_id.has_value()) return ftcl::unexpected(rects_id.error());
+    auto device = geom_parse_optional_device(argv, 4);
+    if (!device.has_value()) return ftcl::unexpected(device.error());
+#ifdef FTCL_GEOMETRY_CUDA
+    if (device->is_cuda()) {
+        UVec<ftclFloat> out;
+        auto ran = uvec_command_manager().with_two(*points_id, *rects_id, [&](UVec<ftclFloat>& points, UVec<ftclFloat>& rects) {
+            if (points.size() % 2 != 0) return ftcl_err("points UVec must contain an even number of coordinates");
+            if (rects.size() % 4 != 0) return ftcl_err("rects UVec must contain 4 coordinates per aabb");
+            const std::size_t point_count = points.size() / 2;
+            const std::size_t rect_count = rects.size() / 4;
+            auto points_ptr = points.as_uptr(*device);
+            auto rects_ptr = rects.as_uptr(*device);
+            if (!points_ptr.has_value()) return ftcl_err(points_ptr.error());
+            if (!rects_ptr.has_value()) return ftcl_err(rects_ptr.error());
+            auto values = UVec<ftclFloat>::zeroed(rect_count, *device);
+            if (!values.has_value()) return ftcl_err(values.error());
+            out = std::move(*values);
+            auto dst = out.as_mut_uptr(*device);
+            if (!dst.has_value()) return ftcl_err(dst.error());
+            auto launched = geom::range_count_rect_cuda(*dst, *points_ptr, *rects_ptr, point_count, rect_count);
+            if (!launched.has_value()) return ftcl_err(launched.error());
+            return ftcl_ok();
+        });
+        if (!ran.has_value()) return ran;
+        return ftcl_ok(uvec_command_manager().create(std::move(out)));
+    }
+#endif
+    std::vector<ftclFloat> points_flat, rects_flat;
+    auto p_load = geom_load_uvec_cpu(*points_id, *device, points_flat);
+    if (!p_load.has_value()) return p_load;
+    auto r_load = geom_load_uvec_cpu(*rects_id, *device, rects_flat);
+    if (!r_load.has_value()) return r_load;
+    auto points = geom_points_from_flat(points_flat, "points UVec");
+    auto rects = geom_aabbs_from_flat(rects_flat, "rects UVec");
+    if (!points.has_value()) return ftcl::unexpected(points.error());
+    if (!rects.has_value()) return ftcl::unexpected(rects.error());
+    return geom_create_uvec_from_cpu(geom::range_count_rect(*points, *rects), *device);
+}
+
+inline ftclResult cmd_geom_bbox_reduce(Interp*, ContextID, const std::vector<Value>& argv) {
+    auto chk = check_args(2, argv, 3, 4, "pointsHandle ?device?");
+    if (!chk.has_value()) return chk;
+    auto points_id = parse_uvec_handle(argv[2]);
+    if (!points_id.has_value()) return ftcl::unexpected(points_id.error());
+    auto device = geom_parse_optional_device(argv, 3);
+    if (!device.has_value()) return ftcl::unexpected(device.error());
+#ifdef FTCL_GEOMETRY_CUDA
+    if (device->is_cuda()) {
+        UVec<ftclFloat> out;
+        auto ran = uvec_command_manager().with_vec(*points_id, [&](UVec<ftclFloat>& points) {
+            if (points.size() % 2 != 0) return ftcl_err("points UVec must contain an even number of coordinates");
+            if (points.size() == 0) return ftcl_err("bbox_reduce requires at least one point");
+            auto src = points.as_uptr(*device);
+            if (!src.has_value()) return ftcl_err(src.error());
+            auto values = UVec<ftclFloat>::zeroed(4, *device);
+            if (!values.has_value()) return ftcl_err(values.error());
+            out = std::move(*values);
+            auto dst = out.as_mut_uptr(*device);
+            if (!dst.has_value()) return ftcl_err(dst.error());
+            auto launched = geom::bbox_reduce_cuda(*dst, *src, points.size() / 2);
+            if (!launched.has_value()) return ftcl_err(launched.error());
+            return ftcl_ok();
+        });
+        if (!ran.has_value()) return ran;
+        const auto& vals = out.cpu_vector();
+        ftclList list;
+        list.push_back(geom_point_to_value(geom::Point{vals[0], vals[1]}));
+        list.push_back(geom_point_to_value(geom::Point{vals[2], vals[3]}));
+        return ftcl_ok(Value::from_list(list));
+    }
+#endif
+    std::vector<ftclFloat> flat;
+    auto load = geom_load_uvec_cpu(*points_id, *device, flat);
+    if (!load.has_value()) return load;
+    auto points = geom_points_from_flat(flat, "points UVec");
+    if (!points.has_value()) return ftcl::unexpected(points.error());
+    auto box = geom::bounding_box(*points);
+    if (!box.has_value()) return ftcl_err("bbox_reduce requires at least one point");
+    ftclList list;
+    list.push_back(geom_point_to_value(box->min));
+    list.push_back(geom_point_to_value(box->max));
+    return ftcl_ok(Value::from_list(list));
+}
+
+inline ftclResult cmd_geom_centroid(Interp*, ContextID, const std::vector<Value>& argv) {
+    auto chk = check_args(2, argv, 3, 4, "pointsHandle ?device?");
+    if (!chk.has_value()) return chk;
+    auto points_id = parse_uvec_handle(argv[2]);
+    if (!points_id.has_value()) return ftcl::unexpected(points_id.error());
+    auto device = geom_parse_optional_device(argv, 3);
+    if (!device.has_value()) return ftcl::unexpected(device.error());
+#ifdef FTCL_GEOMETRY_CUDA
+    if (device->is_cuda()) {
+        UVec<ftclFloat> out;
+        auto ran = uvec_command_manager().with_vec(*points_id, [&](UVec<ftclFloat>& points) {
+            if (points.size() % 2 != 0) return ftcl_err("points UVec must contain an even number of coordinates");
+            if (points.size() == 0) return ftcl_err("centroid requires at least one point");
+            auto src = points.as_uptr(*device);
+            if (!src.has_value()) return ftcl_err(src.error());
+            auto values = UVec<ftclFloat>::zeroed(2, *device);
+            if (!values.has_value()) return ftcl_err(values.error());
+            out = std::move(*values);
+            auto dst = out.as_mut_uptr(*device);
+            if (!dst.has_value()) return ftcl_err(dst.error());
+            auto launched = geom::centroid_cuda(*dst, *src, points.size() / 2);
+            if (!launched.has_value()) return ftcl_err(launched.error());
+            return ftcl_ok();
+        });
+        if (!ran.has_value()) return ran;
+        const auto& vals = out.cpu_vector();
+        return ftcl_ok(geom_point_to_value(geom::Point{vals[0], vals[1]}));
+    }
+#endif
+    std::vector<ftclFloat> flat;
+    auto load = geom_load_uvec_cpu(*points_id, *device, flat);
+    if (!load.has_value()) return load;
+    auto points = geom_points_from_flat(flat, "points UVec");
+    if (!points.has_value()) return ftcl::unexpected(points.error());
+    auto c = geom::centroid(*points);
+    if (!c.has_value()) return ftcl_err("centroid requires at least one point");
+    return ftcl_ok(geom_point_to_value(*c));
+}
+
+inline ftclResult cmd_geom_transform_points(Interp*, ContextID, const std::vector<Value>& argv) {
+    auto chk = check_args(2, argv, 5, 11, "pointsHandle mode args... ?device?");
+    if (!chk.has_value()) return chk;
+    auto points_id = parse_uvec_handle(argv[2]);
+    if (!points_id.has_value()) return ftcl::unexpected(points_id.error());
+    const std::string mode = argv[3].as_string();
+    ftclFloat m00 = 1.0, m01 = 0.0, m02 = 0.0, m10 = 0.0, m11 = 1.0, m12 = 0.0;
+    std::size_t device_index = 0;
+    if (mode == "translate") {
+        auto argc_chk = check_args(2, argv, 6, 7, "pointsHandle translate dx dy ?device?");
+        if (!argc_chk.has_value()) return argc_chk;
+        auto dx = parse_uvec_float(argv[4]);
+        auto dy = parse_uvec_float(argv[5]);
+        if (!dx.has_value()) return ftcl::unexpected(dx.error());
+        if (!dy.has_value()) return ftcl::unexpected(dy.error());
+        m02 = *dx;
+        m12 = *dy;
+        device_index = 6;
+    } else if (mode == "scale") {
+        auto argc_chk = check_args(2, argv, 6, 7, "pointsHandle scale sx sy ?device?");
+        if (!argc_chk.has_value()) return argc_chk;
+        auto sx = parse_uvec_float(argv[4]);
+        auto sy = parse_uvec_float(argv[5]);
+        if (!sx.has_value()) return ftcl::unexpected(sx.error());
+        if (!sy.has_value()) return ftcl::unexpected(sy.error());
+        m00 = *sx;
+        m11 = *sy;
+        device_index = 6;
+    } else if (mode == "rotate") {
+        auto argc_chk = check_args(2, argv, 5, 6, "pointsHandle rotate degrees ?device?");
+        if (!argc_chk.has_value()) return argc_chk;
+        auto degrees = parse_uvec_float(argv[4]);
+        if (!degrees.has_value()) return ftcl::unexpected(degrees.error());
+        const ftclFloat radians = *degrees * 3.14159265358979323846264338327950288 / 180.0;
+        const ftclFloat c = std::cos(radians);
+        const ftclFloat s = std::sin(radians);
+        m00 = c;
+        m01 = -s;
+        m10 = s;
+        m11 = c;
+        device_index = 5;
+    } else if (mode == "affine") {
+        auto argc_chk = check_args(2, argv, 10, 11, "pointsHandle affine m00 m01 m02 m10 m11 m12 ?device?");
+        if (!argc_chk.has_value()) return argc_chk;
+        auto a = parse_uvec_float(argv[4]);
+        auto b = parse_uvec_float(argv[5]);
+        auto c = parse_uvec_float(argv[6]);
+        auto d = parse_uvec_float(argv[7]);
+        auto e = parse_uvec_float(argv[8]);
+        auto f = parse_uvec_float(argv[9]);
+        if (!a.has_value()) return ftcl::unexpected(a.error());
+        if (!b.has_value()) return ftcl::unexpected(b.error());
+        if (!c.has_value()) return ftcl::unexpected(c.error());
+        if (!d.has_value()) return ftcl::unexpected(d.error());
+        if (!e.has_value()) return ftcl::unexpected(e.error());
+        if (!f.has_value()) return ftcl::unexpected(f.error());
+        m00 = *a; m01 = *b; m02 = *c; m10 = *d; m11 = *e; m12 = *f;
+        device_index = 10;
+    } else {
+        return ftcl_err("bad transform mode \"" + mode + "\": must be translate, scale, rotate, or affine");
+    }
+    auto device = geom_parse_optional_device(argv, device_index);
+    if (!device.has_value()) return ftcl::unexpected(device.error());
+#ifdef FTCL_GEOMETRY_CUDA
+    if (device->is_cuda()) {
+        UVec<ftclFloat> out;
+        auto ran = uvec_command_manager().with_vec(*points_id, [&](UVec<ftclFloat>& points) {
+            if (points.size() % 2 != 0) return ftcl_err("points UVec must contain an even number of coordinates");
+            const std::size_t count = points.size() / 2;
+            auto src = points.as_uptr(*device);
+            if (!src.has_value()) return ftcl_err(src.error());
+            auto values = UVec<ftclFloat>::zeroed(points.size(), *device);
+            if (!values.has_value()) return ftcl_err(values.error());
+            out = std::move(*values);
+            auto dst = out.as_mut_uptr(*device);
+            if (!dst.has_value()) return ftcl_err(dst.error());
+            auto launched = geom::transform_points_cuda(*dst, *src, count, m00, m01, m02, m10, m11, m12);
+            if (!launched.has_value()) return ftcl_err(launched.error());
+            return ftcl_ok();
+        });
+        if (!ran.has_value()) return ran;
+        return ftcl_ok(uvec_command_manager().create(std::move(out)));
+    }
+#endif
+    std::vector<ftclFloat> flat;
+    auto load = geom_load_uvec_cpu(*points_id, *device, flat);
+    if (!load.has_value()) return load;
+    auto points = geom_points_from_flat(flat, "points UVec");
+    if (!points.has_value()) return ftcl::unexpected(points.error());
+    return geom_create_uvec_from_cpu(flatten_geom_points(geom::transform_points(*points, m00, m01, m02, m10, m11, m12)), *device);
+}
+
+inline ftclResult cmd_geom_batch_orientation(Interp*, ContextID, const std::vector<Value>& argv) {
+    auto chk = check_args(2, argv, 3, 4, "pointTriplesHandle ?device?");
+    if (!chk.has_value()) return chk;
+    auto id = parse_uvec_handle(argv[2]);
+    if (!id.has_value()) return ftcl::unexpected(id.error());
+    auto device = geom_parse_optional_device(argv, 3);
+    if (!device.has_value()) return ftcl::unexpected(device.error());
+#ifdef FTCL_GEOMETRY_CUDA
+    if (device->is_cuda()) {
+        UVec<ftclFloat> out;
+        auto ran = uvec_command_manager().with_vec(*id, [&](UVec<ftclFloat>& triples) {
+            if (triples.size() % 6 != 0) return ftcl_err("pointTriples UVec must contain 3 points per orientation test");
+            const std::size_t count = triples.size() / 6;
+            auto src = triples.as_uptr(*device);
+            if (!src.has_value()) return ftcl_err(src.error());
+            auto values = UVec<ftclFloat>::zeroed(count, *device);
+            if (!values.has_value()) return ftcl_err(values.error());
+            out = std::move(*values);
+            auto dst = out.as_mut_uptr(*device);
+            if (!dst.has_value()) return ftcl_err(dst.error());
+            auto launched = geom::batch_orientation_cuda(*dst, *src, count);
+            if (!launched.has_value()) return ftcl_err(launched.error());
+            return ftcl_ok();
+        });
+        if (!ran.has_value()) return ran;
+        return ftcl_ok(uvec_command_manager().create(std::move(out)));
+    }
+#endif
+    std::vector<ftclFloat> flat;
+    auto load = geom_load_uvec_cpu(*id, *device, flat);
+    if (!load.has_value()) return load;
+    auto triples = geom_points_from_flat(flat, "pointTriples UVec");
+    if (!triples.has_value()) return ftcl::unexpected(triples.error());
+    if (triples->size() % 3 != 0) return ftcl_err("pointTriples UVec must contain 3 points per orientation test");
+    return geom_create_uvec_from_cpu(geom::batch_orientation(*triples), *device);
+}
+
+inline ftclResult cmd_geom_collision_aabb(Interp*, ContextID, const std::vector<Value>& argv) {
+    auto chk = check_args(2, argv, 4, 5, "aabbAHandle aabbBHandle ?device?");
+    if (!chk.has_value()) return chk;
+    auto lhs_id = parse_uvec_handle(argv[2]);
+    auto rhs_id = parse_uvec_handle(argv[3]);
+    if (!lhs_id.has_value()) return ftcl::unexpected(lhs_id.error());
+    if (!rhs_id.has_value()) return ftcl::unexpected(rhs_id.error());
+    auto device = geom_parse_optional_device(argv, 4);
+    if (!device.has_value()) return ftcl::unexpected(device.error());
+#ifdef FTCL_GEOMETRY_CUDA
+    if (device->is_cuda()) {
+        UVec<ftclFloat> out;
+        auto ran = uvec_command_manager().with_two(*lhs_id, *rhs_id, [&](UVec<ftclFloat>& lhs, UVec<ftclFloat>& rhs) {
+            if (lhs.size() % 4 != 0 || rhs.size() % 4 != 0) return ftcl_err("aabb UVec must contain 4 coordinates per box");
+            if (lhs.size() != rhs.size()) return ftcl_err("aabb UVec inputs must have the same number of boxes");
+            const std::size_t count = lhs.size() / 4;
+            auto lhs_ptr = lhs.as_uptr(*device);
+            auto rhs_ptr = rhs.as_uptr(*device);
+            if (!lhs_ptr.has_value()) return ftcl_err(lhs_ptr.error());
+            if (!rhs_ptr.has_value()) return ftcl_err(rhs_ptr.error());
+            auto values = UVec<ftclFloat>::zeroed(count, *device);
+            if (!values.has_value()) return ftcl_err(values.error());
+            out = std::move(*values);
+            auto dst = out.as_mut_uptr(*device);
+            if (!dst.has_value()) return ftcl_err(dst.error());
+            auto launched = geom::collision_aabb_cuda(*dst, *lhs_ptr, *rhs_ptr, count);
+            if (!launched.has_value()) return ftcl_err(launched.error());
+            return ftcl_ok();
+        });
+        if (!ran.has_value()) return ran;
+        return ftcl_ok(uvec_command_manager().create(std::move(out)));
+    }
+#endif
+    std::vector<ftclFloat> lhs_flat, rhs_flat;
+    auto lhs_load = geom_load_uvec_cpu(*lhs_id, *device, lhs_flat);
+    if (!lhs_load.has_value()) return lhs_load;
+    auto rhs_load = geom_load_uvec_cpu(*rhs_id, *device, rhs_flat);
+    if (!rhs_load.has_value()) return rhs_load;
+    auto lhs = geom_aabbs_from_flat(lhs_flat, "aabbA UVec");
+    auto rhs = geom_aabbs_from_flat(rhs_flat, "aabbB UVec");
+    if (!lhs.has_value()) return ftcl::unexpected(lhs.error());
+    if (!rhs.has_value()) return ftcl::unexpected(rhs.error());
+    if (lhs->size() != rhs->size()) return ftcl_err("aabb UVec inputs must have the same number of boxes");
+    return geom_create_uvec_from_cpu(geom::collision_aabb(*lhs, *rhs), *device);
+}
+
+inline ftclResult cmd_geom_polygon_batch_area(Interp*, ContextID, const std::vector<Value>& argv) {
+    auto chk = check_args(2, argv, 4, 5, "pointsHandle offsetsHandle ?device?");
+    if (!chk.has_value()) return chk;
+    auto points_id = parse_uvec_handle(argv[2]);
+    auto offsets_id = parse_uvec_handle(argv[3]);
+    if (!points_id.has_value()) return ftcl::unexpected(points_id.error());
+    if (!offsets_id.has_value()) return ftcl::unexpected(offsets_id.error());
+    auto device = geom_parse_optional_device(argv, 4);
+    if (!device.has_value()) return ftcl::unexpected(device.error());
+#ifdef FTCL_GEOMETRY_CUDA
+    if (device->is_cuda()) {
+        UVec<ftclFloat> out;
+        auto ran = uvec_command_manager().with_two(*points_id, *offsets_id, [&](UVec<ftclFloat>& points, UVec<ftclFloat>& offsets) {
+            if (points.size() % 2 != 0) return ftcl_err("points UVec must contain an even number of coordinates");
+            if (offsets.size() < 2) return ftcl_err("polygon_batch_area requires at least two offsets");
+            const std::size_t point_count = points.size() / 2;
+            const std::size_t polygon_count = offsets.size() - 1;
+            auto points_ptr = points.as_uptr(*device);
+            auto offsets_ptr = offsets.as_uptr(*device);
+            if (!points_ptr.has_value()) return ftcl_err(points_ptr.error());
+            if (!offsets_ptr.has_value()) return ftcl_err(offsets_ptr.error());
+            auto values = UVec<ftclFloat>::zeroed(polygon_count, *device);
+            if (!values.has_value()) return ftcl_err(values.error());
+            out = std::move(*values);
+            auto dst = out.as_mut_uptr(*device);
+            if (!dst.has_value()) return ftcl_err(dst.error());
+            auto launched = geom::polygon_batch_area_cuda(*dst, *points_ptr, *offsets_ptr, point_count, polygon_count);
+            if (!launched.has_value()) return ftcl_err(launched.error());
+            return ftcl_ok();
+        });
+        if (!ran.has_value()) return ran;
+        return ftcl_ok(uvec_command_manager().create(std::move(out)));
+    }
+#endif
+    std::vector<ftclFloat> points_flat, offsets;
+    auto p_load = geom_load_uvec_cpu(*points_id, *device, points_flat);
+    if (!p_load.has_value()) return p_load;
+    auto o_load = geom_load_uvec_cpu(*offsets_id, *device, offsets);
+    if (!o_load.has_value()) return o_load;
+    auto points = geom_points_from_flat(points_flat, "points UVec");
+    if (!points.has_value()) return ftcl::unexpected(points.error());
+    if (offsets.size() < 2) return ftcl_err("polygon_batch_area requires at least two offsets");
+    return geom_create_uvec_from_cpu(geom::polygon_batch_area(*points, offsets), *device);
+}
+
+inline ftclResult cmd_geom_distance_to_polyline(Interp*, ContextID, const std::vector<Value>& argv) {
+    auto chk = check_args(2, argv, 4, 5, "pointsHandle polyline ?device?");
+    if (!chk.has_value()) return chk;
+    auto points_id = parse_uvec_handle(argv[2]);
+    if (!points_id.has_value()) return ftcl::unexpected(points_id.error());
+    auto polyline = parse_geom_points(argv[3]);
+    if (!polyline.has_value()) return ftcl::unexpected(polyline.error());
+    if (polyline->size() < 2) return ftcl_err("distance_to_polyline requires at least two polyline points");
+    auto device = geom_parse_optional_device(argv, 4);
+    if (!device.has_value()) return ftcl::unexpected(device.error());
+#ifdef FTCL_GEOMETRY_CUDA
+    if (device->is_cuda()) {
+        UVec<ftclFloat> out;
+        UVec<ftclFloat> polyline_vec = UVec<ftclFloat>::from_cpu(flatten_geom_points(*polyline));
+        auto poly_mut = polyline_vec.as_mut_uptr(*device);
+        if (!poly_mut.has_value()) return ftcl_err(poly_mut.error());
+        auto poly_ptr = polyline_vec.as_uptr(*device);
+        if (!poly_ptr.has_value()) return ftcl_err(poly_ptr.error());
+        auto ran = uvec_command_manager().with_vec(*points_id, [&](UVec<ftclFloat>& points) {
+            if (points.size() % 2 != 0) return ftcl_err("points UVec must contain an even number of coordinates");
+            const std::size_t point_count = points.size() / 2;
+            auto src = points.as_uptr(*device);
+            if (!src.has_value()) return ftcl_err(src.error());
+            auto values = UVec<ftclFloat>::zeroed(point_count, *device);
+            if (!values.has_value()) return ftcl_err(values.error());
+            out = std::move(*values);
+            auto dst = out.as_mut_uptr(*device);
+            if (!dst.has_value()) return ftcl_err(dst.error());
+            auto launched = geom::distance_to_polyline_cuda(*dst, *src, *poly_ptr, point_count, polyline->size());
+            if (!launched.has_value()) return ftcl_err(launched.error());
+            return ftcl_ok();
+        });
+        if (!ran.has_value()) return ran;
+        return ftcl_ok(uvec_command_manager().create(std::move(out)));
+    }
+#endif
+    std::vector<ftclFloat> points_flat;
+    auto load = geom_load_uvec_cpu(*points_id, *device, points_flat);
+    if (!load.has_value()) return load;
+    auto points = geom_points_from_flat(points_flat, "points UVec");
+    if (!points.has_value()) return ftcl::unexpected(points.error());
+    return geom_create_uvec_from_cpu(geom::distance_to_polyline(*points, *polyline), *device);
+}
+
+inline ftclResult cmd_geom_spatial_grid_build(Interp*, ContextID, const std::vector<Value>& argv) {
+    auto chk = check_args(2, argv, 6, 7, "pointsHandle origin cellSize columns ?device?");
+    if (!chk.has_value()) return chk;
+    auto points_id = parse_uvec_handle(argv[2]);
+    auto origin = parse_geom_point(argv[3]);
+    auto cell_size = parse_uvec_float(argv[4]);
+    auto columns = geom_parse_positive_size(argv[5], "columns");
+    if (!points_id.has_value()) return ftcl::unexpected(points_id.error());
+    if (!origin.has_value()) return ftcl::unexpected(origin.error());
+    if (!cell_size.has_value()) return ftcl::unexpected(cell_size.error());
+    if (*cell_size <= 0.0) return ftcl_err("cellSize must be positive");
+    if (!columns.has_value()) return ftcl::unexpected(columns.error());
+    auto device = geom_parse_optional_device(argv, 6);
+    if (!device.has_value()) return ftcl::unexpected(device.error());
+#ifdef FTCL_GEOMETRY_CUDA
+    if (device->is_cuda()) {
+        UVec<ftclFloat> out;
+        auto ran = uvec_command_manager().with_vec(*points_id, [&](UVec<ftclFloat>& points) {
+            if (points.size() % 2 != 0) return ftcl_err("points UVec must contain an even number of coordinates");
+            const std::size_t point_count = points.size() / 2;
+            auto src = points.as_uptr(*device);
+            if (!src.has_value()) return ftcl_err(src.error());
+            auto values = UVec<ftclFloat>::zeroed(point_count, *device);
+            if (!values.has_value()) return ftcl_err(values.error());
+            out = std::move(*values);
+            auto dst = out.as_mut_uptr(*device);
+            if (!dst.has_value()) return ftcl_err(dst.error());
+            auto launched = geom::spatial_grid_build_cuda(*dst, *src, point_count, *origin, *cell_size, *columns);
+            if (!launched.has_value()) return ftcl_err(launched.error());
+            return ftcl_ok();
+        });
+        if (!ran.has_value()) return ran;
+        return ftcl_ok(uvec_command_manager().create(std::move(out)));
+    }
+#endif
+    std::vector<ftclFloat> flat;
+    auto load = geom_load_uvec_cpu(*points_id, *device, flat);
+    if (!load.has_value()) return load;
+    auto points = geom_points_from_flat(flat, "points UVec");
+    if (!points.has_value()) return ftcl::unexpected(points.error());
+    return geom_create_uvec_from_cpu(geom::spatial_grid_build(*points, *origin, *cell_size, *columns), *device);
+}
+
 inline ftclResult cmd_geom(Interp* interp, ContextID context_id, const std::vector<Value>& argv) {
     std::vector<Subcommand> subs = {
         Subcommand("batch_distance", cmd_geom_batch_distance),
+        Subcommand("batch_distance_matrix", cmd_geom_batch_distance_matrix),
+        Subcommand("batch_orientation", cmd_geom_batch_orientation),
+        Subcommand("batch_point_in_polygon", cmd_geom_batch_point_in_polygon),
+        Subcommand("batch_point_segment_distance", cmd_geom_batch_point_segment_distance),
+        Subcommand("batch_segment_intersect", cmd_geom_batch_segment_intersect),
         Subcommand("bbox", cmd_geom_bbox),
+        Subcommand("bbox_reduce", cmd_geom_bbox_reduce),
+        Subcommand("centroid", cmd_geom_centroid),
         Subcommand("closest_pair_distance", cmd_geom_closest_pair_distance),
+        Subcommand("collision_aabb", cmd_geom_collision_aabb),
         Subcommand("convex_hull", cmd_geom_convex_hull),
         Subcommand("distance", cmd_geom_distance),
         Subcommand("distance2", cmd_geom_distance2),
+        Subcommand("distance_to_polyline", cmd_geom_distance_to_polyline),
+        Subcommand("k_nearest", cmd_geom_k_nearest),
         Subcommand("line_intersection", cmd_geom_line_intersection),
+        Subcommand("nearest_point", cmd_geom_nearest_point),
         Subcommand("on_segment", cmd_geom_on_segment),
         Subcommand("orient", cmd_geom_orient),
         Subcommand("point_in_polygon", cmd_geom_point_in_polygon),
         Subcommand("point_line_distance", cmd_geom_point_line_distance),
         Subcommand("point_segment_distance", cmd_geom_point_segment_distance),
         Subcommand("polygon_area", cmd_geom_polygon_area),
+        Subcommand("polygon_batch_area", cmd_geom_polygon_batch_area),
         Subcommand("polygon_perimeter", cmd_geom_polygon_perimeter),
         Subcommand("polygon_signed_area", cmd_geom_polygon_signed_area),
+        Subcommand("range_count_circle", cmd_geom_range_count_circle),
+        Subcommand("range_count_rect", cmd_geom_range_count_rect),
         Subcommand("segment_intersect", cmd_geom_segment_intersect),
+        Subcommand("spatial_grid_build", cmd_geom_spatial_grid_build),
+        Subcommand("transform_points", cmd_geom_transform_points),
+        Subcommand("uvec_aabbs", cmd_geom_uvec_aabbs),
         Subcommand("uvec_points", cmd_geom_uvec_points),
+        Subcommand("uvec_segments", cmd_geom_uvec_segments),
     };
     return interp->call_subcommand(context_id, argv, 1, subs);
 }

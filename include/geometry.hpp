@@ -285,4 +285,235 @@ inline std::optional<double> closest_pair_distance(const std::vector<Point>& poi
     return best;
 }
 
+
+inline int point_location_code(PointLocation location) {
+    switch (location) {
+        case PointLocation::Outside:
+            return 0;
+        case PointLocation::Boundary:
+            return 1;
+        case PointLocation::Inside:
+            return 2;
+    }
+    return 0;
+}
+
+inline std::vector<double> batch_distance_matrix(const std::vector<Point>& lhs, const std::vector<Point>& rhs) {
+    std::vector<double> out;
+    out.reserve(lhs.size() * rhs.size());
+    for (const auto& a : lhs) {
+        for (const auto& b : rhs) {
+            out.push_back(distance(a, b));
+        }
+    }
+    return out;
+}
+
+inline std::vector<double> batch_point_in_polygon(const std::vector<Point>& points, const std::vector<Point>& polygon) {
+    std::vector<double> out;
+    out.reserve(points.size());
+    for (const auto& point : points) {
+        out.push_back(static_cast<double>(point_location_code(point_in_polygon(point, polygon))));
+    }
+    return out;
+}
+
+inline std::vector<double> batch_segment_intersect(const std::vector<Segment>& lhs, const std::vector<Segment>& rhs) {
+    std::vector<double> out;
+    const std::size_t count = std::min(lhs.size(), rhs.size());
+    out.reserve(count);
+    for (std::size_t i = 0; i < count; ++i) {
+        out.push_back(segments_intersect(lhs[i].a, lhs[i].b, rhs[i].a, rhs[i].b) ? 1.0 : 0.0);
+    }
+    return out;
+}
+
+inline std::vector<double> batch_point_segment_distance(const std::vector<Point>& points,
+                                                        const std::vector<Segment>& segments) {
+    std::vector<double> out;
+    const std::size_t count = std::min(points.size(), segments.size());
+    out.reserve(count);
+    for (std::size_t i = 0; i < count; ++i) {
+        out.push_back(point_segment_distance(points[i], segments[i].a, segments[i].b));
+    }
+    return out;
+}
+
+inline std::vector<double> nearest_point(const std::vector<Point>& dataset, const std::vector<Point>& queries) {
+    std::vector<double> out;
+    out.reserve(queries.size() * 2);
+    for (const auto& query : queries) {
+        double best = std::numeric_limits<double>::infinity();
+        std::size_t best_index = 0;
+        for (std::size_t i = 0; i < dataset.size(); ++i) {
+            const double d = distance(dataset[i], query);
+            if (d < best) {
+                best = d;
+                best_index = i;
+            }
+        }
+        out.push_back(static_cast<double>(best_index));
+        out.push_back(best);
+    }
+    return out;
+}
+
+inline std::vector<double> k_nearest_points(const std::vector<Point>& dataset,
+                                            const std::vector<Point>& queries,
+                                            std::size_t k) {
+    std::vector<double> out(queries.size() * k * 2, 0.0);
+    for (std::size_t qi = 0; qi < queries.size(); ++qi) {
+        std::vector<std::pair<double, std::size_t>> best;
+        best.reserve(dataset.size());
+        for (std::size_t di = 0; di < dataset.size(); ++di) {
+            best.emplace_back(distance(dataset[di], queries[qi]), di);
+        }
+        const std::size_t take = std::min(k, best.size());
+        std::partial_sort(best.begin(), best.begin() + static_cast<std::ptrdiff_t>(take), best.end());
+        for (std::size_t j = 0; j < k; ++j) {
+            const std::size_t base = (qi * k + j) * 2;
+            if (j < take) {
+                out[base] = static_cast<double>(best[j].second);
+                out[base + 1] = best[j].first;
+            } else {
+                out[base] = -1.0;
+                out[base + 1] = std::numeric_limits<double>::infinity();
+            }
+        }
+    }
+    return out;
+}
+
+inline std::vector<double> range_count_circle(const std::vector<Point>& points,
+                                              const std::vector<Point>& centers,
+                                              double radius) {
+    std::vector<double> out;
+    out.reserve(centers.size());
+    const double r2 = radius * radius;
+    for (const auto& center : centers) {
+        std::size_t count = 0;
+        for (const auto& point : points) {
+            if (distance2(point, center) <= r2 + kEps) {
+                ++count;
+            }
+        }
+        out.push_back(static_cast<double>(count));
+    }
+    return out;
+}
+
+inline std::vector<double> range_count_rect(const std::vector<Point>& points, const std::vector<BoundingBox>& rects) {
+    std::vector<double> out;
+    out.reserve(rects.size());
+    for (const auto& rect : rects) {
+        std::size_t count = 0;
+        for (const auto& point : points) {
+            if (point.x + kEps >= rect.min.x && point.x <= rect.max.x + kEps &&
+                point.y + kEps >= rect.min.y && point.y <= rect.max.y + kEps) {
+                ++count;
+            }
+        }
+        out.push_back(static_cast<double>(count));
+    }
+    return out;
+}
+
+inline std::optional<Point> centroid(const std::vector<Point>& points) {
+    if (points.empty()) {
+        return std::nullopt;
+    }
+    Point sum{};
+    for (const auto& p : points) {
+        sum.x += p.x;
+        sum.y += p.y;
+    }
+    return Point{sum.x / static_cast<double>(points.size()), sum.y / static_cast<double>(points.size())};
+}
+
+inline std::vector<Point> transform_points(const std::vector<Point>& points,
+                                           double m00,
+                                           double m01,
+                                           double m02,
+                                           double m10,
+                                           double m11,
+                                           double m12) {
+    std::vector<Point> out;
+    out.reserve(points.size());
+    for (const auto& p : points) {
+        out.push_back(Point{m00 * p.x + m01 * p.y + m02, m10 * p.x + m11 * p.y + m12});
+    }
+    return out;
+}
+
+inline std::vector<double> batch_orientation(const std::vector<Point>& triples) {
+    std::vector<double> out;
+    out.reserve(triples.size() / 3);
+    for (std::size_t i = 0; i + 2 < triples.size(); i += 3) {
+        out.push_back(static_cast<double>(orientation(triples[i], triples[i + 1], triples[i + 2])));
+    }
+    return out;
+}
+
+inline bool aabb_intersects(const BoundingBox& lhs, const BoundingBox& rhs) {
+    return lhs.min.x <= rhs.max.x + kEps && lhs.max.x + kEps >= rhs.min.x && lhs.min.y <= rhs.max.y + kEps &&
+           lhs.max.y + kEps >= rhs.min.y;
+}
+
+inline std::vector<double> collision_aabb(const std::vector<BoundingBox>& lhs, const std::vector<BoundingBox>& rhs) {
+    std::vector<double> out;
+    const std::size_t count = std::min(lhs.size(), rhs.size());
+    out.reserve(count);
+    for (std::size_t i = 0; i < count; ++i) {
+        out.push_back(aabb_intersects(lhs[i], rhs[i]) ? 1.0 : 0.0);
+    }
+    return out;
+}
+
+inline std::vector<double> polygon_batch_area(const std::vector<Point>& points, const std::vector<double>& offsets) {
+    if (offsets.size() < 2) {
+        return {};
+    }
+    std::vector<double> out;
+    out.reserve(offsets.size() - 1);
+    for (std::size_t i = 0; i + 1 < offsets.size(); ++i) {
+        const std::size_t begin = static_cast<std::size_t>(offsets[i]);
+        const std::size_t end = static_cast<std::size_t>(offsets[i + 1]);
+        if (end <= begin || end > points.size()) {
+            out.push_back(0.0);
+            continue;
+        }
+        std::vector<Point> polygon(points.begin() + static_cast<std::ptrdiff_t>(begin),
+                                   points.begin() + static_cast<std::ptrdiff_t>(end));
+        out.push_back(polygon_area(polygon));
+    }
+    return out;
+}
+
+inline std::vector<double> distance_to_polyline(const std::vector<Point>& points, const std::vector<Point>& polyline) {
+    std::vector<double> out;
+    out.reserve(points.size());
+    for (const auto& point : points) {
+        double best = std::numeric_limits<double>::infinity();
+        for (std::size_t i = 0; i + 1 < polyline.size(); ++i) {
+            best = std::min(best, point_segment_distance(point, polyline[i], polyline[i + 1]));
+        }
+        out.push_back(best);
+    }
+    return out;
+}
+
+inline std::vector<double> spatial_grid_build(const std::vector<Point>& points,
+                                              Point origin,
+                                              double cell_size,
+                                              std::size_t columns) {
+    std::vector<double> out;
+    out.reserve(points.size());
+    for (const auto& p : points) {
+        const auto cx = static_cast<long long>(std::floor((p.x - origin.x) / cell_size));
+        const auto cy = static_cast<long long>(std::floor((p.y - origin.y) / cell_size));
+        out.push_back(static_cast<double>(cy * static_cast<long long>(columns) + cx));
+    }
+    return out;
+}
+
 }  // namespace ftcl::geom
