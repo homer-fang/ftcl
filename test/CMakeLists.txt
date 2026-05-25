@@ -40,6 +40,11 @@ add_executable(test_uvec_command test_uvec_command.cpp)
 target_link_libraries(test_uvec_command PRIVATE ftcl)
 add_test(NAME UVecCommandTest COMMAND test_uvec_command)
 
+# CPU geometry algorithms and script-level geom command tests
+add_executable(test_geometry test_geometry.cpp)
+target_link_libraries(test_geometry PRIVATE ftcl)
+add_test(NAME GeometryTest COMMAND test_geometry)
+
 # Parser/substitution regression tests (P0-1)
 add_executable(test_parser_subst test_parser_subst.cpp)
 target_link_libraries(test_parser_subst PRIVATE ftcl)

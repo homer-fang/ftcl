@@ -21,10 +21,28 @@ set(FTCL_PARSER_DEFAULT_BACKEND "0" CACHE STRING "Default parser backend: 0=lega
 
 # All code is header-only (inline implementations)
 # Create an INTERFACE library since there are no source files
+if(FTCL_ENABLE_CUDA)
+    enable_language(CUDA)
+    find_package(CUDAToolkit REQUIRED)
+endif()
+
 add_library(ftcl INTERFACE)
 find_package(Threads REQUIRED)
+
 if(FTCL_ENABLE_CUDA)
-    find_package(CUDAToolkit REQUIRED)
+    add_library(ftcl_cuda STATIC src/geometry_cuda.cu)
+    target_include_directories(ftcl_cuda PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:include>
+    )
+    target_compile_definitions(ftcl_cuda PUBLIC FTCL_ENABLE_CUDA=1 FTCL_GEOMETRY_CUDA=1)
+    target_link_libraries(ftcl_cuda PUBLIC CUDA::cudart)
+    set_target_properties(ftcl_cuda PROPERTIES
+        CUDA_STANDARD 17
+        CUDA_STANDARD_REQUIRED ON
+        CUDA_EXTENSIONS OFF
+        POSITION_INDEPENDENT_CODE ON
+    )
 endif()
 
 # 创建一个名为ftcl的接口库目标（纯头文件库）
@@ -35,11 +53,11 @@ target_include_directories(ftcl INTERFACE
 )
 target_compile_definitions(ftcl INTERFACE FTCL_PARSER_DEFAULT_BACKEND=${FTCL_PARSER_DEFAULT_BACKEND})
 if(FTCL_ENABLE_CUDA)
-    target_compile_definitions(ftcl INTERFACE FTCL_ENABLE_CUDA=1)
+    target_compile_definitions(ftcl INTERFACE FTCL_ENABLE_CUDA=1 FTCL_GEOMETRY_CUDA=1)
 endif()
 target_link_libraries(ftcl INTERFACE Threads::Threads)
 if(FTCL_ENABLE_CUDA)
-    target_link_libraries(ftcl INTERFACE CUDA::cudart)
+    target_link_libraries(ftcl INTERFACE ftcl_cuda CUDA::cudart)
 endif()
 
 # 在源码树/构建树使用时，头文件从include找
@@ -56,6 +74,15 @@ endif()
 # MSVC开高警报/W4
 #不报warning当error
 #gcc/clang开常用警告。
+
+if(FTCL_ENABLE_CUDA)
+    install(TARGETS ftcl_cuda
+        EXPORT ftcl-targets
+        LIBRARY DESTINATION lib
+        ARCHIVE DESTINATION lib
+        RUNTIME DESTINATION bin
+    )
+endif()
 
 install(TARGETS ftcl
     EXPORT ftcl-targets

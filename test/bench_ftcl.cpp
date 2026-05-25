@@ -350,6 +350,62 @@ proc frame_step {} {
     return frame_us;
 }
 
+static std::string make_geometry_points_literal(std::size_t point_count) {
+    std::ostringstream out;
+    out << "{";
+    for (std::size_t i = 0; i < point_count; ++i) {
+        const double x = static_cast<double>(i % 257) * 0.25;
+        const double y = static_cast<double>((i * 37) % 263) * 0.25;
+        out << " {" << std::fixed << std::setprecision(6) << x << ' ' << y << "}";
+    }
+    out << "}";
+    return out.str();
+}
+
+static std::vector<double> run_geom_batch_distance_benchmark(std::size_t warmup,
+                                                             std::size_t samples,
+                                                             std::size_t point_count,
+                                                             const std::string& device) {
+    auto interp = new_interp_with_stdlib();
+    const std::string points = make_geometry_points_literal(point_count);
+    auto init = interp.eval("set pts [geom uvec_points " + points + " " + device + "]");
+    if (!init.has_value()) {
+        throw std::runtime_error("geometry benchmark init failed on " + device + ": " + init.error().value().as_string());
+    }
+
+    const std::string step_script =
+        "set d [geom batch_distance $pts {0.125 -0.25} " + device + "]\n"
+        "set n [uvec len $d]\n"
+        "uvec destroy $d\n"
+        "set n";
+
+    std::vector<double> elapsed_us;
+    elapsed_us.reserve(samples);
+    const std::size_t total = warmup + samples;
+    for (std::size_t i = 0; i < total; ++i) {
+        const auto t0 = std::chrono::steady_clock::now();
+        auto step = interp.eval(step_script);
+        const auto t1 = std::chrono::steady_clock::now();
+        if (!step.has_value()) {
+            throw std::runtime_error("geometry benchmark step failed on " + device + ": " + step.error().value().as_string());
+        }
+        if (step->as_string() != std::to_string(point_count)) {
+            throw std::runtime_error("geometry benchmark produced the wrong output length on " + device);
+        }
+        if (i >= warmup) {
+            elapsed_us.push_back(
+                std::chrono::duration_cast<std::chrono::duration<double, std::micro>>(t1 - t0).count());
+        }
+    }
+
+    auto cleanup = interp.eval("uvec destroy $pts");
+    if (!cleanup.has_value()) {
+        throw std::runtime_error("geometry benchmark cleanup failed on " + device + ": " + cleanup.error().value().as_string());
+    }
+
+    return elapsed_us;
+}
+
 static void write_samples_csv(const fs::path& path, const std::string& metric_name, const std::vector<double>& values) {
     std::ostringstream out;
     out << "sample_idx," << metric_name << "\n";
@@ -374,8 +430,9 @@ int main(int argc, char** argv) {
             (argc >= 2) ? fs::path(argv[1]) : fs::path("benchmark_out");
         ensure_dir(out_dir);
 
-        const std::size_t warmup = 500;
-        const std::size_t samples = 5000;
+        const std::size_t warmup = (argc >= 3) ? static_cast<std::size_t>(std::stoull(argv[2])) : 500;
+        const std::size_t samples = (argc >= 4) ? static_cast<std::size_t>(std::stoull(argv[3])) : 5000;
+        const std::size_t geometry_points = (argc >= 5) ? static_cast<std::size_t>(std::stoull(argv[4])) : 4096;
 
         const auto suites = run_semantic_pass_rate();
         write_semantic_csv(out_dir, suites);
@@ -388,13 +445,32 @@ int main(int argc, char** argv) {
         write_samples_csv(out_dir / "frame_time_us.csv", "frame_time_us", frame_us);
         write_summary_csv(out_dir / "frame_time_summary.csv", "frame_time", frame_us);
 
+        const auto geom_cpu_us = run_geom_batch_distance_benchmark(warmup, samples, geometry_points, "cpu");
+        write_samples_csv(out_dir / "geometry_batch_distance_cpu_us.csv", "batch_distance_cpu_us", geom_cpu_us);
+        write_summary_csv(out_dir / "geometry_batch_distance_cpu_summary.csv", "geometry_batch_distance_cpu", geom_cpu_us);
+#ifdef FTCL_ENABLE_CUDA
+        const auto geom_cuda_us = run_geom_batch_distance_benchmark(warmup, samples, geometry_points, "cuda:0");
+        write_samples_csv(out_dir / "geometry_batch_distance_cuda_us.csv", "batch_distance_cuda_us", geom_cuda_us);
+        write_summary_csv(out_dir / "geometry_batch_distance_cuda_summary.csv", "geometry_batch_distance_cuda", geom_cuda_us);
+#endif
+
         const auto c = summarize(channel_us);
         const auto f = summarize(frame_us);
+        const auto g_cpu = summarize(geom_cpu_us);
+#ifdef FTCL_ENABLE_CUDA
+        const auto g_cuda = summarize(geom_cuda_us);
+#endif
 
         std::cout << "bench_ftcl output: " << out_dir.string() << "\n";
         std::cout << "channel latency (one-way, us): p50=" << std::fixed << std::setprecision(3) << c.p50
                   << " p95=" << c.p95 << " p99=" << c.p99 << "\n";
         std::cout << "frame time (us): p50=" << f.p50 << " p95=" << f.p95 << " p99=" << f.p99 << "\n";
+        std::cout << "geometry batch_distance cpu (" << geometry_points << " points, us): p50=" << g_cpu.p50
+                  << " p95=" << g_cpu.p95 << " p99=" << g_cpu.p99 << "\n";
+#ifdef FTCL_ENABLE_CUDA
+        std::cout << "geometry batch_distance cuda:0 (" << geometry_points << " points, us): p50=" << g_cuda.p50
+                  << " p95=" << g_cuda.p95 << " p99=" << g_cuda.p99 << "\n";
+#endif
         return 0;
     } catch (const std::exception& ex) {
         std::cerr << "bench_ftcl failed: " << ex.what() << std::endl;

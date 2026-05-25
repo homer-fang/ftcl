@@ -1,6 +1,10 @@
 #pragma once
 
 #include "dict.hpp"
+#include "geometry.hpp"
+#ifdef FTCL_GEOMETRY_CUDA
+#include "geometry_cuda.hpp"
+#endif
 #include "interp.hpp"
 #include "list.hpp"
 #include "macros.hpp"
@@ -2740,6 +2744,480 @@ inline ftclResult cmd_uvec(Interp* interp, ContextID context_id, const std::vect
     return interp->call_subcommand(context_id, argv, 1, subs);
 }
 
+
+// geom subcommands: script-level access to CPU geometry algorithms and UVec point batches.
+inline ftcl::expected<geom::Point, Exception> parse_geom_point(const Value& value) {
+    auto parts = value.as_list();
+    if (!parts.has_value()) {
+        return ftcl::unexpected(Exception::ftcl_err(Value(parts.error())));
+    }
+    if (parts->size() != 2) {
+        return ftcl::unexpected(Exception::ftcl_err(Value("expected point as {x y}")));
+    }
+
+    auto x = parse_uvec_float((*parts)[0]);
+    if (!x.has_value()) {
+        return ftcl::unexpected(x.error());
+    }
+    auto y = parse_uvec_float((*parts)[1]);
+    if (!y.has_value()) {
+        return ftcl::unexpected(y.error());
+    }
+    return geom::Point{*x, *y};
+}
+
+inline ftcl::expected<std::vector<geom::Point>, Exception> parse_geom_points(const Value& value) {
+    auto list = value.as_list();
+    if (!list.has_value()) {
+        return ftcl::unexpected(Exception::ftcl_err(Value(list.error())));
+    }
+
+    std::vector<geom::Point> points;
+    points.reserve(list->size());
+    for (const auto& item : *list) {
+        auto point = parse_geom_point(item);
+        if (!point.has_value()) {
+            return ftcl::unexpected(point.error());
+        }
+        points.push_back(*point);
+    }
+    return points;
+}
+
+inline Value geom_point_to_value(const geom::Point& point) {
+    ftclList out;
+    out.emplace_back(point.x);
+    out.emplace_back(point.y);
+    return Value::from_list(out);
+}
+
+inline Value geom_points_to_value(const std::vector<geom::Point>& points) {
+    ftclList out;
+    out.reserve(points.size());
+    for (const auto& point : points) {
+        out.push_back(geom_point_to_value(point));
+    }
+    return Value::from_list(out);
+}
+
+inline std::vector<ftclFloat> flatten_geom_points(const std::vector<geom::Point>& points) {
+    std::vector<ftclFloat> out;
+    out.reserve(points.size() * 2);
+    for (const auto& point : points) {
+        out.push_back(point.x);
+        out.push_back(point.y);
+    }
+    return out;
+}
+
+inline ftclResult cmd_geom_distance(Interp*, ContextID, const std::vector<Value>& argv) {
+    auto chk = check_args(2, argv, 4, 4, "pointA pointB");
+    if (!chk.has_value()) {
+        return chk;
+    }
+    auto a = parse_geom_point(argv[2]);
+    if (!a.has_value()) {
+        return ftcl::unexpected(a.error());
+    }
+    auto b = parse_geom_point(argv[3]);
+    if (!b.has_value()) {
+        return ftcl::unexpected(b.error());
+    }
+    return ftcl_ok(geom::distance(*a, *b));
+}
+
+inline ftclResult cmd_geom_distance2(Interp*, ContextID, const std::vector<Value>& argv) {
+    auto chk = check_args(2, argv, 4, 4, "pointA pointB");
+    if (!chk.has_value()) {
+        return chk;
+    }
+    auto a = parse_geom_point(argv[2]);
+    if (!a.has_value()) {
+        return ftcl::unexpected(a.error());
+    }
+    auto b = parse_geom_point(argv[3]);
+    if (!b.has_value()) {
+        return ftcl::unexpected(b.error());
+    }
+    return ftcl_ok(geom::distance2(*a, *b));
+}
+
+inline ftclResult cmd_geom_orient(Interp*, ContextID, const std::vector<Value>& argv) {
+    auto chk = check_args(2, argv, 5, 5, "pointA pointB pointC");
+    if (!chk.has_value()) {
+        return chk;
+    }
+    auto a = parse_geom_point(argv[2]);
+    auto b = parse_geom_point(argv[3]);
+    auto c = parse_geom_point(argv[4]);
+    if (!a.has_value()) {
+        return ftcl::unexpected(a.error());
+    }
+    if (!b.has_value()) {
+        return ftcl::unexpected(b.error());
+    }
+    if (!c.has_value()) {
+        return ftcl::unexpected(c.error());
+    }
+    return ftcl_ok(static_cast<ftclInt>(geom::orientation(*a, *b, *c)));
+}
+
+inline ftclResult cmd_geom_on_segment(Interp*, ContextID, const std::vector<Value>& argv) {
+    auto chk = check_args(2, argv, 5, 5, "pointA pointB pointP");
+    if (!chk.has_value()) {
+        return chk;
+    }
+    auto a = parse_geom_point(argv[2]);
+    auto b = parse_geom_point(argv[3]);
+    auto p = parse_geom_point(argv[4]);
+    if (!a.has_value()) {
+        return ftcl::unexpected(a.error());
+    }
+    if (!b.has_value()) {
+        return ftcl::unexpected(b.error());
+    }
+    if (!p.has_value()) {
+        return ftcl::unexpected(p.error());
+    }
+    return ftcl_ok(geom::on_segment(*a, *b, *p));
+}
+
+inline ftclResult cmd_geom_segment_intersect(Interp*, ContextID, const std::vector<Value>& argv) {
+    auto chk = check_args(2, argv, 6, 6, "pointA pointB pointC pointD");
+    if (!chk.has_value()) {
+        return chk;
+    }
+    auto a = parse_geom_point(argv[2]);
+    auto b = parse_geom_point(argv[3]);
+    auto c = parse_geom_point(argv[4]);
+    auto d = parse_geom_point(argv[5]);
+    if (!a.has_value()) {
+        return ftcl::unexpected(a.error());
+    }
+    if (!b.has_value()) {
+        return ftcl::unexpected(b.error());
+    }
+    if (!c.has_value()) {
+        return ftcl::unexpected(c.error());
+    }
+    if (!d.has_value()) {
+        return ftcl::unexpected(d.error());
+    }
+    return ftcl_ok(geom::segments_intersect(*a, *b, *c, *d));
+}
+
+inline ftclResult cmd_geom_line_intersection(Interp*, ContextID, const std::vector<Value>& argv) {
+    auto chk = check_args(2, argv, 6, 6, "pointA pointB pointC pointD");
+    if (!chk.has_value()) {
+        return chk;
+    }
+    auto a = parse_geom_point(argv[2]);
+    auto b = parse_geom_point(argv[3]);
+    auto c = parse_geom_point(argv[4]);
+    auto d = parse_geom_point(argv[5]);
+    if (!a.has_value()) {
+        return ftcl::unexpected(a.error());
+    }
+    if (!b.has_value()) {
+        return ftcl::unexpected(b.error());
+    }
+    if (!c.has_value()) {
+        return ftcl::unexpected(c.error());
+    }
+    if (!d.has_value()) {
+        return ftcl::unexpected(d.error());
+    }
+
+    auto point = geom::line_intersection(*a, *b, *c, *d);
+    if (!point.has_value()) {
+        return ftcl_ok(Value::empty());
+    }
+    return ftcl_ok(geom_point_to_value(*point));
+}
+
+inline ftclResult cmd_geom_point_line_distance(Interp*, ContextID, const std::vector<Value>& argv) {
+    auto chk = check_args(2, argv, 5, 5, "pointP pointA pointB");
+    if (!chk.has_value()) {
+        return chk;
+    }
+    auto p = parse_geom_point(argv[2]);
+    auto a = parse_geom_point(argv[3]);
+    auto b = parse_geom_point(argv[4]);
+    if (!p.has_value()) {
+        return ftcl::unexpected(p.error());
+    }
+    if (!a.has_value()) {
+        return ftcl::unexpected(a.error());
+    }
+    if (!b.has_value()) {
+        return ftcl::unexpected(b.error());
+    }
+    return ftcl_ok(geom::point_line_distance(*p, *a, *b));
+}
+
+inline ftclResult cmd_geom_point_segment_distance(Interp*, ContextID, const std::vector<Value>& argv) {
+    auto chk = check_args(2, argv, 5, 5, "pointP pointA pointB");
+    if (!chk.has_value()) {
+        return chk;
+    }
+    auto p = parse_geom_point(argv[2]);
+    auto a = parse_geom_point(argv[3]);
+    auto b = parse_geom_point(argv[4]);
+    if (!p.has_value()) {
+        return ftcl::unexpected(p.error());
+    }
+    if (!a.has_value()) {
+        return ftcl::unexpected(a.error());
+    }
+    if (!b.has_value()) {
+        return ftcl::unexpected(b.error());
+    }
+    return ftcl_ok(geom::point_segment_distance(*p, *a, *b));
+}
+
+inline ftclResult cmd_geom_polygon_area(Interp*, ContextID, const std::vector<Value>& argv) {
+    auto chk = check_args(2, argv, 3, 3, "points");
+    if (!chk.has_value()) {
+        return chk;
+    }
+    auto points = parse_geom_points(argv[2]);
+    if (!points.has_value()) {
+        return ftcl::unexpected(points.error());
+    }
+    return ftcl_ok(geom::polygon_area(*points));
+}
+
+inline ftclResult cmd_geom_polygon_signed_area(Interp*, ContextID, const std::vector<Value>& argv) {
+    auto chk = check_args(2, argv, 3, 3, "points");
+    if (!chk.has_value()) {
+        return chk;
+    }
+    auto points = parse_geom_points(argv[2]);
+    if (!points.has_value()) {
+        return ftcl::unexpected(points.error());
+    }
+    return ftcl_ok(geom::polygon_signed_area(*points));
+}
+
+inline ftclResult cmd_geom_polygon_perimeter(Interp*, ContextID, const std::vector<Value>& argv) {
+    auto chk = check_args(2, argv, 3, 3, "points");
+    if (!chk.has_value()) {
+        return chk;
+    }
+    auto points = parse_geom_points(argv[2]);
+    if (!points.has_value()) {
+        return ftcl::unexpected(points.error());
+    }
+    return ftcl_ok(geom::polygon_perimeter(*points));
+}
+
+inline ftclResult cmd_geom_point_in_polygon(Interp*, ContextID, const std::vector<Value>& argv) {
+    auto chk = check_args(2, argv, 4, 4, "point polygon");
+    if (!chk.has_value()) {
+        return chk;
+    }
+    auto point = parse_geom_point(argv[2]);
+    if (!point.has_value()) {
+        return ftcl::unexpected(point.error());
+    }
+    auto polygon = parse_geom_points(argv[3]);
+    if (!polygon.has_value()) {
+        return ftcl::unexpected(polygon.error());
+    }
+    return ftcl_ok(geom::point_location_to_string(geom::point_in_polygon(*point, *polygon)));
+}
+
+inline ftclResult cmd_geom_convex_hull(Interp*, ContextID, const std::vector<Value>& argv) {
+    auto chk = check_args(2, argv, 3, 3, "points");
+    if (!chk.has_value()) {
+        return chk;
+    }
+    auto points = parse_geom_points(argv[2]);
+    if (!points.has_value()) {
+        return ftcl::unexpected(points.error());
+    }
+    return ftcl_ok(geom_points_to_value(geom::convex_hull(std::move(*points))));
+}
+
+inline ftclResult cmd_geom_bbox(Interp*, ContextID, const std::vector<Value>& argv) {
+    auto chk = check_args(2, argv, 3, 3, "points");
+    if (!chk.has_value()) {
+        return chk;
+    }
+    auto points = parse_geom_points(argv[2]);
+    if (!points.has_value()) {
+        return ftcl::unexpected(points.error());
+    }
+    auto box = geom::bounding_box(*points);
+    if (!box.has_value()) {
+        return ftcl_err("cannot compute bounding box of empty point set");
+    }
+    ftclList out;
+    out.push_back(geom_point_to_value(box->min));
+    out.push_back(geom_point_to_value(box->max));
+    return ftcl_ok(Value::from_list(out));
+}
+
+inline ftclResult cmd_geom_closest_pair_distance(Interp*, ContextID, const std::vector<Value>& argv) {
+    auto chk = check_args(2, argv, 3, 3, "points");
+    if (!chk.has_value()) {
+        return chk;
+    }
+    auto points = parse_geom_points(argv[2]);
+    if (!points.has_value()) {
+        return ftcl::unexpected(points.error());
+    }
+    auto best = geom::closest_pair_distance(*points);
+    if (!best.has_value()) {
+        return ftcl_err("closest_pair_distance requires at least two points");
+    }
+    return ftcl_ok(*best);
+}
+
+inline ftclResult cmd_geom_uvec_points(Interp*, ContextID, const std::vector<Value>& argv) {
+    auto chk = check_args(2, argv, 3, 4, "points ?device?");
+    if (!chk.has_value()) {
+        return chk;
+    }
+    auto points = parse_geom_points(argv[2]);
+    if (!points.has_value()) {
+        return ftcl::unexpected(points.error());
+    }
+
+    Device device = Device::cpu();
+    if (argv.size() == 4) {
+        auto parsed_device = parse_uvec_device(argv[3]);
+        if (!parsed_device.has_value()) {
+            return ftcl::unexpected(parsed_device.error());
+        }
+        device = *parsed_device;
+    }
+
+    UVec<ftclFloat> vec = UVec<ftclFloat>::from_cpu(flatten_geom_points(*points));
+    if (!device.is_cpu()) {
+        auto ptr = vec.as_mut_uptr(device);
+        if (!ptr.has_value()) {
+            return ftcl_err(ptr.error());
+        }
+    }
+    return ftcl_ok(uvec_command_manager().create(std::move(vec)));
+}
+
+inline ftclResult cmd_geom_batch_distance(Interp*, ContextID, const std::vector<Value>& argv) {
+    auto chk = check_args(2, argv, 4, 5, "pointsHandle queryPoint ?device?");
+    if (!chk.has_value()) {
+        return chk;
+    }
+    auto id = parse_uvec_handle(argv[2]);
+    if (!id.has_value()) {
+        return ftcl::unexpected(id.error());
+    }
+    auto query = parse_geom_point(argv[3]);
+    if (!query.has_value()) {
+        return ftcl::unexpected(query.error());
+    }
+
+    Device device = Device::cpu();
+    if (argv.size() == 5) {
+        auto parsed_device = parse_uvec_device(argv[4]);
+        if (!parsed_device.has_value()) {
+            return ftcl::unexpected(parsed_device.error());
+        }
+        device = *parsed_device;
+    }
+
+    std::vector<ftclFloat> flat;
+    UVec<ftclFloat> out;
+    bool produced_on_device = false;
+
+    auto loaded = uvec_command_manager().with_vec(*id, [&](UVec<ftclFloat>& vec) {
+        if (vec.size() % 2 != 0) {
+            return ftcl_err("geom point UVec must contain an even number of coordinates");
+        }
+
+#ifdef FTCL_GEOMETRY_CUDA
+        if (device.is_cuda()) {
+            const std::size_t point_count = vec.size() / 2;
+            auto src = vec.as_uptr(device);
+            if (!src.has_value()) {
+                return ftcl_err(src.error());
+            }
+
+            auto distances = UVec<ftclFloat>::zeroed(point_count, device);
+            if (!distances.has_value()) {
+                return ftcl_err(distances.error());
+            }
+            out = std::move(*distances);
+
+            auto dst = out.as_mut_uptr(device);
+            if (!dst.has_value()) {
+                return ftcl_err(dst.error());
+            }
+
+            auto launched = geom::batch_distance_cuda(*dst, *src, *query, point_count);
+            if (!launched.has_value()) {
+                return ftcl_err(launched.error());
+            }
+
+            produced_on_device = true;
+            return ftcl_ok();
+        }
+#endif
+
+        auto synced = vec.as_uptr(device);
+        if (!synced.has_value()) {
+            return ftcl_err(synced.error());
+        }
+        const auto& cpu = vec.cpu_vector();
+        flat.assign(cpu.begin(), cpu.end());
+        return ftcl_ok();
+    });
+    if (!loaded.has_value()) {
+        return loaded;
+    }
+
+    if (!produced_on_device) {
+        std::vector<ftclFloat> distances;
+        distances.reserve(flat.size() / 2);
+        for (std::size_t i = 0; i < flat.size(); i += 2) {
+            distances.push_back(geom::distance(geom::Point{flat[i], flat[i + 1]}, *query));
+        }
+
+        out = UVec<ftclFloat>::from_cpu(std::move(distances));
+        if (!device.is_cpu()) {
+            auto ptr = out.as_mut_uptr(device);
+            if (!ptr.has_value()) {
+                return ftcl_err(ptr.error());
+            }
+        }
+    }
+
+    return ftcl_ok(uvec_command_manager().create(std::move(out)));
+}
+
+inline ftclResult cmd_geom(Interp* interp, ContextID context_id, const std::vector<Value>& argv) {
+    std::vector<Subcommand> subs = {
+        Subcommand("batch_distance", cmd_geom_batch_distance),
+        Subcommand("bbox", cmd_geom_bbox),
+        Subcommand("closest_pair_distance", cmd_geom_closest_pair_distance),
+        Subcommand("convex_hull", cmd_geom_convex_hull),
+        Subcommand("distance", cmd_geom_distance),
+        Subcommand("distance2", cmd_geom_distance2),
+        Subcommand("line_intersection", cmd_geom_line_intersection),
+        Subcommand("on_segment", cmd_geom_on_segment),
+        Subcommand("orient", cmd_geom_orient),
+        Subcommand("point_in_polygon", cmd_geom_point_in_polygon),
+        Subcommand("point_line_distance", cmd_geom_point_line_distance),
+        Subcommand("point_segment_distance", cmd_geom_point_segment_distance),
+        Subcommand("polygon_area", cmd_geom_polygon_area),
+        Subcommand("polygon_perimeter", cmd_geom_polygon_perimeter),
+        Subcommand("polygon_signed_area", cmd_geom_polygon_signed_area),
+        Subcommand("segment_intersect", cmd_geom_segment_intersect),
+        Subcommand("uvec_points", cmd_geom_uvec_points),
+    };
+    return interp->call_subcommand(context_id, argv, 1, subs);
+}
+
 inline ftclResult cmd_pdump(Interp* interp, ContextID, const std::vector<Value>& argv) {
     auto chk = check_args(1, argv, 1, 1, "");
     if (!chk.has_value()) {
@@ -2770,6 +3248,7 @@ inline void install_core_commands(Interp& interp) {
     interp.add_command("exit", cmd_exit);
     interp.add_command("expr", cmd_expr);
     interp.add_command("for", cmd_for);
+    interp.add_command("geom", cmd_geom);
     interp.add_command("foreach", cmd_foreach);
     interp.add_command("getch", cmd_getch);
     interp.add_command("global", cmd_global);

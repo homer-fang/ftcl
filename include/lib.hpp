@@ -3,6 +3,7 @@
 #include "commands.hpp"
 #include "dict.hpp"
 #include "eval_ptr.hpp"
+#include "geometry.hpp"
 #include "expr.hpp"
 #include "interp.hpp"
 #include "lexer.hpp"
