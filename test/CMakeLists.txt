@@ -45,6 +45,32 @@ add_executable(test_geometry test_geometry.cpp)
 target_link_libraries(test_geometry PRIVATE ftcl)
 add_test(NAME GeometryTest COMMAND test_geometry)
 
+
+# Geometry validation tests for CPU/CUDA correctness, fuzzing, edge cases, and stress.
+add_executable(test_geometry_equivalence test_geometry_equivalence.cpp)
+target_link_libraries(test_geometry_equivalence PRIVATE ftcl)
+add_test(NAME GeometryEquivalenceTest COMMAND test_geometry_equivalence)
+
+add_executable(test_geometry_random_diff test_geometry_random_diff.cpp)
+target_link_libraries(test_geometry_random_diff PRIVATE ftcl)
+add_test(NAME GeometryRandomDiffTest COMMAND test_geometry_random_diff)
+
+add_executable(test_geometry_edge_cases test_geometry_edge_cases.cpp)
+target_link_libraries(test_geometry_edge_cases PRIVATE ftcl)
+add_test(NAME GeometryEdgeCaseTest COMMAND test_geometry_edge_cases)
+
+add_executable(test_uvec_consistency test_uvec_consistency.cpp)
+target_link_libraries(test_uvec_consistency PRIVATE ftcl)
+add_test(NAME UVecConsistencyTest COMMAND test_uvec_consistency)
+
+add_executable(test_geometry_thread_stress test_geometry_thread_stress.cpp)
+target_link_libraries(test_geometry_thread_stress PRIVATE ftcl)
+add_test(NAME GeometryThreadStressTest COMMAND test_geometry_thread_stress)
+
+add_executable(test_geometry_perf_scale test_geometry_perf_scale.cpp)
+target_link_libraries(test_geometry_perf_scale PRIVATE ftcl)
+add_test(NAME GeometryPerfScaleSmokeTest COMMAND test_geometry_perf_scale)
+
 # Parser/substitution regression tests (P0-1)
 add_executable(test_parser_subst test_parser_subst.cpp)
 target_link_libraries(test_parser_subst PRIVATE ftcl)
