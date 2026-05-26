@@ -213,12 +213,14 @@ def draw_distribution(
 
 
 def main() -> int:
-    if len(sys.argv) < 3:
-        print("Usage: plot_benchmarks.py <benchmark_data_dir> <figures_out_dir>")
-        return 2
+    docs_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+    if len(sys.argv) >= 3:
+        data_dir = sys.argv[1]
+        fig_dir = sys.argv[2]
+    else:
+        data_dir = os.path.join(docs_dir, "data", "benchmarks")
+        fig_dir = os.path.join(docs_dir, "figures", "benchmarks")
 
-    data_dir = sys.argv[1]
-    fig_dir = sys.argv[2]
     ensure_dir(fig_dir)
 
     draw_semantic_pass_rate(

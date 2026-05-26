@@ -3357,7 +3357,7 @@ inline ftclResult cmd_geom_batch_distance_matrix(Interp*, ContextID, const std::
             auto rhs_ptr = rhs.as_uptr(*device);
             if (!lhs_ptr.has_value()) return ftcl_err(lhs_ptr.error());
             if (!rhs_ptr.has_value()) return ftcl_err(rhs_ptr.error());
-            auto values = UVec<ftclFloat>::zeroed(lhs_count * rhs_count, *device);
+            auto values = UVec<ftclFloat>::uninitialized(lhs_count * rhs_count, *device);
             if (!values.has_value()) return ftcl_err(values.error());
             out = std::move(*values);
             auto dst = out.as_mut_uptr(*device);
@@ -3406,7 +3406,7 @@ inline ftclResult cmd_geom_batch_point_in_polygon(Interp*, ContextID, const std:
             const std::size_t point_count = points_vec.size() / 2;
             auto src = points_vec.as_uptr(*device);
             if (!src.has_value()) return ftcl_err(src.error());
-            auto values = UVec<ftclFloat>::zeroed(point_count, *device);
+            auto values = UVec<ftclFloat>::uninitialized(point_count, *device);
             if (!values.has_value()) return ftcl_err(values.error());
             out = std::move(*values);
             auto dst = out.as_mut_uptr(*device);
@@ -3448,7 +3448,7 @@ inline ftclResult cmd_geom_batch_segment_intersect(Interp*, ContextID, const std
             auto rhs_ptr = rhs.as_uptr(*device);
             if (!lhs_ptr.has_value()) return ftcl_err(lhs_ptr.error());
             if (!rhs_ptr.has_value()) return ftcl_err(rhs_ptr.error());
-            auto values = UVec<ftclFloat>::zeroed(count, *device);
+            auto values = UVec<ftclFloat>::uninitialized(count, *device);
             if (!values.has_value()) return ftcl_err(values.error());
             out = std::move(*values);
             auto dst = out.as_mut_uptr(*device);
@@ -3495,7 +3495,7 @@ inline ftclResult cmd_geom_batch_point_segment_distance(Interp*, ContextID, cons
             auto segments_ptr = segments.as_uptr(*device);
             if (!points_ptr.has_value()) return ftcl_err(points_ptr.error());
             if (!segments_ptr.has_value()) return ftcl_err(segments_ptr.error());
-            auto values = UVec<ftclFloat>::zeroed(count, *device);
+            auto values = UVec<ftclFloat>::uninitialized(count, *device);
             if (!values.has_value()) return ftcl_err(values.error());
             out = std::move(*values);
             auto dst = out.as_mut_uptr(*device);
@@ -3542,7 +3542,7 @@ inline ftclResult cmd_geom_nearest_point(Interp*, ContextID, const std::vector<V
             auto query_ptr = queries.as_uptr(*device);
             if (!dataset_ptr.has_value()) return ftcl_err(dataset_ptr.error());
             if (!query_ptr.has_value()) return ftcl_err(query_ptr.error());
-            auto values = UVec<ftclFloat>::zeroed(query_count * 2, *device);
+            auto values = UVec<ftclFloat>::uninitialized(query_count * 2, *device);
             if (!values.has_value()) return ftcl_err(values.error());
             out = std::move(*values);
             auto dst = out.as_mut_uptr(*device);
@@ -3591,7 +3591,7 @@ inline ftclResult cmd_geom_k_nearest(Interp*, ContextID, const std::vector<Value
             auto query_ptr = queries.as_uptr(*device);
             if (!dataset_ptr.has_value()) return ftcl_err(dataset_ptr.error());
             if (!query_ptr.has_value()) return ftcl_err(query_ptr.error());
-            auto values = UVec<ftclFloat>::zeroed(query_count * (*k) * 2, *device);
+            auto values = UVec<ftclFloat>::uninitialized(query_count * (*k) * 2, *device);
             if (!values.has_value()) return ftcl_err(values.error());
             out = std::move(*values);
             auto dst = out.as_mut_uptr(*device);
@@ -3657,7 +3657,7 @@ inline ftclResult cmd_geom_batch_distance(Interp*, ContextID, const std::vector<
                 return ftcl_err(src.error());
             }
 
-            auto distances = UVec<ftclFloat>::zeroed(point_count, device);
+            auto distances = UVec<ftclFloat>::uninitialized(point_count, device);
             if (!distances.has_value()) {
                 return ftcl_err(distances.error());
             }
@@ -3733,7 +3733,7 @@ inline ftclResult cmd_geom_range_count_circle(Interp*, ContextID, const std::vec
             auto centers_ptr = centers.as_uptr(*device);
             if (!points_ptr.has_value()) return ftcl_err(points_ptr.error());
             if (!centers_ptr.has_value()) return ftcl_err(centers_ptr.error());
-            auto values = UVec<ftclFloat>::zeroed(center_count, *device);
+            auto values = UVec<ftclFloat>::uninitialized(center_count, *device);
             if (!values.has_value()) return ftcl_err(values.error());
             out = std::move(*values);
             auto dst = out.as_mut_uptr(*device);
@@ -3779,7 +3779,7 @@ inline ftclResult cmd_geom_range_count_rect(Interp*, ContextID, const std::vecto
             auto rects_ptr = rects.as_uptr(*device);
             if (!points_ptr.has_value()) return ftcl_err(points_ptr.error());
             if (!rects_ptr.has_value()) return ftcl_err(rects_ptr.error());
-            auto values = UVec<ftclFloat>::zeroed(rect_count, *device);
+            auto values = UVec<ftclFloat>::uninitialized(rect_count, *device);
             if (!values.has_value()) return ftcl_err(values.error());
             out = std::move(*values);
             auto dst = out.as_mut_uptr(*device);
@@ -3819,7 +3819,7 @@ inline ftclResult cmd_geom_bbox_reduce(Interp*, ContextID, const std::vector<Val
             if (points.size() == 0) return ftcl_err("bbox_reduce requires at least one point");
             auto src = points.as_uptr(*device);
             if (!src.has_value()) return ftcl_err(src.error());
-            auto values = UVec<ftclFloat>::zeroed(4, *device);
+            auto values = UVec<ftclFloat>::uninitialized(4, *device);
             if (!values.has_value()) return ftcl_err(values.error());
             out = std::move(*values);
             auto dst = out.as_mut_uptr(*device);
@@ -3864,7 +3864,7 @@ inline ftclResult cmd_geom_centroid(Interp*, ContextID, const std::vector<Value>
             if (points.size() == 0) return ftcl_err("centroid requires at least one point");
             auto src = points.as_uptr(*device);
             if (!src.has_value()) return ftcl_err(src.error());
-            auto values = UVec<ftclFloat>::zeroed(2, *device);
+            auto values = UVec<ftclFloat>::uninitialized(2, *device);
             if (!values.has_value()) return ftcl_err(values.error());
             out = std::move(*values);
             auto dst = out.as_mut_uptr(*device);
@@ -3959,7 +3959,7 @@ inline ftclResult cmd_geom_transform_points(Interp*, ContextID, const std::vecto
             const std::size_t count = points.size() / 2;
             auto src = points.as_uptr(*device);
             if (!src.has_value()) return ftcl_err(src.error());
-            auto values = UVec<ftclFloat>::zeroed(points.size(), *device);
+            auto values = UVec<ftclFloat>::uninitialized(points.size(), *device);
             if (!values.has_value()) return ftcl_err(values.error());
             out = std::move(*values);
             auto dst = out.as_mut_uptr(*device);
@@ -3995,7 +3995,7 @@ inline ftclResult cmd_geom_batch_orientation(Interp*, ContextID, const std::vect
             const std::size_t count = triples.size() / 6;
             auto src = triples.as_uptr(*device);
             if (!src.has_value()) return ftcl_err(src.error());
-            auto values = UVec<ftclFloat>::zeroed(count, *device);
+            auto values = UVec<ftclFloat>::uninitialized(count, *device);
             if (!values.has_value()) return ftcl_err(values.error());
             out = std::move(*values);
             auto dst = out.as_mut_uptr(*device);
@@ -4037,7 +4037,7 @@ inline ftclResult cmd_geom_collision_aabb(Interp*, ContextID, const std::vector<
             auto rhs_ptr = rhs.as_uptr(*device);
             if (!lhs_ptr.has_value()) return ftcl_err(lhs_ptr.error());
             if (!rhs_ptr.has_value()) return ftcl_err(rhs_ptr.error());
-            auto values = UVec<ftclFloat>::zeroed(count, *device);
+            auto values = UVec<ftclFloat>::uninitialized(count, *device);
             if (!values.has_value()) return ftcl_err(values.error());
             out = std::move(*values);
             auto dst = out.as_mut_uptr(*device);
@@ -4084,7 +4084,7 @@ inline ftclResult cmd_geom_polygon_batch_area(Interp*, ContextID, const std::vec
             auto offsets_ptr = offsets.as_uptr(*device);
             if (!points_ptr.has_value()) return ftcl_err(points_ptr.error());
             if (!offsets_ptr.has_value()) return ftcl_err(offsets_ptr.error());
-            auto values = UVec<ftclFloat>::zeroed(polygon_count, *device);
+            auto values = UVec<ftclFloat>::uninitialized(polygon_count, *device);
             if (!values.has_value()) return ftcl_err(values.error());
             out = std::move(*values);
             auto dst = out.as_mut_uptr(*device);
@@ -4131,7 +4131,7 @@ inline ftclResult cmd_geom_distance_to_polyline(Interp*, ContextID, const std::v
             const std::size_t point_count = points.size() / 2;
             auto src = points.as_uptr(*device);
             if (!src.has_value()) return ftcl_err(src.error());
-            auto values = UVec<ftclFloat>::zeroed(point_count, *device);
+            auto values = UVec<ftclFloat>::uninitialized(point_count, *device);
             if (!values.has_value()) return ftcl_err(values.error());
             out = std::move(*values);
             auto dst = out.as_mut_uptr(*device);
@@ -4174,7 +4174,7 @@ inline ftclResult cmd_geom_spatial_grid_build(Interp*, ContextID, const std::vec
             const std::size_t point_count = points.size() / 2;
             auto src = points.as_uptr(*device);
             if (!src.has_value()) return ftcl_err(src.error());
-            auto values = UVec<ftclFloat>::zeroed(point_count, *device);
+            auto values = UVec<ftclFloat>::uninitialized(point_count, *device);
             if (!values.has_value()) return ftcl_err(values.error());
             out = std::move(*values);
             auto dst = out.as_mut_uptr(*device);

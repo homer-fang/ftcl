@@ -44,10 +44,10 @@ build/test/bench_ftcl
 
 ## Run Benchmarks
 
-Run and write CSV outputs to `docs/benchmark_data`:
+Run and write CSV outputs to `docs/data/benchmarks`:
 
 ```bash
-./build/test/bench_ftcl ./docs/benchmark_data
+./build/test/bench_ftcl ./docs/data/benchmarks
 ```
 
 The benchmark includes warmup and then records sample distributions.
@@ -141,14 +141,14 @@ Interpretation:
 Generate SVG figures from CSV (Python standard library only):
 
 ```bash
-python3 ./docs/plot_benchmarks.py ./docs/benchmark_data ./docs/figures
+python3 ./docs/scripts/benchmarks/plot_benchmarks.py ./docs/data/benchmarks ./docs/figures
 ```
 
 Generated files:
 
-- `docs/figures/semantic_pass_rate.svg`
-- `docs/figures/channel_latency_distribution.svg`
-- `docs/figures/frame_time_distribution.svg`
+- `docs/figures/benchmarks/semantic_pass_rate.svg`
+- `docs/figures/benchmarks/channel_latency_distribution.svg`
+- `docs/figures/benchmarks/frame_time_distribution.svg`
 
 ## How to Read the Three Figures
 
@@ -205,8 +205,8 @@ Rule of thumb:
 Use `perf` when you need *why* something is slow (hotspot attribution), not just *how slow*:
 
 ```bash
-perf stat -r 10 ./build/test/bench_ftcl ./docs/benchmark_data
-perf record -g -- ./build/test/bench_ftcl ./docs/benchmark_data
+perf stat -r 10 ./build/test/bench_ftcl ./docs/data/benchmarks
+perf record -g -- ./build/test/bench_ftcl ./docs/data/benchmarks
 perf report
 ```
 

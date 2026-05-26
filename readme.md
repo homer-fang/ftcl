@@ -128,14 +128,14 @@ Run subset:
 Run core benchmark and generate figures:
 
 ```bash
-./build/test/bench_ftcl ./docs/benchmark_data
-python3 ./docs/plot_benchmarks.py ./docs/benchmark_data ./docs/figures
+./build/test/bench_ftcl ./docs/data/benchmarks
+python3 ./docs/scripts/benchmarks/plot_benchmarks.py ./docs/data/benchmarks ./docs/figures
 ```
 
 Parser backend timing comparison (`legacy` vs `token_stream`):
 
 ```bash
-python3 ./docs/benchmark_parser_backends.py \
+python3 ./docs/scripts/benchmarks/benchmark_parser_backends.py \
   --binary ./build/test/test_ftcl_subset \
   --tests-dir ./test/tests \
   --rounds 24 \
@@ -144,9 +144,9 @@ python3 ./docs/benchmark_parser_backends.py \
 
 Outputs:
 
-- `docs/benchmark_data/parser_backend_timing_raw.csv`
-- `docs/benchmark_data/parser_backend_timing_summary.csv`
-- `docs/figures/parser_backend_timing.svg`
+- `docs/data/benchmarks/parser_backend_timing_raw.csv`
+- `docs/data/benchmarks/parser_backend_timing_summary.csv`
+- `docs/figures/benchmarks/parser_backend_timing.svg`
 
 Detailed benchmark interpretation:
 
@@ -170,8 +170,8 @@ Controls:
 - `test/`: C++ tests and benchmark executables
 - `test/tests/`: Tcl test scripts
 - `docs/benchmark.md`: benchmark definitions and metric interpretation
-- `docs/benchmark_data/`: generated CSV data
-- `docs/figures/`: generated SVG figures
+- `docs/data/benchmarks/`: generated CSV data
+- `docs/figures/`: generated SVG figures grouped by topic
 - `game.tcl`: real-time game demo
 
 

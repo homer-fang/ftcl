@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="700" viewBox="0 0 1200 700" role="img">
+<style>
+text{font-family:Arial,Helvetica,sans-serif;fill:#111827;}
+.title{font-size:24px;font-weight:700;}
+.subtitle{font-size:13px;fill:#475569;}
+.axis{font-size:12px;fill:#374151;}
+.small{font-size:12px;fill:#475569;}
+.tiny{font-size:11px;fill:#64748b;}
+.label{font-size:14px;font-weight:700;}
+.box{stroke:#1f2937;stroke-width:1.4;rx:14;ry:14;}
+</style>
+<defs>
+<marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+<path d="M0,0 L0,6 L9,3 z" fill="#334155" />
+</marker>
+</defs>
+<rect x="0" y="0" width="1200" height="700" fill="#ffffff"/>
+<text class="title" x="70.00" y="44.00" text-anchor="start">CUDA break-even point</text>
+<text class="subtitle" x="70.00" y="66.00" text-anchor="start">Speedup crosses 1.0 at the break-even scale; higher means CUDA is faster than CPU.</text>
+<line x1="95" y1="595.00" x2="970" y2="595.00" stroke="#e5e7eb"/>
+<text class="axis" x="83.00" y="599.00" text-anchor="end">0.00</text>
+<line x1="95" y1="499.47" x2="970" y2="499.47" stroke="#e5e7eb"/>
+<text class="axis" x="83.00" y="503.47" text-anchor="end">50</text>
+<line x1="95" y1="403.95" x2="970" y2="403.95" stroke="#e5e7eb"/>
+<text class="axis" x="83.00" y="407.95" text-anchor="end">100</text>
+<line x1="95" y1="308.42" x2="970" y2="308.42" stroke="#e5e7eb"/>
+<text class="axis" x="83.00" y="312.42" text-anchor="end">150</text>
+<line x1="95" y1="212.90" x2="970" y2="212.90" stroke="#e5e7eb"/>
+<text class="axis" x="83.00" y="216.90" text-anchor="end">200</text>
+<line x1="95" y1="117.37" x2="970" y2="117.37" stroke="#e5e7eb"/>
+<text class="axis" x="83.00" y="121.37" text-anchor="end">250</text>
+<line x1="95" y1="90" x2="95" y2="595" stroke="#111827" stroke-width="1.4"/>
+<line x1="95" y1="595" x2="970" y2="595" stroke="#111827" stroke-width="1.4"/>
+<line x1="95" y1="593.09" x2="970" y2="593.09" stroke="#0f172a" stroke-width="1.5" stroke-dasharray="7 5"/>
+<text class="tiny" x="978.00" y="597.09" text-anchor="start">reference 1.0</text>
+<polyline points="95.00,582.07 532.50,495.85 970.00,167.03" fill="none" stroke="#2563eb" stroke-width="3"/>
+<circle cx="95.00" cy="582.07" r="4.5" fill="#2563eb"/>
+<circle cx="532.50" cy="495.85" r="4.5" fill="#2563eb"/>
+<circle cx="970.00" cy="167.03" r="4.5" fill="#2563eb"/>
+<polyline points="95.00,591.08 532.50,578.96 970.00,563.37" fill="none" stroke="#16a34a" stroke-width="3"/>
+<circle cx="95.00" cy="591.08" r="4.5" fill="#16a34a"/>
+<circle cx="532.50" cy="578.96" r="4.5" fill="#16a34a"/>
+<circle cx="970.00" cy="563.37" r="4.5" fill="#16a34a"/>
+<polyline points="95.00,592.30 532.50,582.57 970.00,569.92" fill="none" stroke="#f59e0b" stroke-width="3"/>
+<circle cx="95.00" cy="592.30" r="4.5" fill="#f59e0b"/>
+<circle cx="532.50" cy="582.57" r="4.5" fill="#f59e0b"/>
+<circle cx="970.00" cy="569.92" r="4.5" fill="#f59e0b"/>
+<line x1="95.00" y1="595" x2="95.00" y2="601" stroke="#111827"/>
+<text class="axis" x="95.00" y="620.00" text-anchor="middle">2048</text>
+<line x1="532.50" y1="595" x2="532.50" y2="601" stroke="#111827"/>
+<text class="axis" x="532.50" y="620.00" text-anchor="middle">8192</text>
+<line x1="970.00" y1="595" x2="970.00" y2="601" stroke="#111827"/>
+<text class="axis" x="970.00" y="620.00" text-anchor="middle">32768</text>
+<text class="axis" x="532.50" y="666.00" text-anchor="middle">Point count N</text>
+<text class="axis" x="28" y="342.50" transform="rotate(-90 28 342.50)">Speedup (CPU time / CUDA time)</text>
+<line x1="1004" y1="102" x2="1034" y2="102" stroke="#2563eb" stroke-width="3"/>
+<circle cx="1019" cy="102" r="4" fill="#2563eb"/>
+<text class="tiny" x="1046.00" y="106.00" text-anchor="start">distance matrix</text>
+<line x1="1004" y1="126" x2="1034" y2="126" stroke="#16a34a" stroke-width="3"/>
+<circle cx="1019" cy="126" r="4" fill="#16a34a"/>
+<text class="tiny" x="1046.00" y="130.00" text-anchor="start">nearest point</text>
+<line x1="1004" y1="150" x2="1034" y2="150" stroke="#f59e0b" stroke-width="3"/>
+<circle cx="1019" cy="150" r="4" fill="#f59e0b"/>
+<text class="tiny" x="1046.00" y="154.00" text-anchor="start">circle range count</text>
+</svg>

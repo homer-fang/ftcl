@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="680" viewBox="0 0 1200 680" role="img">
+<style>
+text{font-family:Arial,Helvetica,sans-serif;fill:#111827;}
+.title{font-size:24px;font-weight:700;}
+.subtitle{font-size:13px;fill:#475569;}
+.label{font-size:14px;font-weight:700;}
+.small{font-size:12px;fill:#475569;}
+.tiny{font-size:10px;fill:#64748b;}
+.axis{font-size:12px;fill:#374151;}
+.box{stroke:#1f2937;stroke-width:1.4;rx:14;ry:14;}
+</style>
+<defs>
+<marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+<path d="M0,0 L0,6 L9,3 z" fill="#334155" />
+</marker>
+<filter id="shadow" x="-10%" y="-10%" width="120%" height="130%">
+<feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#0f172a" flood-opacity="0.12"/>
+</filter>
+</defs>
+<rect x="0" y="0" width="1200" height="680" fill="#ffffff"/>
+<text class="title" x="70.00" y="44.00" text-anchor="start">FTCL geometry system architecture</text>
+<text class="subtitle" x="70.00" y="66.00" text-anchor="start">Script level commands are lowered to UVec-backed CPU/CUDA geometry kernels.</text>
+<rect class="box" x="80.00" y="150.00" width="190.00" height="88.00" fill="#dbeafe" stroke="#1f2937" filter="url(#shadow)"/>
+<text class="small" x="175.00" y="182.00" text-anchor="middle"><tspan x="175.00" dy="0.00">FTCL Script</tspan><tspan x="175.00" dy="17.00">geom nearest_point</tspan><tspan x="175.00" dy="17.00">thread channel</tspan></text>
+<rect class="box" x="350.00" y="150.00" width="220.00" height="88.00" fill="#e0f2fe" stroke="#1f2937" filter="url(#shadow)"/>
+<text class="small" x="460.00" y="182.00" text-anchor="middle"><tspan x="460.00" dy="0.00">Parser / Interpreter</tspan><tspan x="460.00" dy="17.00">word parsing</tspan><tspan x="460.00" dy="17.00">command dispatch</tspan></text>
+<rect class="box" x="650.00" y="150.00" width="190.00" height="88.00" fill="#dcfce7" stroke="#1f2937" filter="url(#shadow)"/>
+<text class="small" x="745.00" y="182.00" text-anchor="middle"><tspan x="745.00" dy="0.00">geom command</tspan><tspan x="745.00" dy="17.00">argument decode</tspan><tspan x="745.00" dy="17.00">device select</tspan></text>
+<rect class="box" x="940.00" y="150.00" width="180.00" height="88.00" fill="#fef3c7" stroke="#1f2937" filter="url(#shadow)"/>
+<text class="small" x="1030.00" y="182.00" text-anchor="middle"><tspan x="1030.00" dy="0.00">UVec</tspan><tspan x="1030.00" dy="17.00">typed handle</tspan><tspan x="1030.00" dy="17.00">valid flags</tspan></text>
+<line x1="270.00" y1="194.00" x2="350.00" y2="194.00" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="248.00" y="176.00" width="124" height="20" rx="10" fill="#ffffff" opacity="0.92"/>
+<text class="tiny" x="310.00" y="190.00" text-anchor="middle">parse/eval</text>
+<line x1="570.00" y1="194.00" x2="650.00" y2="194.00" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="548.00" y="176.00" width="124" height="20" rx="10" fill="#ffffff" opacity="0.92"/>
+<text class="tiny" x="610.00" y="190.00" text-anchor="middle">dispatch</text>
+<line x1="840.00" y1="194.00" x2="940.00" y2="194.00" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="828.00" y="176.00" width="124" height="20" rx="10" fill="#ffffff" opacity="0.92"/>
+<text class="tiny" x="890.00" y="190.00" text-anchor="middle">handles</text>
+<rect class="box" x="760.00" y="380.00" width="180.00" height="86.00" fill="#f1f5f9" stroke="#1f2937" filter="url(#shadow)"/>
+<text class="small" x="850.00" y="411.00" text-anchor="middle"><tspan x="850.00" dy="0.00">CPU backend</tspan><tspan x="850.00" dy="17.00">std::vector</tspan><tspan x="850.00" dy="17.00">scalar loops</tspan></text>
+<rect class="box" x="980.00" y="380.00" width="180.00" height="86.00" fill="#ede9fe" stroke="#1f2937" filter="url(#shadow)"/>
+<text class="small" x="1070.00" y="411.00" text-anchor="middle"><tspan x="1070.00" dy="0.00">CUDA backend</tspan><tspan x="1070.00" dy="17.00">device buffer</tspan><tspan x="1070.00" dy="17.00">kernels</tspan></text>
+<line x1="1000.00" y1="238.00" x2="850.00" y2="380.00" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="863.00" y="291.00" width="124" height="20" rx="10" fill="#ffffff" opacity="0.92"/>
+<text class="tiny" x="925.00" y="305.00" text-anchor="middle">cpu</text>
+<line x1="1040.00" y1="238.00" x2="1070.00" y2="380.00" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="993.00" y="291.00" width="124" height="20" rx="10" fill="#ffffff" opacity="0.92"/>
+<text class="tiny" x="1055.00" y="305.00" text-anchor="middle">cuda:0</text>
+<line x1="850.00" y1="466.00" x2="1000.00" y2="238.00" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="863.00" y="334.00" width="124" height="20" rx="10" fill="#ffffff" opacity="0.92"/>
+<text class="tiny" x="925.00" y="348.00" text-anchor="middle">result UVec</text>
+<line x1="1070.00" y1="466.00" x2="1040.00" y2="238.00" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="993.00" y="334.00" width="124" height="20" rx="10" fill="#ffffff" opacity="0.92"/>
+<text class="tiny" x="1055.00" y="348.00" text-anchor="middle">result UVec</text>
+<rect class="box" x="80.00" y="390.00" width="490.00" height="74.00" fill="#fff7ed" stroke="#1f2937" filter="url(#shadow)"/>
+<text class="small" x="325.00" y="423.50" text-anchor="middle"><tspan x="325.00" dy="0.00">Result returns as an FTCL value</tspan><tspan x="325.00" dy="17.00">Most batch algorithms return a UVec handle, so scripts can continue without copying immediately.</tspan></text>
+<line x1="940.00" y1="194.00" x2="570.00" y2="427.00" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="693.00" y="292.50" width="124" height="20" rx="10" fill="#ffffff" opacity="0.92"/>
+<text class="tiny" x="755.00" y="306.50" text-anchor="middle">return handle</text>
+<line x1="350.00" y1="427.00" x2="270.00" y2="194.00" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="248.00" y="292.50" width="124" height="20" rx="10" fill="#ffffff" opacity="0.92"/>
+<text class="tiny" x="310.00" y="306.50" text-anchor="middle">script value</text>
+</svg>

@@ -229,9 +229,9 @@ def main() -> int:
     parser.add_argument("--tests-dir", default="./test/tests")
     parser.add_argument("--rounds", type=int, default=20)
     parser.add_argument("--warmup", type=int, default=3)
-    parser.add_argument("--raw-csv", default="./docs/benchmark_data/parser_backend_timing_raw.csv")
-    parser.add_argument("--summary-csv", default="./docs/benchmark_data/parser_backend_timing_summary.csv")
-    parser.add_argument("--figure", default="./docs/figures/parser_backend_timing.svg")
+    parser.add_argument("--raw-csv", default="./docs/data/benchmarks/parser_backend_timing_raw.csv")
+    parser.add_argument("--summary-csv", default="./docs/data/benchmarks/parser_backend_timing_summary.csv")
+    parser.add_argument("--figure", default="./docs/figures/benchmarks/parser_backend_timing.svg")
     args = parser.parse_args()
 
     backends = ["legacy", "token_stream"]

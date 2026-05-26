@@ -308,10 +308,12 @@ public:
 
     explicit UVec(std::vector<T> data)
         : cpu_(std::move(data)),
+          len_(cpu_.size()),
           cpu_valid_(true) {}
 
     UVec(const UVec& other)
         : cpu_(other.cpu_vector()),
+          len_(cpu_.size()),
           cpu_valid_(true) {}
 
     UVec& operator=(const UVec& other) {
@@ -320,14 +322,17 @@ public:
         }
         release_cuda_buffers();
         cpu_ = other.cpu_vector();
+        len_ = cpu_.size();
         cpu_valid_ = true;
         return *this;
     }
 
     UVec(UVec&& other) noexcept
         : cpu_(std::move(other.cpu_)),
+          len_(other.len_),
           cpu_valid_(other.cpu_valid_),
           cuda_buffers_(std::move(other.cuda_buffers_)) {
+        other.len_ = other.cpu_.size();
         other.cpu_valid_ = true;
         other.cuda_buffers_.clear();
     }
@@ -338,8 +343,10 @@ public:
         }
         release_cuda_buffers();
         cpu_ = std::move(other.cpu_);
+        len_ = other.len_;
         cpu_valid_ = other.cpu_valid_;
         cuda_buffers_ = std::move(other.cuda_buffers_);
+        other.len_ = other.cpu_.size();
         other.cpu_valid_ = true;
         other.cuda_buffers_.clear();
         return *this;
@@ -381,8 +388,29 @@ public:
         return filled(len, T{}, device);
     }
 
+    static ftcl::expected<UVec<T>, std::string> uninitialized(std::size_t len, Device device = Device::cpu()) {
+        if (!device.valid()) {
+            return ftcl::unexpected("invalid device \"" + device.to_string() + "\"");
+        }
+
+        UVec<T> out;
+        out.len_ = len;
+        out.cpu_valid_ = device.is_cpu();
+        if (device.is_cpu()) {
+            out.cpu_.resize(len);
+            return out;
+        }
+
+        auto buffer = out.ensure_cuda_buffer(device.index());
+        if (!buffer.has_value()) {
+            return ftcl::unexpected(buffer.error());
+        }
+        (*buffer)->valid = true;
+        return out;
+    }
+
     std::size_t size() const {
-        return cpu_.size();
+        return len_;
     }
 
     bool empty() const {
@@ -420,14 +448,14 @@ public:
         }
 
         if (device.is_cpu()) {
-            return RawUPtr<T>(cpu_.data(), cpu_.size(), device);
+            return RawUPtr<T>(cpu_.data(), len_, device);
         }
 
         const auto* buffer = find_cuda_buffer(device.index());
         if (buffer == nullptr || buffer->ptr == nullptr) {
             return ftcl::unexpected("CUDA buffer is not allocated");
         }
-        return RawUPtr<T>(buffer->ptr, cpu_.size(), device);
+        return RawUPtr<T>(buffer->ptr, len_, device);
     }
 
     ftcl::expected<RawUMutPtr<T>, std::string> as_mut_uptr(Device device = Device::cpu()) {
@@ -438,14 +466,14 @@ public:
 
         mark_only_valid(device);
         if (device.is_cpu()) {
-            return RawUMutPtr<T>(cpu_.data(), cpu_.size(), device);
+            return RawUMutPtr<T>(cpu_.data(), len_, device);
         }
 
         auto* buffer = find_cuda_buffer(device.index());
         if (buffer == nullptr || buffer->ptr == nullptr) {
             return ftcl::unexpected("CUDA buffer is not allocated");
         }
-        return RawUMutPtr<T>(buffer->ptr, cpu_.size(), device);
+        return RawUMutPtr<T>(buffer->ptr, len_, device);
     }
 
     ftcl::expected<std::size_t, std::string> fill(const T& value, Device device = Device::cpu()) {
@@ -503,6 +531,13 @@ public:
     }
 
 private:
+    void ensure_cpu_storage() const {
+        auto* self = const_cast<UVec<T>*>(this);
+        if (self->cpu_.size() != len_) {
+            self->cpu_.resize(len_);
+        }
+    }
+
     struct CudaBuffer {
         int device_index = -1;
         T* ptr = nullptr;
@@ -562,6 +597,7 @@ private:
         }
 
         if (device.is_cpu()) {
+            ensure_cpu_storage();
             if (cpu_valid_) {
                 return static_cast<std::size_t>(0);
             }
@@ -596,6 +632,7 @@ private:
         }
 
         if (cpu_valid_) {
+            ensure_cpu_storage();
 #ifdef FTCL_ENABLE_CUDA
             auto copied = cuda_copy_bytes((*dst)->ptr,
                                           device,
@@ -663,6 +700,7 @@ private:
     }
 
     std::vector<T> cpu_;
+    std::size_t len_ = 0;
     mutable bool cpu_valid_ = true;
     mutable std::vector<CudaBuffer> cuda_buffers_;
 };

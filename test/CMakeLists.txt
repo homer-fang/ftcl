@@ -155,6 +155,10 @@ add_test(NAME GetchSemanticsTest COMMAND test_getch_semantics)
 add_executable(bench_ftcl bench_ftcl.cpp)
 target_link_libraries(bench_ftcl PRIVATE ftcl)
 
+# Geometry study benchmark executable (ablation + concurrency).
+add_executable(bench_geometry_studies bench_geometry_studies.cpp)
+target_link_libraries(bench_geometry_studies PRIVATE ftcl)
+
 # Run original ftcl Tcl test suite via ftcl test_harness.
 add_executable(test_ftcl_suite test_ftcl_suite.cpp)
 target_link_libraries(test_ftcl_suite PRIVATE ftcl)

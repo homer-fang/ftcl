@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="760" viewBox="0 0 1200 760" role="img">
+<style>
+text{font-family:Arial,Helvetica,sans-serif;fill:#111827;}
+.title{font-size:24px;font-weight:700;}
+.subtitle{font-size:13px;fill:#475569;}
+.axis{font-size:12px;fill:#374151;}
+.small{font-size:12px;fill:#475569;}
+.tiny{font-size:11px;fill:#64748b;}
+.label{font-size:14px;font-weight:700;}
+.box{stroke:#1f2937;stroke-width:1.4;rx:14;ry:14;}
+</style>
+<defs>
+<marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+<path d="M0,0 L0,6 L9,3 z" fill="#334155" />
+</marker>
+</defs>
+<rect x="0" y="0" width="1200" height="760" fill="#ffffff"/>
+<text class="title" x="70.00" y="44.00" text-anchor="start">UVec state machine</text>
+<text class="subtitle" x="70.00" y="66.00" text-anchor="start">Write invalidates the opposite side; read may trigger synchronization copy.</text>
+<rect class="box" x="170" y="220" width="240" height="90" fill="#f8fafc"/>
+<text class="label" x="290.00" y="257.00" text-anchor="middle"><tspan x="290.00" dy="0.00">CPU valid</tspan><tspan x="290.00" dy="16.00">cuda invalid</tspan></text>
+<rect class="box" x="790" y="220" width="240" height="90" fill="#f8fafc"/>
+<text class="label" x="910.00" y="257.00" text-anchor="middle"><tspan x="910.00" dy="0.00">CUDA valid</tspan><tspan x="910.00" dy="16.00">cpu invalid</tspan></text>
+<rect class="box" x="480" y="430" width="240" height="90" fill="#f8fafc"/>
+<text class="label" x="600.00" y="467.00" text-anchor="middle"><tspan x="600.00" dy="0.00">CPU+CUDA valid</tspan><tspan x="600.00" dy="16.00">both readable</tspan></text>
+<line x1="410" y1="265" x2="790" y2="265" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="514.0" y="248.0" width="172" height="20" rx="10" fill="#ffffff" opacity="0.92"/>
+<text class="tiny" x="600.00" y="262.00" text-anchor="middle">as_uptr(cuda) copy CPU-&gt;CUDA</text>
+<line x1="790" y1="238" x2="410" y2="238" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="514.0" y="221.0" width="172" height="20" rx="10" fill="#ffffff" opacity="0.92"/>
+<text class="tiny" x="600.00" y="235.00" text-anchor="middle">as_uptr(cpu) copy CUDA-&gt;CPU</text>
+<line x1="290" y1="310" x2="530" y2="430" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="324.0" y="353.0" width="172" height="20" rx="10" fill="#ffffff" opacity="0.92"/>
+<text class="tiny" x="410.00" y="367.00" text-anchor="middle">sync read -&gt; both valid</text>
+<line x1="910" y1="310" x2="670" y2="430" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="704.0" y="353.0" width="172" height="20" rx="10" fill="#ffffff" opacity="0.92"/>
+<text class="tiny" x="790.00" y="367.00" text-anchor="middle">sync read -&gt; both valid</text>
+<line x1="600" y1="430" x2="290" y2="310" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="359.0" y="353.0" width="172" height="20" rx="10" fill="#ffffff" opacity="0.92"/>
+<text class="tiny" x="445.00" y="367.00" text-anchor="middle">as_mut_uptr(cpu) write</text>
+<line x1="600" y1="430" x2="910" y2="310" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="669.0" y="353.0" width="172" height="20" rx="10" fill="#ffffff" opacity="0.92"/>
+<text class="tiny" x="755.00" y="367.00" text-anchor="middle">as_mut_uptr(cuda) write</text>
+<text class="small" x="600.00" y="680.00" text-anchor="middle">Init examples: from_cpu() starts in CPU-valid; uninitialized(..., cuda:0) starts in CUDA-valid.</text>
+</svg>

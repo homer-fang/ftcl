@@ -1,0 +1,9 @@
+check,max_abs_error
+batch_distance_matrix CPU/GPU equivalence,0
+batch_point_in_polygon CPU/GPU equivalence,0
+batch_segment_intersect CPU/GPU equivalence,0
+batch_point_segment_distance CPU/GPU equivalence,0
+nearest_point CPU/GPU equivalence,0
+range_count_circle CPU/GPU equivalence,0
+range_count_rect CPU/GPU equivalence,0
+transform_points CPU/GPU equivalence,0
