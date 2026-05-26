@@ -1,4 +1,4 @@
 metric,label,break_even_n,speedup_at_min_n,speedup_at_max_n
-batch_distance_matrix,distance matrix,2048.00,6.769072,224.005725
-nearest_point,nearest point,2048.00,2.053759,16.553988
-range_count_circle,circle range count,2048.00,1.411940,13.124870
+batch_distance_matrix,distance matrix,128.00,1.559165,85.420292
+nearest_point,nearest point,239.85,0.786581,13.705829
+range_count_circle,circle range count,398.64,0.671811,11.242576

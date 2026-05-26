@@ -1,4 +1,4 @@
-#include "geometry_test_utils.hpp"
+﻿#include "geometry_test_utils.hpp"
 
 #include <algorithm>
 #include <cstdlib>
@@ -21,9 +21,20 @@ static std::vector<std::pair<double, double>> grid_points(std::size_t n) {
     return out;
 }
 
-static bool paper_mode() {
+static std::string perf_mode() {
     const char* mode = std::getenv("FTCL_GEOMETRY_PERF_MODE");
-    return mode != nullptr && std::string(mode) == "paper";
+    if (mode == nullptr) {
+        return "smoke";
+    }
+    return std::string(mode);
+}
+
+static bool paper_mode() {
+    return perf_mode() == "paper";
+}
+
+static bool break_even_mode() {
+    return perf_mode() == "break_even";
 }
 
 static std::vector<ScaleCase> scale_cases() {
@@ -32,6 +43,24 @@ static std::vector<ScaleCase> scale_cases() {
             {2048, 256, 5},
             {8192, 1024, 5},
             {32768, 2048, 3},
+        };
+    }
+
+    if (break_even_mode()) {
+        return {
+            {128, 64, 3},
+            {192, 64, 3},
+            {256, 96, 3},
+            {384, 128, 3},
+            {512, 160, 3},
+            {768, 192, 3},
+            {1024, 256, 3},
+            {1536, 256, 3},
+            {2048, 256, 3},
+            {3072, 384, 3},
+            {4096, 512, 3},
+            {6144, 768, 3},
+            {8192, 1024, 3},
         };
     }
 
@@ -120,7 +149,7 @@ static void destroy_inputs(ftcl::Interp& interp, const std::string& prefix) {
 
 int main() {
     std::cout << "=== Geometry Performance Scale Smoke Test ===" << std::endl;
-    std::cout << "# mode=" << (paper_mode() ? "paper" : "smoke")
+    std::cout << "# mode=" << perf_mode()
               << " timing=median_us inputs=prebuilt command=geom" << std::endl;
     auto interp = ftcl::new_interp_with_stdlib();
 
@@ -199,3 +228,4 @@ int main() {
     std::cout << "=== Geometry performance scale smoke test passed ===" << std::endl;
     return 0;
 }
+

@@ -7,6 +7,7 @@ text{font-family:Arial,Helvetica,sans-serif;fill:#111827;}
 .small{font-size:12px;fill:#475569;}
 .tiny{font-size:11px;fill:#64748b;}
 .label{font-size:14px;font-weight:700;}
+.code{font-family:Consolas,Monaco,'Courier New',monospace;font-size:12px;fill:#e2e8f0;}
 .box{stroke:#1f2937;stroke-width:1.4;rx:14;ry:14;}
 </style>
 <defs>

@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 import argparse
 import csv
 import html
@@ -61,6 +61,7 @@ text{{font-family:Arial,Helvetica,sans-serif;fill:{COLORS['ink']};}}
 .small{{font-size:12px;fill:#475569;}}
 .tiny{{font-size:11px;fill:#64748b;}}
 .label{{font-size:14px;font-weight:700;}}
+.code{{font-family:Consolas,Monaco,'Courier New',monospace;font-size:12px;fill:#e2e8f0;}}
 .box{{stroke:#1f2937;stroke-width:1.4;rx:14;ry:14;}}
 </style>
 <defs>
@@ -207,14 +208,23 @@ def parse_perf_output(text_output: str) -> List[Dict[str, str]]:
     return rows
 
 
-def load_or_collect_perf(build_dir: Path, data_dir: Path, perf_mode: str) -> List[Dict[str, str]]:
-    csv_path = data_dir / 'geometry_perf_scale.csv'
+def load_or_collect_perf(build_dir: Path,
+                         data_dir: Path,
+                         perf_mode: str,
+                         csv_name: str,
+                         fallback_mode: str = '') -> List[Dict[str, str]]:
+    csv_path = data_dir / csv_name
     exe = build_dir / 'test' / 'test_geometry_perf_scale'
+
     if exe.exists():
         env = os.environ.copy()
         env['FTCL_GEOMETRY_PERF_MODE'] = perf_mode
         proc = subprocess.run([str(exe)], text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=True, env=env)
         rows = parse_perf_output(proc.stdout)
+        if not rows and fallback_mode:
+            env['FTCL_GEOMETRY_PERF_MODE'] = fallback_mode
+            proc = subprocess.run([str(exe)], text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=True, env=env)
+            rows = parse_perf_output(proc.stdout)
         if rows:
             ensure_dir(data_dir)
             with csv_path.open('w', newline='', encoding='utf-8') as f:
@@ -222,9 +232,11 @@ def load_or_collect_perf(build_dir: Path, data_dir: Path, perf_mode: str) -> Lis
                 writer.writeheader()
                 writer.writerows(rows)
             return rows
+
     if csv_path.exists():
         with csv_path.open('r', newline='', encoding='utf-8') as f:
             return list(csv.DictReader(f))
+
     raise RuntimeError(f'Missing performance source: {csv_path}')
 
 
@@ -351,13 +363,21 @@ def compute_break_even(perf_rows: List[Dict[str, str]]) -> Tuple[List[Dict[str, 
 
 
 def draw_break_even(series: List[Dict[str, object]], out: Path) -> None:
+    # Focus on the crossing region so the break-even trend is readable.
+    plot_series = []
+    for item in series:
+        values = [(n, speed) for n, speed in item['values'] if n <= 4096]
+        if not values:
+            values = item['values']
+        plot_series.append({'name': item['name'], 'values': values, 'color': item['color']})
+
     line_chart(
         out,
         'CUDA break-even point',
-        'Speedup crosses 1.0 at the break-even scale; higher means CUDA is faster than CPU.',
+        'Dense sweep for N<=4096. Speedup above 1.0 means CUDA is faster than CPU.',
         'Point count N',
         'Speedup (CPU time / CUDA time)',
-        [{'name': s['name'], 'values': s['values'], 'color': s['color']} for s in series],
+        plot_series,
         0.0,
         1.0,
     )
@@ -496,9 +516,9 @@ def draw_real_demo(out: Path) -> None:
         'set count [geom range_count_circle $enemy $radar 8.0 cuda:0]',
         'set hit [geom collision_aabb $player_box $wall_box cuda:0]',
     ]
-    p.append('<rect x="750" y="170" width="390" height="290" rx="14" fill="#0f172a"/>\n')
+    p.append('<rect x="740" y="160" width="450" height="340" rx="14" fill="#0f172a"/>\n')
     for i, line in enumerate(script_lines):
-        p.append(f'<text x="770" y="{205 + i * 40}" fill="#e2e8f0" font-family="monospace" font-size="15">{esc(line)}</text>\n')
+        p.append(f'<text class="code" x="762" y="{198 + i * 48}">{esc(line)}</text>\n')
 
     p.append(multiline_text(945, 520, [
         'Output semantics:',
@@ -562,7 +582,8 @@ def main() -> int:
     parser.add_argument('--build-dir', default=str(DEFAULT_BUILD_DIR))
     parser.add_argument('--data-dir', default=str(DEFAULT_DATA_DIR))
     parser.add_argument('--fig-dir', default=str(DEFAULT_FIG_DIR))
-    parser.add_argument('--perf-mode', default='paper')
+    parser.add_argument('--break-even-mode', default='break_even')
+    parser.add_argument('--break-even-fallback-mode', default='smoke')
     args = parser.parse_args()
 
     build_dir = Path(args.build_dir)
@@ -575,7 +596,13 @@ def main() -> int:
     ensure_dir(geom_fig_dir)
     ensure_dir(arch_fig_dir)
 
-    perf_rows = load_or_collect_perf(build_dir, data_dir, args.perf_mode)
+    perf_rows = load_or_collect_perf(
+        build_dir,
+        data_dir,
+        args.break_even_mode,
+        'geometry_break_even_perf.csv',
+        args.break_even_fallback_mode,
+    )
     speed_series, break_even_rows = compute_break_even(perf_rows)
     draw_break_even(speed_series, geom_fig_dir / 'geometry_break_even_point.svg')
     write_break_even_csv(break_even_rows, data_dir / 'geometry_break_even_points.csv')
@@ -595,3 +622,10 @@ def main() -> int:
 
 if __name__ == '__main__':
     raise SystemExit(main())
+
+
+
+
+
+
+

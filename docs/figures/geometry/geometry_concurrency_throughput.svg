@@ -7,6 +7,7 @@ text{font-family:Arial,Helvetica,sans-serif;fill:#111827;}
 .small{font-size:12px;fill:#475569;}
 .tiny{font-size:11px;fill:#64748b;}
 .label{font-size:14px;font-weight:700;}
+.code{font-family:Consolas,Monaco,'Courier New',monospace;font-size:12px;fill:#e2e8f0;}
 .box{stroke:#1f2937;stroke-width:1.4;rx:14;ry:14;}
 </style>
 <defs>
@@ -19,26 +20,28 @@ text{font-family:Arial,Helvetica,sans-serif;fill:#111827;}
 <text class="subtitle" x="70.00" y="66.00" text-anchor="start">Workload: thread-channel pipeline + geom nearest_point worker tasks.</text>
 <line x1="95" y1="595.00" x2="970" y2="595.00" stroke="#e5e7eb"/>
 <text class="axis" x="83.00" y="599.00" text-anchor="end">0.00</text>
-<line x1="95" y1="486.97" x2="970" y2="486.97" stroke="#e5e7eb"/>
-<text class="axis" x="83.00" y="490.97" text-anchor="end">2.0k</text>
-<line x1="95" y1="378.94" x2="970" y2="378.94" stroke="#e5e7eb"/>
-<text class="axis" x="83.00" y="382.94" text-anchor="end">4.0k</text>
-<line x1="95" y1="270.91" x2="970" y2="270.91" stroke="#e5e7eb"/>
-<text class="axis" x="83.00" y="274.91" text-anchor="end">6.0k</text>
-<line x1="95" y1="162.87" x2="970" y2="162.87" stroke="#e5e7eb"/>
-<text class="axis" x="83.00" y="166.87" text-anchor="end">8.0k</text>
+<line x1="95" y1="500.06" x2="970" y2="500.06" stroke="#e5e7eb"/>
+<text class="axis" x="83.00" y="504.06" text-anchor="end">2.0k</text>
+<line x1="95" y1="405.12" x2="970" y2="405.12" stroke="#e5e7eb"/>
+<text class="axis" x="83.00" y="409.12" text-anchor="end">4.0k</text>
+<line x1="95" y1="310.18" x2="970" y2="310.18" stroke="#e5e7eb"/>
+<text class="axis" x="83.00" y="314.18" text-anchor="end">6.0k</text>
+<line x1="95" y1="215.24" x2="970" y2="215.24" stroke="#e5e7eb"/>
+<text class="axis" x="83.00" y="219.24" text-anchor="end">8.0k</text>
+<line x1="95" y1="120.30" x2="970" y2="120.30" stroke="#e5e7eb"/>
+<text class="axis" x="83.00" y="124.30" text-anchor="end">10.0k</text>
 <line x1="95" y1="90" x2="95" y2="595" stroke="#111827" stroke-width="1.4"/>
 <line x1="95" y1="595" x2="970" y2="595" stroke="#111827" stroke-width="1.4"/>
-<polyline points="95.00,505.19 386.67,467.05 678.33,394.97 970.00,167.03" fill="none" stroke="#2563eb" stroke-width="3"/>
-<circle cx="95.00" cy="505.19" r="4.5" fill="#2563eb"/>
-<circle cx="386.67" cy="467.05" r="4.5" fill="#2563eb"/>
-<circle cx="678.33" cy="394.97" r="4.5" fill="#2563eb"/>
+<polyline points="95.00,515.10 386.67,471.05 678.33,388.69 970.00,167.03" fill="none" stroke="#2563eb" stroke-width="3"/>
+<circle cx="95.00" cy="515.10" r="4.5" fill="#2563eb"/>
+<circle cx="386.67" cy="471.05" r="4.5" fill="#2563eb"/>
+<circle cx="678.33" cy="388.69" r="4.5" fill="#2563eb"/>
 <circle cx="970.00" cy="167.03" r="4.5" fill="#2563eb"/>
-<polyline points="95.00,525.37 386.67,522.91 678.33,523.15 970.00,523.75" fill="none" stroke="#7c3aed" stroke-width="3"/>
-<circle cx="95.00" cy="525.37" r="4.5" fill="#7c3aed"/>
-<circle cx="386.67" cy="522.91" r="4.5" fill="#7c3aed"/>
-<circle cx="678.33" cy="523.15" r="4.5" fill="#7c3aed"/>
-<circle cx="970.00" cy="523.75" r="4.5" fill="#7c3aed"/>
+<polyline points="95.00,533.34 386.67,530.52 678.33,529.37 970.00,532.00" fill="none" stroke="#7c3aed" stroke-width="3"/>
+<circle cx="95.00" cy="533.34" r="4.5" fill="#7c3aed"/>
+<circle cx="386.67" cy="530.52" r="4.5" fill="#7c3aed"/>
+<circle cx="678.33" cy="529.37" r="4.5" fill="#7c3aed"/>
+<circle cx="970.00" cy="532.00" r="4.5" fill="#7c3aed"/>
 <line x1="95.00" y1="595" x2="95.00" y2="601" stroke="#111827"/>
 <text class="axis" x="95.00" y="620.00" text-anchor="middle">1</text>
 <line x1="386.67" y1="595" x2="386.67" y2="601" stroke="#111827"/>
