@@ -20,29 +20,23 @@ text{font-family:Arial,Helvetica,sans-serif;fill:#111827;}
 <text class="subtitle" x="70.00" y="66.00" text-anchor="start">P95 one-request latency in the same worker/channel experiment; lower is better.</text>
 <line x1="95" y1="595.00" x2="970" y2="595.00" stroke="#e5e7eb"/>
 <text class="axis" x="83.00" y="599.00" text-anchor="end">0.00</text>
-<line x1="95" y1="518.71" x2="970" y2="518.71" stroke="#e5e7eb"/>
-<text class="axis" x="83.00" y="522.71" text-anchor="end">5.0k</text>
-<line x1="95" y1="442.41" x2="970" y2="442.41" stroke="#e5e7eb"/>
-<text class="axis" x="83.00" y="446.41" text-anchor="end">10.0k</text>
-<line x1="95" y1="366.12" x2="970" y2="366.12" stroke="#e5e7eb"/>
-<text class="axis" x="83.00" y="370.12" text-anchor="end">15.0k</text>
-<line x1="95" y1="289.83" x2="970" y2="289.83" stroke="#e5e7eb"/>
-<text class="axis" x="83.00" y="293.83" text-anchor="end">20.0k</text>
-<line x1="95" y1="213.54" x2="970" y2="213.54" stroke="#e5e7eb"/>
-<text class="axis" x="83.00" y="217.54" text-anchor="end">25.0k</text>
-<line x1="95" y1="137.24" x2="970" y2="137.24" stroke="#e5e7eb"/>
-<text class="axis" x="83.00" y="141.24" text-anchor="end">30.0k</text>
+<line x1="95" y1="454.63" x2="970" y2="454.63" stroke="#e5e7eb"/>
+<text class="axis" x="83.00" y="458.63" text-anchor="end">10.0k</text>
+<line x1="95" y1="314.25" x2="970" y2="314.25" stroke="#e5e7eb"/>
+<text class="axis" x="83.00" y="318.25" text-anchor="end">20.0k</text>
+<line x1="95" y1="173.88" x2="970" y2="173.88" stroke="#e5e7eb"/>
+<text class="axis" x="83.00" y="177.88" text-anchor="end">30.0k</text>
 <line x1="95" y1="90" x2="95" y2="595" stroke="#111827" stroke-width="1.4"/>
 <line x1="95" y1="595" x2="970" y2="595" stroke="#111827" stroke-width="1.4"/>
-<polyline points="95.00,537.03 386.67,529.68 678.33,519.25 970.00,524.66" fill="none" stroke="#16a34a" stroke-width="3"/>
-<circle cx="95.00" cy="537.03" r="4.5" fill="#16a34a"/>
-<circle cx="386.67" cy="529.68" r="4.5" fill="#16a34a"/>
-<circle cx="678.33" cy="519.25" r="4.5" fill="#16a34a"/>
-<circle cx="970.00" cy="524.66" r="4.5" fill="#16a34a"/>
-<polyline points="95.00,542.93 386.67,493.67 678.33,394.72 970.00,167.03" fill="none" stroke="#dc2626" stroke-width="3"/>
-<circle cx="95.00" cy="542.93" r="4.5" fill="#dc2626"/>
-<circle cx="386.67" cy="493.67" r="4.5" fill="#dc2626"/>
-<circle cx="678.33" cy="394.72" r="4.5" fill="#dc2626"/>
+<polyline points="95.00,531.31 386.67,548.84 678.33,542.64 970.00,429.92" fill="none" stroke="#16a34a" stroke-width="3"/>
+<circle cx="95.00" cy="531.31" r="4.5" fill="#16a34a"/>
+<circle cx="386.67" cy="548.84" r="4.5" fill="#16a34a"/>
+<circle cx="678.33" cy="542.64" r="4.5" fill="#16a34a"/>
+<circle cx="970.00" cy="429.92" r="4.5" fill="#16a34a"/>
+<polyline points="95.00,543.90 386.67,493.39 678.33,338.46 970.00,167.03" fill="none" stroke="#dc2626" stroke-width="3"/>
+<circle cx="95.00" cy="543.90" r="4.5" fill="#dc2626"/>
+<circle cx="386.67" cy="493.39" r="4.5" fill="#dc2626"/>
+<circle cx="678.33" cy="338.46" r="4.5" fill="#dc2626"/>
 <circle cx="970.00" cy="167.03" r="4.5" fill="#dc2626"/>
 <line x1="95.00" y1="595" x2="95.00" y2="601" stroke="#111827"/>
 <text class="axis" x="95.00" y="620.00" text-anchor="middle">1</text>

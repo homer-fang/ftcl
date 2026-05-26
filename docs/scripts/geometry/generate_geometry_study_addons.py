@@ -318,10 +318,14 @@ def collect_study_data(build_dir: Path, data_dir: Path) -> Tuple[List[Dict[str, 
 
 def compute_break_even(perf_rows: List[Dict[str, str]]) -> Tuple[List[Dict[str, object]], List[Dict[str, object]]]:
     grouped: Dict[str, Dict[int, Dict[str, float]]] = {}
+    meta: Dict[int, Tuple[int, int]] = {}
     for row in perf_rows:
         metric = row['metric']
         n = int(row['n'])
-        grouped.setdefault(metric, {}).setdefault(n, {})[row['device']] = float(row['time_us'])
+        q = int(row['q'])
+        work_items = n * q
+        grouped.setdefault(metric, {}).setdefault(work_items, {})[row['device']] = float(row['time_us'])
+        meta[work_items] = (n, q)
 
     series = []
     break_points = []
@@ -329,11 +333,11 @@ def compute_break_even(perf_rows: List[Dict[str, str]]) -> Tuple[List[Dict[str, 
     for metric in ALGO_LABELS:
         speed = []
         points = grouped.get(metric, {})
-        for n in sorted(points.keys()):
-            cpu = points[n].get('cpu')
-            cuda = points[n].get('cuda:0')
+        for work_items in sorted(points.keys()):
+            cpu = points[work_items].get('cpu')
+            cuda = points[work_items].get('cuda:0')
             if cpu is not None and cuda is not None and cuda > 0:
-                speed.append((n, cpu / cuda))
+                speed.append((work_items, cpu / cuda))
 
         if not speed:
             continue
@@ -345,28 +349,33 @@ def compute_break_even(perf_rows: List[Dict[str, str]]) -> Tuple[List[Dict[str, 
             cross = float(speed[0][0])
         else:
             for i in range(1, len(speed)):
-                n0, s0 = speed[i - 1]
-                n1, s1 = speed[i]
+                x0, s0 = speed[i - 1]
+                x1, s1 = speed[i]
                 if s0 < 1.0 <= s1 and s1 != s0:
-                    cross = n0 + (1.0 - s0) * (n1 - n0) / (s1 - s0)
+                    cross = x0 + (1.0 - s0) * (x1 - x0) / (s1 - s0)
                     break
 
+        min_n, min_q = meta[speed[0][0]]
+        max_n, max_q = meta[speed[-1][0]]
         break_points.append({
             'metric': metric,
             'label': ALGO_LABELS[metric],
-            'break_even_n': cross,
-            'speedup_at_min_n': speed[0][1],
-            'speedup_at_max_n': speed[-1][1],
+            'break_even_work_items': cross,
+            'min_n': min_n,
+            'min_q': min_q,
+            'max_n': max_n,
+            'max_q': max_q,
+            'speedup_at_min_work_items': speed[0][1],
+            'speedup_at_max_work_items': speed[-1][1],
         })
 
     return series, break_points
-
 
 def draw_break_even(series: List[Dict[str, object]], out: Path) -> None:
     # Focus on the crossing region so the break-even trend is readable.
     plot_series = []
     for item in series:
-        values = [(n, speed) for n, speed in item['values'] if n <= 4096]
+        values = [(work_items, speed) for work_items, speed in item['values'] if work_items <= 4096 * 512]
         if not values:
             values = item['values']
         plot_series.append({'name': item['name'], 'values': values, 'color': item['color']})
@@ -374,8 +383,8 @@ def draw_break_even(series: List[Dict[str, object]], out: Path) -> None:
     line_chart(
         out,
         'CUDA break-even point',
-        'Dense sweep for N<=4096. Speedup above 1.0 means CUDA is faster than CPU.',
-        'Point count N',
+        'Dense sweep by work items = N x Q. Speedup above 1.0 means CUDA is faster than CPU.',
+        'Work items (N x Q)',
         'Speedup (CPU time / CUDA time)',
         plot_series,
         0.0,
@@ -387,11 +396,30 @@ def write_break_even_csv(rows: List[Dict[str, object]], out: Path) -> None:
     ensure_dir(out.parent)
     with out.open('w', newline='', encoding='utf-8') as f:
         writer = csv.writer(f)
-        writer.writerow(['metric', 'label', 'break_even_n', 'speedup_at_min_n', 'speedup_at_max_n'])
+        writer.writerow([
+            'metric',
+            'label',
+            'break_even_work_items',
+            'min_n',
+            'min_q',
+            'max_n',
+            'max_q',
+            'speedup_at_min_work_items',
+            'speedup_at_max_work_items',
+        ])
         for r in rows:
-            be = '' if r['break_even_n'] is None else f"{r['break_even_n']:.2f}"
-            writer.writerow([r['metric'], r['label'], be, f"{r['speedup_at_min_n']:.6f}", f"{r['speedup_at_max_n']:.6f}"])
-
+            be = '' if r['break_even_work_items'] is None else f"{r['break_even_work_items']:.2f}"
+            writer.writerow([
+                r['metric'],
+                r['label'],
+                be,
+                r['min_n'],
+                r['min_q'],
+                r['max_n'],
+                r['max_q'],
+                f"{r['speedup_at_min_work_items']:.6f}",
+                f"{r['speedup_at_max_work_items']:.6f}",
+            ])
 
 def write_ablation_table(ablation_rows: List[Dict[str, str]], out: Path) -> None:
     grouped: Dict[Tuple[str, str], Dict[str, float]] = {}
@@ -622,6 +650,9 @@ def main() -> int:
 
 if __name__ == '__main__':
     raise SystemExit(main())
+
+
+
 
 
 
