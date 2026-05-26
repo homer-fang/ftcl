@@ -1,0 +1,55 @@
+\documentclass{styles/jouthesis}
+
+\input{contents/shared/metadata}
+\JOUSharedApplyToThesis
+
+\begin{document}
+
+\frontmatter
+\makecover
+
+\begin{cnabstract}
+This thesis designs and implements FTCL, a Tcl-style scripting interpreter for algorithm experiments, and extends it into a CPU/CUDA hybrid computational geometry system. The work starts from a lightweight interpreter core implemented in C++20. The core supports variables, command evaluation, procedures, scopes, list and dictionary values, arrays, expression evaluation, command substitution, source loading, testing commands, and a regression test harness. On top of the language runtime, the project introduces thread tasks and thread channels, allowing scripts to describe concurrent producer-consumer workloads.
+
+The main extension of this thesis is a geometry-oriented heterogeneous computing layer. A cross-device vector abstraction named UVec is designed to manage CPU and CUDA buffers under one logical vector interface. UVec records which copy is currently valid, automatically copies data from CPU to CUDA or from CUDA to CPU when a device requests the latest value, and exposes unified raw pointer interfaces for CPU and CUDA backends. Based on UVec, the thesis implements a geom command library. The library covers basic two-dimensional geometry operations and batch algorithms such as distance matrices, nearest point queries, circle range counting, bounding-box reduction, affine transformations, and AABB collision checks.
+
+The thesis evaluates the system using semantic regression tests, CPU/GPU equivalence tests, random differential tests, edge-case tests, performance scaling experiments, and concurrent geometry workloads. The results show that CUDA acceleration is effective for large independent geometry workloads, while small workloads are often dominated by command dispatch, output allocation, kernel launch, synchronization, and readback overhead. The project demonstrates that a compact scripting language can serve as a practical control layer for computational geometry and heterogeneous execution.
+
+\cnkeywords{Scripting interpreter; Tcl; Computational geometry; CUDA; UVec; Heterogeneous computing}
+\end{cnabstract}
+
+\begin{enabstract}
+FTCL is not only a collection of geometry functions. It is a complete experimental platform that connects a scripting language, runtime data structures, concurrency primitives, cross-device memory management, CPU algorithms, CUDA kernels, and reproducible benchmark artifacts. This thesis therefore focuses on system integration: how a small interpreter can control large-scale algorithmic workloads, how vector-like data can move between CPU and GPU without exposing low-level memory operations to scripts, and how performance claims can be supported by tests and generated figures.
+
+The final system provides three layers of contribution. First, the interpreter layer offers a Tcl-like command model that is simple enough to implement yet expressive enough for algorithm scripts. Second, the UVec layer abstracts CPU/CUDA synchronization and creates a unified pointer bridge for foreign-function style backend calls. Third, the geometry layer demonstrates the practical value of this runtime through algorithms that are common in programming contests, game scenes, collision detection, and spatial queries. The thesis also discusses limitations, including parser overhead, CUDA break-even behavior, readback cost, and the need for future memory-pool and stream-based scheduling.
+
+\enkeywords{FTCL; Tcl-like interpreter; GPU acceleration; UVec; geometry scripting; benchmark}
+\end{enabstract}
+
+\tableofcontents
+\JOUListOfTablesAndFigures
+
+\mainmatter
+\input{contents/chapters/chapter1}
+\input{contents/chapters/chapter2}
+\input{contents/chapters/chapter3}
+\input{contents/chapters/chapter4}
+\input{contents/chapters/chapter5}
+\input{contents/chapters/chapter6}
+
+\backmatter
+\JOUBackmatterChapter{Conclusion and Future Work}
+This thesis completed an end-to-end system that starts from a Tcl-style interpreter and grows into a CPU/CUDA hybrid computational geometry scripting platform. FTCL now supports a practical language subset, thread channels, UVec cross-device vectors, CPU geometry algorithms, CUDA kernels, tests, benchmarks, and thesis-ready figures. The experiments show that the GPU backend is most useful when work items are numerous and independent, while small inputs and immediate readback may erase the benefit of parallel execution.
+
+Future work should proceed in four directions. First, UVec should be further aligned with the standard vector interface, including iterators, capacity management, insertion, erasure, and stronger exception-safety guarantees. Second, the CUDA backend should add memory pools, asynchronous streams, and better batching to reduce allocation and synchronization costs. Third, the parser path should continue moving toward token-stream parsing, AST representation, bytecode execution, and expression-level Pratt parsing. Fourth, the geometry library can be extended with spatial indexes, dynamic nearest-neighbor search, polygon boolean operations, and more realistic application demos.
+
+\JOUAcknowledgementChapter
+\input{contents/acknowledgements}
+
+\nocite{*}
+\JOUPrintBibliography
+
+\appendix
+\input{contents/appendices/appendixA}
+
+\end{document}

@@ -1,0 +1,49 @@
+\chapter{Applications and Discussion}
+
+\section{Geometry Application Demo}
+Figure \ref{fig:real-demo} presents a scene-style geometry demo. The scene contains a player, enemies, obstacles, radar ranges, and target points. A script can use \texttt{geom nearest\_point} to find the nearest enemy, \texttt{geom range\_count\_circle} to count enemies in a radar region, and \texttt{geom collision\_aabb} to check collisions with walls.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.90\textwidth]{geometry-real-demo.png}
+  \caption{A realistic geometry application scene controlled by FTCL scripts}
+  \label{fig:real-demo}
+\end{figure}
+
+This example helps non-specialist readers understand why the geometry commands matter. They are not isolated mathematical functions. They can be composed into a practical script pipeline.
+
+\section{Algorithm Visualization}
+Figure \ref{fig:geom-visual} visualizes representative algorithms: point-in-polygon classification, nearest point, circle range query, and AABB collision. Such figures are useful in a thesis defense because they explain the workload without requiring the reader to inspect code.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.88\textwidth]{geometry_algorithm_visualization.png}
+  \caption{Visualization of representative geometry algorithms}
+  \label{fig:geom-visual}
+\end{figure}
+
+\section{Difference from a Normal Geometry Library}
+A normal geometry library exposes C++ functions such as \texttt{distance(a,b)} or \texttt{segments\_intersect(a,b,c,d)}. FTCL is different in four ways.
+
+\begin{itemize}
+  \item It exposes geometry operations through scripts, so users can combine tasks without recompiling C++.
+  \item It uses UVec handles to avoid repeatedly converting large arrays into script strings.
+  \item It supports both CPU and CUDA backends under one command interface.
+  \item It includes tests, random differential checks, equivalence checks, and generated figures for thesis-level evaluation.
+\end{itemize}
+
+Therefore, the project is not simply a geometry function collection. Its value is the integration of interpreter design, data management, heterogeneous computing, and experimental validation.
+
+\section{Limitations}
+The current system has several limitations.
+
+First, UVec is not yet fully aligned with \texttt{std::vector}. It supports cross-device storage and script handles, but it should add more familiar container operations such as iterators, capacity management, insertion, erasure, and stronger exception-safety guarantees.
+
+Second, the CUDA backend is still simple. It does not yet use memory pools, asynchronous streams, advanced reductions, shared-memory tiling, or spatial indexes. These techniques are important for reducing overhead and improving performance.
+
+Third, the token-stream parser is architecturally cleaner but not always faster than the legacy parser. Future work should reduce token copying, compress whitespace handling, avoid repeated lexing for sub-scripts, and introduce AST or bytecode execution.
+
+Fourth, the benchmark figures should be repeated under a fixed hardware environment with more rounds and confidence intervals. Some CUDA break-even points can fluctuate because end-to-end timing includes allocation, synchronization, and system scheduling noise.
+
+\section{Practical Value for the Graduation Project}
+This project is suitable as a graduation thesis because it has both engineering depth and algorithmic content. The interpreter demonstrates systems programming. The geometry library demonstrates algorithm design. UVec and CUDA demonstrate heterogeneous computing. The benchmark pipeline demonstrates reproducibility. Together, these parts form a richer result than a single algorithm demo.

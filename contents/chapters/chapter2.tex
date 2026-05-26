@@ -1,0 +1,29 @@
+\chapter{Related Work and Technical Background}
+
+\section{Tcl-style Interpretation}
+A Tcl-style language is command-oriented. The first word of a command is used as the command name, and the remaining words are passed as arguments after substitution. This model differs from expression-centered languages. In a Tcl-like system, most syntax is deliberately shallow, while semantics are provided by commands.
+
+FTCL follows this philosophy but implements only the subset needed for the project. It supports variables, arrays, procedures, control flow, lists, dictionaries, expression evaluation, source loading, and tests. The system is not intended to be a complete Tcl implementation. Instead, it is a controlled interpreter used as a platform for geometry and heterogeneous-computing experiments.
+
+\section{Parser Design}
+FTCL currently contains two parser directions. The legacy parser reads directly from a character stream. It has a small constant factor and is useful as a stable reference. The token-stream parser first performs lexing and then uses token cursors to identify command and word boundaries. The token-stream path is not always faster, but it is more suitable for future work such as span-based diagnostics, AST construction, bytecode generation, and parser backend comparison.
+
+The project also uses shadow comparison during migration. In this mode, both parser paths can parse the same input and compare the resulting structure. This reduces the risk of semantic regressions when replacing old parsing logic with a more structured token-stream implementation.
+
+\section{Expression Evaluation}
+Expression evaluation is handled separately from ordinary command parsing. The \texttt{expr} command needs operator precedence, associativity, short-circuit logic, ternary expressions, integer overflow checks, bitwise operations, division semantics, variable references, and command substitution. FTCL uses layered recursive descent functions, where lower-precedence functions call higher-precedence functions. This structure makes expressions such as \texttt{a || b \&\& c} parse correctly because logical AND is handled below logical OR.
+
+Short-circuit behavior is important. When the left side of a logical OR is true, the right side must still be parsed so that the parser position remains correct, but it should not execute side effects. FTCL handles this using an evaluation mode guard.
+
+\section{Computational Geometry}
+Computational geometry studies algorithms for geometric objects such as points, segments, polygons, and regions. This project focuses on two-dimensional geometry. The basic operations include dot product, cross product, orientation, distance, segment intersection, point-to-segment distance, polygon area, point-in-polygon classification, and convex hull construction.
+
+Batch geometry algorithms are particularly relevant to GPU acceleration. A distance matrix has one output per point pair. A range-count query has one output per query region. A nearest-point query has one output per query point. These operations contain many independent work items and can therefore be mapped naturally to CUDA threads.
+
+\section{CUDA and End-to-end Performance}
+CUDA exposes the GPU as a massively parallel device. A typical CUDA program allocates device memory, transfers input data, launches kernels, synchronizes, and copies results back to the host. However, a user of a scripting language does not want to manage these steps manually. FTCL therefore hides them behind UVec and geom commands.
+
+The experiments in this thesis measure end-to-end FTCL command time rather than pure kernel time. This includes command dispatch, handle lookup, UVec synchronization, output allocation, kernel launch, synchronization, and sometimes readback. End-to-end timing is more conservative, but it better reflects what a script user experiences.
+
+\section{Reproducible Experiment Artifacts}
+The project stores benchmark scripts, CSV files, and SVG/PNG figures under the \texttt{docs} directory. This organization is important for a thesis project because it links claims to reproducible artifacts. Instead of manually drawing figures, the project regenerates them from executable tests and benchmark data.

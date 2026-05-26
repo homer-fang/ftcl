@@ -19,6 +19,8 @@ text{font-family:Arial,Helvetica,sans-serif;fill:#111827;}
 <text class="title" x="70.00" y="44.00" text-anchor="start">FTCL real geometry demo scene</text>
 <text class="subtitle" x="70.00" y="66.00" text-anchor="start">Nearest target + range count + collision checks in one script pipeline.</text>
 <rect x="90" y="120" width="620" height="560" fill="#f8fafc" stroke="#94a3b8" stroke-width="2"/>
+<circle cx="150" cy="600" r="120" fill="#dcfce7"/>
+<circle cx="500" cy="520" r="120" fill="#dcfce7"/>
 <line x1="90.0" y1="120" x2="90.0" y2="680" stroke="#e2e8f0"/>
 <line x1="90" y1="120.0" x2="710" y2="120.0" stroke="#e2e8f0"/>
 <line x1="152.0" y1="120" x2="152.0" y2="680" stroke="#e2e8f0"/>
@@ -53,8 +55,8 @@ text{font-family:Arial,Helvetica,sans-serif;fill:#111827;}
 <circle cx="360" cy="560" r="8" fill="#dc2626"/>
 <line x1="150" y1="600" x2="360" y2="560" stroke="#f59e0b" stroke-width="3" stroke-dasharray="6 5"/>
 <text class="tiny" x="265.00" y="570.00" text-anchor="start">nearest target</text>
-<circle cx="150" cy="600" r="120" fill="#16a34a" opacity="0.08" stroke="#16a34a" stroke-width="2"/>
-<circle cx="500" cy="520" r="120" fill="#16a34a" opacity="0.08" stroke="#16a34a" stroke-width="2"/>
+<circle cx="150" cy="600" r="120" fill="none" stroke="#22c55e" stroke-width="2"/>
+<circle cx="500" cy="520" r="120" fill="none" stroke="#22c55e" stroke-width="2"/>
 <text class="label" x="760.00" y="150.00" text-anchor="start">Script excerpt</text>
 <rect x="740" y="160" width="450" height="340" rx="14" fill="#0f172a"/>
 <text class="code" x="762" y="198">set world [geom uvec_points $map_points cuda:0]</text>

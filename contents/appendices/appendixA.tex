@@ -1,0 +1,46 @@
+\chapter{Build, Test, and Reproduction Commands}
+
+\section{CPU Build}
+\begin{lstlisting}[language=bash]
+cd /mnt/d/ftcl/ftcl
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release \
+  -DBUILD_TESTS=ON \
+  -DFTCL_ENABLE_CUDA=OFF \
+  -DFTCL_CXX_STANDARD=20
+cmake --build build -j8
+ctest --test-dir build --output-on-failure
+\end{lstlisting}
+
+\section{CUDA Build}
+\begin{lstlisting}[language=bash]
+cmake -S . -B /tmp/ftcl-build-geometry-cuda \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DBUILD_TESTS=ON \
+  -DFTCL_ENABLE_CUDA=ON \
+  -DFTCL_CXX_STANDARD=20
+cmake --build /tmp/ftcl-build-geometry-cuda -j8
+\end{lstlisting}
+
+\section{Core Benchmark}
+\begin{lstlisting}[language=bash]
+./build/test/bench_ftcl ./docs/data/benchmarks
+python3 ./docs/scripts/benchmarks/plot_benchmarks.py \
+  ./docs/data/benchmarks ./docs/figures/benchmarks
+\end{lstlisting}
+
+\section{Geometry Figures}
+\begin{lstlisting}[language=bash]
+python3 docs/scripts/geometry/generate_geometry_figures.py \
+  --build-dir /tmp/ftcl-build-geometry-cuda
+
+python3 docs/scripts/geometry/generate_geometry_study_addons.py \
+  --build-dir /tmp/ftcl-build-geometry-cuda
+\end{lstlisting}
+
+\section{Thesis Compilation}
+\begin{lstlisting}[language=bash]
+cd /mnt/d/ftcl/ftcl
+latexmk main.tex
+\end{lstlisting}
+
+With the current latexmk configuration, the generated PDF is written to \texttt{build/main.pdf}.

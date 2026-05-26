@@ -1,0 +1,205 @@
+\chapter{Evaluation}
+
+\section{Evaluation Goals}
+The evaluation answers three questions. First, does the language runtime preserve the intended semantics? Second, do CPU and CUDA geometry backends produce equivalent results? Third, when does CUDA provide an end-to-end speedup from the perspective of an FTCL script?
+
+The project uses generated CSV files and figures under the \texttt{docs} directory. The measurements include semantic pass rate, parser backend timing, thread-channel latency, frame-time distribution, CPU/CUDA geometry speedup, throughput, numerical error, break-even point, ablation data, and concurrent geometry performance.
+
+\section{Experimental Methodology}
+All performance results in this thesis are treated as end-to-end system measurements unless explicitly stated otherwise. A geometry command measurement includes FTCL command dispatch, argument parsing, UVec handle lookup, device synchronization, output UVec allocation, backend execution, and synchronization after CUDA kernel launch. It does not represent pure CUDA kernel time. This choice is intentional because the thesis evaluates the experience of a script-level user.
+
+The benchmark pipeline follows these principles.
+
+\begin{enumerate}
+  \item \textbf{Release builds are used.} Debug builds are excluded from performance discussion because interpreter dispatch and STL containers are highly sensitive to optimization level.
+  \item \textbf{Warmup is separated from measurement.} Parser backend timing and geometry timing scripts perform warmup runs before recording samples when supported by the executable.
+  \item \textbf{Median or percentile values are preferred.} Latency distributions are summarized using P50, P95, and P99. Geometry timing uses representative median command latency when multiple samples are available.
+  \item \textbf{Readback is treated as a separate cost.} Some experiments keep results inside UVec handles, while ablation experiments explicitly measure the cost of converting large UVec outputs back into script lists.
+  \item \textbf{CPU and CUDA results are compared before speed is interpreted.} CUDA speedups are meaningful only if CPU/GPU equivalence tests pass under the selected numerical tolerance.
+\end{enumerate}
+
+The main derived metrics are defined as follows:
+\[
+  \mathrm{speedup} = \frac{T_{\mathrm{CPU}}}{T_{\mathrm{CUDA}}},
+  \quad
+  \mathrm{throughput} = \frac{\mathrm{work\ items}}{T},
+  \quad
+  \mathrm{work\ items} = N \times Q.
+\]
+For distance matrix, nearest point, and range-count workloads, \(N\) denotes the number of data points and \(Q\) denotes the number of query points or query regions.
+
+\begin{table}[H]
+\centering
+\caption{Experimental environment information recorded for reproducibility}
+\label{tab:environment}
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+Item & Recorded or recommended value \\
+\midrule
+Operating system & WSL Ubuntu environment used for build and tests \\
+Build system & CMake with Release configuration \\
+C++ standard & C++20, selected by \texttt{FTCL\_CXX\_STANDARD=20} \\
+Compiler & GCC or Clang available inside WSL \\
+CUDA option & \texttt{FTCL\_ENABLE\_CUDA=ON} for CUDA geometry experiments \\
+CPU build path & \texttt{build} or \texttt{/tmp/ftcl-build-geometry-cpu} \\
+CUDA build path & \texttt{/tmp/ftcl-build-geometry-cuda} \\
+Benchmark data & CSV files under \texttt{docs/data/benchmarks} and \texttt{docs/data/geometry} \\
+Generated figures & SVG/PNG figures under \texttt{docs/figures} and \texttt{contents/figures} \\
+Important note & Hardware model, GPU model, driver version, and commit hash should be recorded in the final defense version \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Table \ref{tab:environment} is intentionally written as an environment record rather than a universal claim. Performance numbers in this thesis should be interpreted as measurements from the recorded environment, not as hardware-independent constants.
+
+\section{Semantic Regression Tests}
+The semantic regression tests cover core commands, collections, control flow, expressions, and threading. Figure \ref{fig:semantic-pass} shows that the currently measured suites reach 100 percent pass rate.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.78\textwidth]{semantic-pass-rate.png}
+  \caption{Semantic pass rate by test suite}
+  \label{fig:semantic-pass}
+\end{figure}
+
+This result does not mean FTCL is a complete Tcl implementation. It means that the chosen subset has a stable regression baseline. This is important because parser and expression changes can easily introduce subtle behavior changes.
+
+\section{Parser Backend Timing}
+Figure \ref{fig:parser-backend} compares the legacy parser and token-stream parser on the Tcl subset benchmark. The token-stream path is not automatically faster because it performs an additional lexing pass and stores token metadata. Its value is mainly architectural: better diagnostics, clearer command boundaries, and a path toward AST and bytecode execution.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.80\textwidth]{parser-backend-timing.png}
+  \caption{Timing comparison between parser backends}
+  \label{fig:parser-backend}
+\end{figure}
+
+\section{Concurrency and Runtime Smoothness}
+Thread-channel latency and frame-time distribution are shown in Figures \ref{fig:channel-latency} and \ref{fig:frame-time}. The channel experiment estimates one-way latency from a ping-pong round trip. The frame-time experiment measures a non-interactive game-like workload.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.78\textwidth]{channel-latency.png}
+  \caption{Thread-channel one-way latency distribution}
+  \label{fig:channel-latency}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.78\textwidth]{frame-time.png}
+  \caption{Frame-time distribution for a game-like workload}
+  \label{fig:frame-time}
+\end{figure}
+
+These experiments show that FTCL can support simple concurrent scripts and interactive demos. They also provide tail-latency metrics such as P50, P95, and P99, which are more informative than average latency alone.
+
+\section{CPU/GPU Equivalence}
+Correctness is more important than speed for the CUDA backend. The equivalence tests run the same geometry workload on CPU and CUDA, compare the returned UVec values, and allow a small tolerance for floating-point differences. Figure \ref{fig:error-dist} shows the numerical error distribution.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.70\textwidth]{geometry-error-distribution.png}
+  \caption{Numerical error distribution between CPU and CUDA geometry results}
+  \label{fig:error-dist}
+\end{figure}
+
+The observed errors are close to zero in the generated data. This supports the claim that the CUDA implementation preserves the intended geometry semantics for the tested workloads.
+
+\section{Geometry Performance Scaling}
+The performance experiment focuses on three representative algorithms: distance matrix, nearest point, and circle range count. They are chosen because each contains many independent work items. Table \ref{tab:geom-speedup} summarizes the end-to-end speedup values computed from the stored performance CSV.
+
+\begin{table}[H]
+\centering
+\caption{End-to-end CPU/CUDA speedup for representative geometry algorithms}
+\label{tab:geom-speedup}
+\begin{tabular}{lrrr}
+\toprule
+Algorithm & N,Q & Work items & Speedup \\
+\midrule
+Distance matrix & 2048, 256 & 524288 & 6.77x \\
+Nearest point & 2048, 256 & 524288 & 2.05x \\
+Circle range count & 2048, 256 & 524288 & 1.41x \\
+Distance matrix & 8192, 1024 & 8388608 & 51.90x \\
+Nearest point & 8192, 1024 & 8388608 & 8.39x \\
+Circle range count & 8192, 1024 & 8388608 & 6.50x \\
+Distance matrix & 32768, 2048 & 67108864 & 224.00x \\
+Nearest point & 32768, 2048 & 67108864 & 16.55x \\
+Circle range count & 32768, 2048 & 67108864 & 13.13x \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.82\textwidth]{geometry-speedup.png}
+  \caption{CPU/CUDA speedup for batch geometry algorithms}
+  \label{fig:geom-speedup}
+\end{figure}
+
+Figures \ref{fig:execution-bars} and \ref{fig:throughput} show execution time and throughput. The distance matrix gains the largest speedup because it has simple independent work items. Nearest point and range count also benefit from CUDA, but they perform more memory reads per query and therefore scale differently.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.82\textwidth]{geometry-execution-bars.png}
+  \caption{Execution-time comparison at the largest measured scale}
+  \label{fig:execution-bars}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.82\textwidth]{geometry-throughput.png}
+  \caption{Throughput curve for geometry algorithms}
+  \label{fig:throughput}
+\end{figure}
+
+\section{Break-even Analysis}
+CUDA acceleration has fixed overhead. A small workload may be slower on CUDA because kernel launch, synchronization, allocation, and command dispatch dominate the useful computation. Figure \ref{fig:break-even} uses work items \(N \times Q\) as the horizontal axis and speedup as the vertical axis.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.82\textwidth]{geometry-break-even.png}
+  \caption{CUDA break-even analysis by work items}
+  \label{fig:break-even}
+\end{figure}
+
+The stored data estimates the break-even point at about 8192 work items for distance matrix, about 47848 for nearest point, and about 121209 for circle range count. These values are not universal constants. They depend on hardware, driver state, input size, output size, and whether the measurement includes readback.
+
+\section{Ablation and Concurrent Geometry}
+The ablation experiment separates inline literal parsing, prebuilt UVec handles, and readback overhead. It shows that prebuilt handles can greatly reduce command latency, especially for CUDA commands. It also shows that reading large outputs back to a script list can dominate total time. Therefore, a high-performance script should keep data in UVec form across multiple geometry commands and only read back final summaries.
+
+\begin{table}[H]
+\centering
+\caption{Interpretation of the geometry ablation experiment}
+\label{tab:ablation-interpretation}
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+Experiment mode & Interpretation \\
+\midrule
+Inline literal input & Measures the full cost of parsing point lists from script text, creating temporary data structures, dispatching the command, and executing the backend. This mode is convenient but can be dominated by script parsing for large inputs. \\
+Prebuilt UVec without readback & Measures the cost of handle lookup, device synchronization, output allocation, and backend execution while keeping data resident in UVec form. This mode best represents a high-throughput script pipeline. \\
+Prebuilt UVec with readback & Adds the cost of converting the output UVec into a script list. For large outputs such as distance matrices, this can dominate total time and hide the benefit of CUDA computation. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+The ablation result leads to a practical design rule: FTCL scripts should use UVec handles as long-lived data objects and should avoid converting large intermediate results back into strings. This is similar to the principle of data residency in GPU programming. Acceleration is strongest when data is copied to the device once, processed by several commands, and read back only at the end.
+
+The same interpretation also explains why CUDA is not always faster for small inputs. Even if the kernel itself is efficient, the total command path still pays fixed costs for launch, synchronization, output allocation, and possible readback. Therefore, the break-even point is a system-level property, not just an algorithmic property.
+
+The concurrent geometry experiment is shown in Figures \ref{fig:concurrency-throughput} and \ref{fig:concurrency-latency}. CPU throughput improves with more workers until contention appears. CUDA throughput is flatter because multiple script workers compete for one GPU and synchronization point.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.78\textwidth]{geometry-concurrency-throughput.png}
+  \caption{Throughput of concurrent geometry workloads}
+  \label{fig:concurrency-throughput}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.78\textwidth]{geometry-concurrency-latency.png}
+  \caption{P95 latency of concurrent geometry workloads}
+  \label{fig:concurrency-latency}
+\end{figure}
+
+This result suggests an important future direction: the interpreter can express concurrent workloads, but the GPU backend should add a more deliberate scheduling layer.

@@ -507,6 +507,11 @@ def draw_real_demo(out: Path) -> None:
 
     x0, y0, cw, ch = 90, 120, 620, 560
     p.append(f'<rect x="{x0}" y="{y0}" width="{cw}" height="{ch}" fill="#f8fafc" stroke="#94a3b8" stroke-width="2"/>\n')
+    radar_centers = [(150, 600), (500, 520)]
+
+    # Use a pre-blended pale green fill because some SVG-to-PNG converters ignore opacity.
+    for cx, cy in radar_centers:
+        p.append(f'<circle cx="{cx}" cy="{cy}" r="120" fill="#dcfce7"/>\n')
 
     for i in range(11):
         gx = x0 + i * cw / 10
@@ -520,7 +525,6 @@ def draw_real_demo(out: Path) -> None:
 
     player = (150, 600)
     enemies = [(300, 160), (520, 180), (640, 420), (580, 620), (360, 560)]
-    radar_centers = [(150, 600), (500, 520)]
 
     p.append(f'<circle cx="{player[0]}" cy="{player[1]}" r="11" fill="#2563eb"/>\n')
     p.append(text(player[0] + 24, player[1] + 4, 'player', 'tiny', 'start'))
@@ -533,7 +537,7 @@ def draw_real_demo(out: Path) -> None:
     p.append(text((player[0] + nearest[0]) / 2 + 10, (player[1] + nearest[1]) / 2 - 10, 'nearest target', 'tiny', 'start'))
 
     for cx, cy in radar_centers:
-        p.append(f'<circle cx="{cx}" cy="{cy}" r="120" fill="#16a34a" opacity="0.08" stroke="#16a34a" stroke-width="2"/>\n')
+        p.append(f'<circle cx="{cx}" cy="{cy}" r="120" fill="none" stroke="#22c55e" stroke-width="2"/>\n')
 
     p.append(text(760, 150, 'Script excerpt', 'label', 'start'))
     script_lines = [

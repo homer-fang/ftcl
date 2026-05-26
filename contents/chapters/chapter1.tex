@@ -1,0 +1,45 @@
+\chapter{Introduction}
+
+\section{Background}
+Scripting languages are often used as glue layers between low-level system capabilities and high-level application logic. Tcl is a representative example of this design philosophy. Its core syntax is simple: a script is a sequence of commands, and each command is a sequence of words. Variable substitution, command substitution, and expression evaluation are performed at runtime \cite{ousterhout1994tcl,tcldocs}. This command-centered model is easy to embed and easy to extend with new native commands.
+
+Computational geometry is another important area for algorithm-oriented software. Problems involving points, segments, polygons, bounding boxes, distances, intersections, nearest-neighbor queries, and range queries appear in programming contests, graphics, robotics, games, and map analysis \cite{deberg2008computational,preparata1985computational}. Many geometry workloads are also naturally parallel. For example, each entry of a distance matrix can be computed independently, and each range query can be assigned to a different thread. This makes computational geometry a suitable domain for GPU acceleration \cite{cuda-guide}.
+
+This thesis combines these two ideas. FTCL uses a Tcl-style interpreter as the control layer, C++ as the host implementation language, and CUDA as the acceleration backend for selected batch geometry algorithms. The goal is not merely to implement geometry functions, but to build a scriptable system where a user can describe a geometry workload without manually managing CUDA memory, raw device pointers, or synchronization.
+
+\section{Motivation}
+The project is motivated by three observations.
+
+First, an interpreter project is a good way to demonstrate systems engineering. It requires parsing, value representation, scoping, command dispatch, error handling, testing, and performance evaluation. These components interact heavily, so the project is richer than a single standalone algorithm implementation.
+
+Second, geometry algorithms are familiar to programming-contest students and easy to validate visually. Basic functions such as orientation and segment intersection are small, while batch tasks such as distance matrices and nearest-point queries are large enough to show performance scaling.
+
+Third, heterogeneous computing needs a practical data abstraction. If every geometry command manually calls cudaMalloc, cudaMemcpy, and cudaFree, the script layer becomes difficult to use and difficult to test. UVec addresses this problem by providing a vector-like object that can hold both CPU and CUDA copies and synchronize them on demand.
+
+\section{Research Questions}
+This thesis is organized around the following research questions.
+
+\begin{description}
+  \item[RQ1:] Can a compact Tcl-style interpreter provide a stable enough semantic foundation for algorithmic scripts, concurrency primitives, and extension commands?
+  \item[RQ2:] Can a cross-device vector abstraction hide CPU/CUDA data movement while preserving a simple vector-like programming model?
+  \item[RQ3:] Which computational geometry workloads benefit from CUDA acceleration when the measurement is end-to-end script command latency rather than pure kernel time?
+  \item[RQ4:] What runtime overheads limit the acceleration of a script-driven heterogeneous geometry system, and how can these overheads be observed experimentally?
+\end{description}
+
+These questions separate the work into four layers: language semantics, memory abstraction, algorithm acceleration, and experimental analysis. This distinction is important because a successful scripting system must be correct and usable before raw performance becomes meaningful.
+
+\section{Main Contributions}
+The main contributions of this thesis are as follows.
+
+\begin{enumerate}
+  \item \textbf{A script runtime for algorithm experiments.} FTCL implements a Tcl-style command model, variable substitution, expression evaluation, procedures, collections, source loading, testing commands, and thread channels in C++20.
+  \item \textbf{A cross-device vector abstraction.} UVec models one logical vector with CPU and CUDA physical copies. It tracks valid copies, performs synchronization on demand, and exposes unified read-only and mutable raw pointer interfaces.
+  \item \textbf{A script-facing computational geometry library.} The \texttt{geom} command family exposes scalar and batch geometry operations to FTCL scripts, allowing large point sets and query sets to be passed by UVec handles instead of repeated script strings.
+  \item \textbf{CUDA acceleration for batch geometry.} The project implements CUDA backends for representative independent-work-item algorithms such as distance matrix, nearest point, range counting, transformation, orientation, and AABB collision.
+  \item \textbf{A reproducible evaluation pipeline.} The project includes semantic tests, CPU/GPU equivalence tests, random differential tests, edge-case tests, performance-scale tests, ablation studies, concurrency experiments, CSV outputs, and generated thesis figures.
+\end{enumerate}
+
+The novelty of the project lies in the integration of these components. FTCL is not only an interpreter, UVec is not only a container, and the geometry library is not only a set of algorithms. Together they form a script-driven heterogeneous geometry experimentation platform.
+
+\section{Thesis Organization}
+Chapter 2 introduces related technologies. Chapter 3 presents the overall system design. Chapter 4 describes the implementation of the interpreter, UVec, and geometry backends. Chapter 5 evaluates correctness and performance. Chapter 6 discusses applications, limitations, and possible improvements. The appendix gives build, test, benchmark, and thesis compilation commands.
