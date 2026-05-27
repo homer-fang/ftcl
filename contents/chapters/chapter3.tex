@@ -12,6 +12,53 @@ The architecture of FTCL is shown in Figure \ref{fig:system-arch}. A script is p
 
 The architecture separates concerns clearly. The parser and interpreter handle language semantics. The command layer exposes stable user-facing operations. UVec manages data location and synchronization. The CPU and CUDA backends implement algorithms.
 
+\section{Engineering Scope}
+Table \ref{tab:engineering-scope} summarizes the main engineering components of the project. The goal of this table is to make the system scale visible: FTCL is not only a set of isolated algorithms, but an integrated interpreter, memory abstraction, geometry library, CUDA backend, testing framework, and benchmark pipeline.
+
+\begin{table}[htbp]
+\centering
+\caption{Engineering scope of the FTCL system}
+\label{tab:engineering-scope}
+\small
+\begin{tabularx}{\textwidth}{lXXX}
+\toprule
+Component & Main files & Main classes/functions & Role \\
+\midrule
+Interpreter core & \texttt{interp.hpp}, \texttt{type.hpp}, \texttt{parser.hpp} & \texttt{Interp}, \texttt{Value}, \texttt{Word}, \texttt{Script} & Script parsing, evaluation, variables, procedures, and command dispatch. \\
+Expression parser & \texttt{expr.hpp} & \texttt{ExprParser}, \texttt{Datum} & Arithmetic, comparison, logical, bitwise, ternary, and substitution-aware expressions. \\
+UVec layer & \texttt{uvec.hpp}, \texttt{commands.hpp} & \texttt{UVec<T>}, pointer wrappers, handle manager & Cross-device vector storage, CPU/CUDA synchronization, and script-visible handles. \\
+Geometry CPU backend & \texttt{geometry.hpp} & \texttt{Point}, \texttt{Segment}, \texttt{BoundingBox}, batch algorithms & Scalar and batch two-dimensional geometry algorithms on CPU data. \\
+CUDA backend & \texttt{geometry\_cuda.*} & kernels and launch wrappers & GPU acceleration for independent-work-item geometry algorithms. \\
+Tests & \texttt{test/*.cpp} & semantic, equivalence, random, edge, stress tests & Language validation, UVec consistency, and CPU/GPU correctness checks. \\
+Benchmarks and figures & \texttt{docs/data}, \texttt{docs/scripts}, \texttt{docs/figures} & CSV files and Python generators & Reproducible performance data and thesis-ready figures. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\caption{Quantitative implementation statistics}
+\label{tab:implementation-statistics}
+\small
+\begin{tabularx}{\textwidth}{lrX}
+\toprule
+Metric & Value & Meaning \\
+\midrule
+C++/CUDA source files & 56 & Header, source, CUDA, benchmark, and test files under \texttt{include}, \texttt{src}, and \texttt{test}. \\
+C++/CUDA source lines & 19151 & Total line count of \texttt{.hpp}, \texttt{.cpp}, and \texttt{.cu} files in the implementation and tests. \\
+Header/interface lines & 12881 & Core interpreter, UVec, parser, expression, command, and geometry interfaces. \\
+CUDA/source implementation lines & 642 & CUDA backend and non-header source files. \\
+Test source lines & 5628 & Regression, equivalence, edge-case, random, stress, and benchmark-related test code. \\
+CTest entries & 31 & Build-system registered tests used for regression and validation. \\
+CUDA kernels & 17 & Device kernels found in the CUDA geometry backend and related test paths. \\
+Benchmark executables & 6 & Non-interactive benchmark programs for runtime, geometry, and multi-GPU experiments. \\
+Benchmark/figure scripts & 5 & Scripts and documents under \texttt{docs/scripts} for data and figure generation. \\
+Generated SVG figures & 18 & Reproducible vector figures under \texttt{docs/figures}. \\
+Thesis PNG figures & 18 & Rendered figures copied into \texttt{contents/figures} for thesis compilation. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
 \section{Interpreter Runtime}
 The runtime contains values, words, scripts, scopes, and commands. A Value stores the script-level value. A Word represents one command argument before or after substitution. A Script is a list of commands. The interpreter maintains command tables and variable scopes.
 
@@ -293,3 +340,5 @@ Using handles is important. Large point sets should not be repeatedly converted 
 FTCL provides thread tasks and thread channels. A thread task runs a script asynchronously and can be awaited later. A thread channel stores messages in a queue protected by a mutex and a condition variable. It supports blocking receive and non-blocking try-receive.
 
 This concurrency model is useful for experiments. It can drive a game-like demo, simulate producer-consumer workloads, and dispatch multiple geometry requests through worker scripts. The current CUDA concurrency experiment also reveals a limitation: multiple script workers can contend for one GPU, so future work should add streams or a dedicated GPU scheduler.
+
+The concurrency design is evaluated later in both single-GPU contention and multi-GPU weak-scaling experiments. These experiments motivate the handle-level locking refinement described in Chapter 5.

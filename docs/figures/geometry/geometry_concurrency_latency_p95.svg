@@ -1,12 +1,12 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="700" viewBox="0 0 1200 700" role="img">
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="760" viewBox="0 0 1280 760" role="img">
 <style>
 text{font-family:Arial,Helvetica,sans-serif;fill:#111827;}
-.title{font-size:24px;font-weight:700;}
-.subtitle{font-size:13px;fill:#475569;}
-.axis{font-size:12px;fill:#374151;}
-.small{font-size:12px;fill:#475569;}
-.tiny{font-size:11px;fill:#64748b;}
-.label{font-size:14px;font-weight:700;}
+.title{font-size:28px;font-weight:700;}
+.subtitle{font-size:15px;fill:#475569;}
+.axis{font-size:15px;fill:#374151;}
+.small{font-size:14px;fill:#475569;}
+.tiny{font-size:13px;fill:#64748b;}
+.label{font-size:16px;font-weight:700;}
 .code{font-family:Consolas,Monaco,'Courier New',monospace;font-size:12px;fill:#e2e8f0;}
 .box{stroke:#1f2937;stroke-width:1.4;rx:14;ry:14;}
 </style>
@@ -15,43 +15,43 @@ text{font-family:Arial,Helvetica,sans-serif;fill:#111827;}
 <path d="M0,0 L0,6 L9,3 z" fill="#334155" />
 </marker>
 </defs>
-<rect x="0" y="0" width="1200" height="700" fill="#ffffff"/>
+<rect x="0" y="0" width="1280" height="760" fill="#ffffff"/>
 <text class="title" x="70.00" y="44.00" text-anchor="start">Concurrent geometry latency tail</text>
 <text class="subtitle" x="70.00" y="66.00" text-anchor="start">P95 one-request latency in the same worker/channel experiment; lower is better.</text>
-<line x1="95" y1="595.00" x2="970" y2="595.00" stroke="#e5e7eb"/>
-<text class="axis" x="83.00" y="599.00" text-anchor="end">0.00</text>
-<line x1="95" y1="454.63" x2="970" y2="454.63" stroke="#e5e7eb"/>
-<text class="axis" x="83.00" y="458.63" text-anchor="end">10.0k</text>
-<line x1="95" y1="314.25" x2="970" y2="314.25" stroke="#e5e7eb"/>
-<text class="axis" x="83.00" y="318.25" text-anchor="end">20.0k</text>
-<line x1="95" y1="173.88" x2="970" y2="173.88" stroke="#e5e7eb"/>
-<text class="axis" x="83.00" y="177.88" text-anchor="end">30.0k</text>
-<line x1="95" y1="90" x2="95" y2="595" stroke="#111827" stroke-width="1.4"/>
-<line x1="95" y1="595" x2="970" y2="595" stroke="#111827" stroke-width="1.4"/>
-<polyline points="95.00,531.31 386.67,548.84 678.33,542.64 970.00,429.92" fill="none" stroke="#16a34a" stroke-width="3"/>
-<circle cx="95.00" cy="531.31" r="4.5" fill="#16a34a"/>
-<circle cx="386.67" cy="548.84" r="4.5" fill="#16a34a"/>
-<circle cx="678.33" cy="542.64" r="4.5" fill="#16a34a"/>
-<circle cx="970.00" cy="429.92" r="4.5" fill="#16a34a"/>
-<polyline points="95.00,543.90 386.67,493.39 678.33,338.46 970.00,167.03" fill="none" stroke="#dc2626" stroke-width="3"/>
-<circle cx="95.00" cy="543.90" r="4.5" fill="#dc2626"/>
-<circle cx="386.67" cy="493.39" r="4.5" fill="#dc2626"/>
-<circle cx="678.33" cy="338.46" r="4.5" fill="#dc2626"/>
-<circle cx="970.00" cy="167.03" r="4.5" fill="#dc2626"/>
-<line x1="95.00" y1="595" x2="95.00" y2="601" stroke="#111827"/>
-<text class="axis" x="95.00" y="620.00" text-anchor="middle">1</text>
-<line x1="386.67" y1="595" x2="386.67" y2="601" stroke="#111827"/>
-<text class="axis" x="386.67" y="620.00" text-anchor="middle">2</text>
-<line x1="678.33" y1="595" x2="678.33" y2="601" stroke="#111827"/>
-<text class="axis" x="678.33" y="620.00" text-anchor="middle">4</text>
-<line x1="970.00" y1="595" x2="970.00" y2="601" stroke="#111827"/>
-<text class="axis" x="970.00" y="620.00" text-anchor="middle">8</text>
-<text class="axis" x="532.50" y="666.00" text-anchor="middle">Worker threads</text>
-<text class="axis" x="28" y="342.50" transform="rotate(-90 28 342.50)">Latency (microseconds)</text>
-<line x1="1004" y1="102" x2="1034" y2="102" stroke="#16a34a" stroke-width="3"/>
-<circle cx="1019" cy="102" r="4" fill="#16a34a"/>
-<text class="tiny" x="1046.00" y="106.00" text-anchor="start">cpu p95</text>
-<line x1="1004" y1="126" x2="1034" y2="126" stroke="#dc2626" stroke-width="3"/>
-<circle cx="1019" cy="126" r="4" fill="#dc2626"/>
-<text class="tiny" x="1046.00" y="130.00" text-anchor="start">cuda:0 p95</text>
+<line x1="120" y1="640.00" x2="990" y2="640.00" stroke="#e5e7eb"/>
+<text class="axis" x="108.00" y="644.00" text-anchor="end">0.00</text>
+<line x1="120" y1="489.90" x2="990" y2="489.90" stroke="#e5e7eb"/>
+<text class="axis" x="108.00" y="493.90" text-anchor="end">10.0k</text>
+<line x1="120" y1="339.80" x2="990" y2="339.80" stroke="#e5e7eb"/>
+<text class="axis" x="108.00" y="343.80" text-anchor="end">20.0k</text>
+<line x1="120" y1="189.69" x2="990" y2="189.69" stroke="#e5e7eb"/>
+<text class="axis" x="108.00" y="193.69" text-anchor="end">30.0k</text>
+<line x1="120" y1="100" x2="120" y2="640" stroke="#111827" stroke-width="1.4"/>
+<line x1="120" y1="640" x2="990" y2="640" stroke="#111827" stroke-width="1.4"/>
+<polyline points="120.00,571.90 410.00,590.64 700.00,584.01 990.00,463.48" fill="none" stroke="#16a34a" stroke-width="3"/>
+<circle cx="120.00" cy="571.90" r="4.5" fill="#16a34a"/>
+<circle cx="410.00" cy="590.64" r="4.5" fill="#16a34a"/>
+<circle cx="700.00" cy="584.01" r="4.5" fill="#16a34a"/>
+<circle cx="990.00" cy="463.48" r="4.5" fill="#16a34a"/>
+<polyline points="120.00,585.35 410.00,531.35 700.00,365.69 990.00,182.37" fill="none" stroke="#dc2626" stroke-width="3"/>
+<circle cx="120.00" cy="585.35" r="4.5" fill="#dc2626"/>
+<circle cx="410.00" cy="531.35" r="4.5" fill="#dc2626"/>
+<circle cx="700.00" cy="365.69" r="4.5" fill="#dc2626"/>
+<circle cx="990.00" cy="182.37" r="4.5" fill="#dc2626"/>
+<line x1="120.00" y1="640" x2="120.00" y2="646" stroke="#111827"/>
+<text class="axis" x="120.00" y="665.00" text-anchor="middle">1</text>
+<line x1="410.00" y1="640" x2="410.00" y2="646" stroke="#111827"/>
+<text class="axis" x="410.00" y="665.00" text-anchor="middle">2</text>
+<line x1="700.00" y1="640" x2="700.00" y2="646" stroke="#111827"/>
+<text class="axis" x="700.00" y="665.00" text-anchor="middle">4</text>
+<line x1="990.00" y1="640" x2="990.00" y2="646" stroke="#111827"/>
+<text class="axis" x="990.00" y="665.00" text-anchor="middle">8</text>
+<text class="axis" x="555.00" y="726.00" text-anchor="middle">Worker threads (count)</text>
+<text class="axis" x="120.00" y="84.00" text-anchor="start">Latency (microseconds)</text>
+<line x1="1024" y1="112" x2="1060" y2="112" stroke="#16a34a" stroke-width="4"/>
+<circle cx="1042" cy="112" r="5.5" fill="#16a34a"/>
+<text class="tiny" x="1074.00" y="117.00" text-anchor="start">cpu p95</text>
+<line x1="1024" y1="142" x2="1060" y2="142" stroke="#dc2626" stroke-width="4"/>
+<circle cx="1042" cy="142" r="5.5" fill="#dc2626"/>
+<text class="tiny" x="1074.00" y="147.00" text-anchor="start">cuda:0 p95</text>
 </svg>

@@ -26,7 +26,7 @@ The current paper-mode benchmark is designed to measure the geometry command pat
 
 ## Add-on study bundle
 
-To generate the break-even chart, ablation table, real demo scene, UVec state machine, and concurrency experiment charts:
+To generate the break-even chart, ablation table, ocean spatial-computing demo scene, UVec state machine, and concurrency experiment charts:
 
 ```bash
 python3 docs/scripts/geometry/generate_geometry_study_addons.py --build-dir /tmp/ftcl-build-geometry-cuda

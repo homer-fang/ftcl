@@ -5,7 +5,7 @@ Scripting languages are often used as glue layers between low-level system capab
 
 Computational geometry is another important area for algorithm-oriented software. Problems involving points, segments, polygons, bounding boxes, distances, intersections, nearest-neighbor queries, and range queries appear in programming contests, graphics, robotics, games, and map analysis \cite{deberg2008computational,preparata1985computational}. Many geometry workloads are also naturally parallel. For example, each entry of a distance matrix can be computed independently, and each range query can be assigned to a different thread. This makes computational geometry a suitable domain for GPU acceleration \cite{cuda-guide}.
 
-This thesis combines these two ideas. FTCL uses a Tcl-style interpreter as the control layer, C++ as the host implementation language, and CUDA as the acceleration backend for selected batch geometry algorithms. The goal is not merely to implement geometry functions, but to build a scriptable system where a user can describe a geometry workload without manually managing CUDA memory, raw device pointers, or synchronization.
+This thesis combines these two ideas and places them in an ocean-oriented application context. FTCL uses a Tcl-style interpreter as the control layer, C++ as the host implementation language, and CUDA as the acceleration backend for selected batch geometry algorithms. The goal is not merely to implement geometry functions, but to build a scriptable system where a user can describe marine ranch sensing, smart port spatial analysis, UAV inspection, or ship collision checking without manually managing CUDA memory, raw device pointers, or synchronization.
 
 \section{Motivation}
 The project is motivated by three observations.
@@ -16,6 +16,8 @@ Second, geometry algorithms are familiar to programming-contest students and eas
 
 Third, heterogeneous computing needs a practical data abstraction. If every geometry command manually calls cudaMalloc, cudaMemcpy, and cudaFree, the script layer becomes difficult to use and difficult to test. UVec addresses this problem by providing a vector-like object that can hold both CPU and CUDA copies and synchronize them on demand.
 
+Fourth, many realistic spatial-computing tasks are no longer single-device tasks. A marine monitoring or port inspection system may involve many sensors, large detection sets, and multiple independent query regions. If the hardware platform provides several GPUs, the scripting system should be able to expose these devices and dispatch independent workloads without being serialized by the interpreter runtime.
+
 \section{Research Questions}
 This thesis is organized around the following research questions.
 
@@ -24,9 +26,10 @@ This thesis is organized around the following research questions.
   \item[RQ2:] Can a cross-device vector abstraction hide CPU/CUDA data movement while preserving a simple vector-like programming model?
   \item[RQ3:] Which computational geometry workloads benefit from CUDA acceleration when the measurement is end-to-end script command latency rather than pure kernel time?
   \item[RQ4:] What runtime overheads limit the acceleration of a script-driven heterogeneous geometry system, and how can these overheads be observed experimentally?
+  \item[RQ5:] Can the same scripting and UVec model express multi-GPU spatial workloads, and what limits the scaling of different geometry algorithms?
 \end{description}
 
-These questions separate the work into four layers: language semantics, memory abstraction, algorithm acceleration, and experimental analysis. This distinction is important because a successful scripting system must be correct and usable before raw performance becomes meaningful.
+These questions separate the work into five layers: language semantics, memory abstraction, algorithm acceleration, multi-GPU execution, and experimental analysis. This distinction is important because a successful scripting system must be correct and usable before raw performance becomes meaningful.
 
 \section{Main Contributions}
 The main contributions of this thesis are as follows.
@@ -34,9 +37,12 @@ The main contributions of this thesis are as follows.
 \begin{enumerate}
   \item \textbf{A script runtime for algorithm experiments.} FTCL implements a Tcl-style command model, variable substitution, expression evaluation, procedures, collections, source loading, testing commands, and thread channels in C++20.
   \item \textbf{A cross-device vector abstraction.} UVec models one logical vector with CPU and CUDA physical copies. It tracks valid copies, performs synchronization on demand, and exposes unified read-only and mutable raw pointer interfaces.
+  \item \textbf{A finer-grained UVec handle manager.} The runtime avoids executing long geometry commands while holding a global UVec table lock. The global mutex protects handle-table lookup, while per-handle entry locks protect individual UVec objects. This design allows independent UVec workloads to run concurrently on different CUDA devices.
   \item \textbf{A script-facing computational geometry library.} The \texttt{geom} command family exposes scalar and batch geometry operations to FTCL scripts, allowing large point sets and query sets to be passed by UVec handles instead of repeated script strings.
   \item \textbf{CUDA acceleration for batch geometry.} The project implements CUDA backends for representative independent-work-item algorithms such as distance matrix, nearest point, range counting, transformation, orientation, and AABB collision.
-  \item \textbf{A reproducible evaluation pipeline.} The project includes semantic tests, CPU/GPU equivalence tests, random differential tests, edge-case tests, performance-scale tests, ablation studies, concurrency experiments, CSV outputs, and generated thesis figures.
+  \item \textbf{A multi-GPU scaling experiment.} The evaluation uses an eight-GPU A800 server to measure 1/2/4/8 GPU weak scaling. The result shows near-linear scaling for compact-output range counting, partial scaling for nearest-point search, and output-bandwidth limitations for distance matrices.
+  \item \textbf{An ocean-oriented application framing.} The thesis maps points, circles, boxes, and distance matrices to marine ranch sensing, smart port spatial computing, UAV floating-object inspection, and ship-path collision checking.
+  \item \textbf{A reproducible evaluation pipeline.} The project includes semantic tests, CPU/GPU equivalence tests, random differential tests, edge-case tests, performance-scale tests, ablation studies, concurrency experiments, multi-GPU CSV outputs, and generated thesis figures.
 \end{enumerate}
 
 The novelty of the project lies in the integration of these components. FTCL is not only an interpreter, UVec is not only a container, and the geometry library is not only a set of algorithms. Together they form a script-driven heterogeneous geometry experimentation platform.

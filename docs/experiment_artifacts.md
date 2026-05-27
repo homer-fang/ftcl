@@ -350,7 +350,8 @@ python3 docs/scripts/geometry/generate_geometry_figures.py \
 
 `geometry_real_application_demo.svg`
 
-- Presents a realistic scene-style geometry application view and matching FTCL script snippet.
+- Presents an ocean-oriented spatial computing scene and matching FTCL script snippet.
+- The scene maps marine ranch sensors, floating objects, sonar/radar coverage, port obstacles, and ship collision checks to FTCL geometry commands.
 
 `geometry_concurrency_throughput.svg`
 

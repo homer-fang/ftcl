@@ -10,6 +10,8 @@ FTCL currently contains two parser directions. The legacy parser reads directly 
 
 The project also uses shadow comparison during migration. In this mode, both parser paths can parse the same input and compare the resulting structure. This reduces the risk of semantic regressions when replacing old parsing logic with a more structured token-stream implementation.
 
+The parser and runtime design are also related to classic compiler construction and interpreter implementation. Compiler textbooks describe lexical analysis, parsing, intermediate representations, optimization, and code generation \cite{aho2006compilers,muchnick1997advanced}. Interpreter-focused references emphasize a smaller but very practical path: represent source structure, evaluate runtime values, and grow the language through a controlled set of semantic actions \cite{nystrom2021crafting}. FTCL follows the second path for feasibility, while keeping the token-stream parser as a future bridge toward AST and bytecode execution.
+
 \section{Expression Evaluation}
 Expression evaluation is handled separately from ordinary command parsing. The \texttt{expr} command needs operator precedence, associativity, short-circuit logic, ternary expressions, integer overflow checks, bitwise operations, division semantics, variable references, and command substitution. FTCL uses layered recursive descent functions, where lower-precedence functions call higher-precedence functions. This structure makes expressions such as \texttt{a || b \&\& c} parse correctly because logical AND is handled below logical OR.
 
@@ -20,10 +22,17 @@ Computational geometry studies algorithms for geometric objects such as points, 
 
 Batch geometry algorithms are particularly relevant to GPU acceleration. A distance matrix has one output per point pair. A range-count query has one output per query region. A nearest-point query has one output per query point. These operations contain many independent work items and can therefore be mapped naturally to CUDA threads.
 
+The algorithmic side of the project is grounded in standard algorithm analysis and data-structure design \cite{cormen2022introduction,knuth1997fundamental,knuth1998sorting}. Spatial query extensions such as range counting, nearest-neighbor search, and grid-based acceleration are connected to multidimensional data structures \cite{samet2006foundations}. This thesis implements direct batch algorithms first because they are simple to validate, easy to parallelize, and suitable for CPU/GPU equivalence testing.
+
 \section{CUDA and End-to-end Performance}
 CUDA exposes the GPU as a massively parallel device. A typical CUDA program allocates device memory, transfers input data, launches kernels, synchronizes, and copies results back to the host. However, a user of a scripting language does not want to manage these steps manually. FTCL therefore hides them behind UVec and geom commands.
 
 The experiments in this thesis measure end-to-end FTCL command time rather than pure kernel time. This includes command dispatch, handle lookup, UVec synchronization, output allocation, kernel launch, synchronization, and sometimes readback. End-to-end timing is more conservative, but it better reflects what a script user experiences.
+
+The heterogeneous-computing literature shows that GPU acceleration is a system problem, not only a kernel problem. CUDA programming references discuss memory hierarchy, thread organization, occupancy, and synchronization costs \cite{kirk2016programming,sanders2010cuda,nickolls2008scalable,owens2008gpu}. OpenCL and heterogeneous architecture work further show that portability and data movement are central concerns in CPU/GPU systems \cite{stone2010opencl,hennessy2019computer,flynn1972some}. FTCL's UVec layer is designed around this lesson: device pointers should be available to backend code, but scripts should not manually manage memory copies.
+
+\section{Heterogeneous System Case Studies}
+Recent CPU/GPU heterogeneous systems in electronic-design automation provide useful comparisons for this thesis. GPU-accelerated static timing analysis and later CPU-GPU timing engines show that real systems must combine parallel kernels with scheduling, memory management, and industrial workflow constraints \cite{guo2020gpu,guo2023sta,guo2024heteroexcept,guo2026heterosta}. Although FTCL targets computational geometry instead of timing analysis, the systems-level lesson is similar: acceleration becomes convincing only when the runtime, memory abstraction, workload partitioning, and benchmark methodology are considered together.
 
 \section{Reproducible Experiment Artifacts}
 The project stores benchmark scripts, CSV files, and SVG/PNG figures under the \texttt{docs} directory. This organization is important for a thesis project because it links claims to reproducible artifacts. Instead of manually drawing figures, the project regenerates them from executable tests and benchmark data.

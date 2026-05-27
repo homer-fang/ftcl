@@ -55,12 +55,12 @@ def svg_header(w: int, h: int) -> str:
     return f'''<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" viewBox="0 0 {w} {h}" role="img">
 <style>
 text{{font-family:Arial,Helvetica,sans-serif;fill:{COLORS['ink']};}}
-.title{{font-size:24px;font-weight:700;}}
-.subtitle{{font-size:13px;fill:#475569;}}
-.axis{{font-size:12px;fill:#374151;}}
-.small{{font-size:12px;fill:#475569;}}
-.tiny{{font-size:11px;fill:#64748b;}}
-.label{{font-size:14px;font-weight:700;}}
+.title{{font-size:28px;font-weight:700;}}
+.subtitle{{font-size:15px;fill:#475569;}}
+.axis{{font-size:15px;fill:#374151;}}
+.small{{font-size:14px;fill:#475569;}}
+.tiny{{font-size:13px;fill:#64748b;}}
+.label{{font-size:16px;font-weight:700;}}
 .code{{font-family:Consolas,Monaco,'Courier New',monospace;font-size:12px;fill:#e2e8f0;}}
 .box{{stroke:#1f2937;stroke-width:1.4;rx:14;ry:14;}}
 </style>
@@ -126,8 +126,8 @@ def line_chart(out: Path,
                series: List[Dict[str, object]],
                y_min: float = 0.0,
                y_ref: float = None) -> None:
-    w, h = 1200, 700
-    ml, mr, mt, mb = 95, 230, 90, 105
+    w, h = 1280, 760
+    ml, mr, mt, mb = 120, 290, 100, 120
     pw, ph = w - ml - mr, h - mt - mb
 
     xs = sorted({x for s in series for x, _ in s['values']})
@@ -176,15 +176,15 @@ def line_chart(out: Path,
         p.append(text(xp, mt + ph + 25, str(x), 'axis'))
 
     p.append(text(ml + pw / 2, h - 34, xlabel, 'axis'))
-    p.append(f'<text class="axis" x="28" y="{mt + ph/2:.2f}" transform="rotate(-90 28 {mt + ph/2:.2f})">{esc(ylabel)}</text>\n')
+    p.append(text(ml, mt - 16, ylabel, 'axis', 'start'))
 
     lx, ly = ml + pw + 34, mt + 12
     for i, s in enumerate(series):
-        y = ly + i * 24
+        y = ly + i * 30
         color = str(s['color'])
-        p.append(f'<line x1="{lx}" y1="{y}" x2="{lx + 30}" y2="{y}" stroke="{color}" stroke-width="3"/>\n')
-        p.append(f'<circle cx="{lx + 15}" cy="{y}" r="4" fill="{color}"/>\n')
-        p.append(text(lx + 42, y + 4, str(s['name']), 'tiny', 'start'))
+        p.append(f'<line x1="{lx}" y1="{y}" x2="{lx + 36}" y2="{y}" stroke="{color}" stroke-width="4"/>\n')
+        p.append(f'<circle cx="{lx + 18}" cy="{y}" r="5.5" fill="{color}"/>\n')
+        p.append(text(lx + 50, y + 5, str(s['name']), 'tiny', 'start'))
 
     p.append(svg_footer())
     write_text(out, ''.join(p))
@@ -573,61 +573,79 @@ def draw_real_demo(out: Path) -> None:
     w, h = 1200, 780
     p = [svg_header(w, h)]
     p.append(f'<rect x="0" y="0" width="{w}" height="{h}" fill="{COLORS["paper"]}"/>\n')
-    p.append(text(70, 44, 'FTCL real geometry demo scene', 'title', 'start'))
-    p.append(text(70, 66, 'Nearest target + range count + collision checks in one script pipeline.', 'subtitle', 'start'))
+    p.append(text(70, 44, 'FTCL ocean spatial computing demo', 'title', 'start'))
+    p.append(text(70, 66, 'Marine ranch sensing + smart port safety + UAV inspection in one script pipeline.', 'subtitle', 'start'))
 
     x0, y0, cw, ch = 90, 120, 620, 560
-    p.append(f'<rect x="{x0}" y="{y0}" width="{cw}" height="{ch}" fill="#f8fafc" stroke="#94a3b8" stroke-width="2"/>\n')
-    radar_centers = [(150, 600), (500, 520)]
-
-    # Use a pre-blended pale green fill because some SVG-to-PNG converters ignore opacity.
-    for cx, cy in radar_centers:
-        p.append(f'<circle cx="{cx}" cy="{cy}" r="120" fill="#dcfce7"/>\n')
+    p.append(f'<rect x="{x0}" y="{y0}" width="{cw}" height="{ch}" fill="#eff6ff" stroke="#94a3b8" stroke-width="2"/>\n')
+    p.append(f'<path d="M{x0},{y0 + 92} C230,160 315,188 410,148 C510,112 590,132 {x0 + cw},{y0 + 95} L{x0 + cw},{y0} L{x0},{y0} Z" fill="#e2e8f0"/>\n')
+    p.append(f'<path d="M{x0 + 430},{y0 + 70} L{x0 + cw},{y0 + 70} L{x0 + cw},{y0 + 185} L{x0 + 500},{y0 + 185} L{x0 + 500},{y0 + 130} L{x0 + 430},{y0 + 130} Z" fill="#cbd5e1"/>\n')
+    p.append(text(x0 + 540, y0 + 55, 'smart port', 'tiny'))
 
     for i in range(11):
         gx = x0 + i * cw / 10
         gy = y0 + i * ch / 10
-        p.append(f'<line x1="{gx:.1f}" y1="{y0}" x2="{gx:.1f}" y2="{y0 + ch}" stroke="#e2e8f0"/>\n')
-        p.append(f'<line x1="{x0}" y1="{gy:.1f}" x2="{x0 + cw}" y2="{gy:.1f}" stroke="#e2e8f0"/>\n')
+        p.append(f'<line x1="{gx:.1f}" y1="{y0}" x2="{gx:.1f}" y2="{y0 + ch}" stroke="#dbeafe"/>\n')
+        p.append(f'<line x1="{x0}" y1="{gy:.1f}" x2="{x0 + cw}" y2="{gy:.1f}" stroke="#dbeafe"/>\n')
 
-    obstacles = [(180, 180, 130, 80), (390, 260, 170, 90), (230, 470, 240, 70)]
+    coverage = [(250, 420, 108, 'sonar A'), (530, 455, 128, 'sonar B'), (620, 220, 86, 'port radar')]
+    for cx, cy, r, label in coverage:
+        p.append(f'<circle cx="{cx}" cy="{cy}" r="{r}" fill="#dcfce7"/>\n')
+        p.append(f'<circle cx="{cx}" cy="{cy}" r="{r}" fill="none" stroke="#22c55e" stroke-width="2"/>\n')
+        p.append(text(cx, cy - r - 8, label, 'tiny'))
+
+    cages = [(185, 330, 90, 60), (300, 330, 90, 60), (185, 415, 90, 60), (300, 415, 90, 60)]
+    for x, y, bw, bh in cages:
+        p.append(f'<rect x="{x}" y="{y}" width="{bw}" height="{bh}" fill="#bae6fd" stroke="#0284c7" stroke-width="2" rx="8"/>\n')
+    p.append(text(287, 315, 'marine ranch cages', 'tiny'))
+
+    obstacles = [(505, 165, 74, 52), (600, 150, 58, 90), (450, 565, 88, 36)]
     for ox, oy, ow, oh in obstacles:
-        p.append(f'<rect x="{ox}" y="{oy}" width="{ow}" height="{oh}" fill="#334155" opacity="0.85" rx="8"/>\n')
+        p.append(f'<rect x="{ox}" y="{oy}" width="{ow}" height="{oh}" fill="#334155" opacity="0.86" rx="7"/>\n')
+    p.append(text(614, 145, 'berths / obstacles', 'tiny'))
 
-    player = (150, 600)
-    enemies = [(300, 160), (520, 180), (640, 420), (580, 620), (360, 560)]
+    ship_path = [(145, 615), (250, 570), (370, 530), (500, 500), (645, 475)]
+    path_pts = ' '.join(f'{x},{y}' for x, y in ship_path)
+    p.append(f'<polyline points="{path_pts}" fill="none" stroke="#f59e0b" stroke-width="4" stroke-dasharray="9 6"/>\n')
+    p.append(f'<polygon points="640,463 665,475 640,487" fill="#f59e0b"/>\n')
+    p.append(text(378, 516, 'planned ship route', 'tiny'))
 
-    p.append(f'<circle cx="{player[0]}" cy="{player[1]}" r="11" fill="#2563eb"/>\n')
-    p.append(text(player[0] + 24, player[1] + 4, 'player', 'tiny', 'start'))
+    uav = (155, 235)
+    p.append(f'<path d="M{uav[0]},{uav[1] - 13} L{uav[0] + 18},{uav[1] + 10} L{uav[0]},{uav[1] + 4} L{uav[0] - 18},{uav[1] + 10} Z" fill="#2563eb"/>\n')
+    p.append(text(uav[0] + 34, uav[1] + 6, 'UAV', 'tiny', 'start'))
 
-    for ex, ey in enemies:
-        p.append(f'<circle cx="{ex}" cy="{ey}" r="8" fill="#dc2626"/>\n')
+    sensors = [(220, 250), (340, 235), (255, 520), (535, 325)]
+    for sx, sy in sensors:
+        p.append(f'<circle cx="{sx}" cy="{sy}" r="7" fill="#0ea5e9" stroke="#075985" stroke-width="1.5"/>\n')
+    p.append(text(300, 220, 'sensor buoys', 'tiny'))
 
-    nearest = min(enemies, key=lambda pt: (pt[0] - player[0]) ** 2 + (pt[1] - player[1]) ** 2)
-    p.append(f'<line x1="{player[0]}" y1="{player[1]}" x2="{nearest[0]}" y2="{nearest[1]}" stroke="#f59e0b" stroke-width="3" stroke-dasharray="6 5"/>\n')
-    p.append(text((player[0] + nearest[0]) / 2 + 10, (player[1] + nearest[1]) / 2 - 10, 'nearest target', 'tiny', 'start'))
+    floats = [(440, 265), (575, 360), (615, 512), (350, 600), (465, 455), (690, 300)]
+    for fx, fy in floats:
+        p.append(f'<circle cx="{fx}" cy="{fy}" r="8" fill="#dc2626"/>\n')
+    nearest = min(floats, key=lambda pt: (pt[0] - uav[0]) ** 2 + (pt[1] - uav[1]) ** 2)
+    p.append(f'<line x1="{uav[0]}" y1="{uav[1]}" x2="{nearest[0]}" y2="{nearest[1]}" stroke="#ef4444" stroke-width="2.5" stroke-dasharray="5 5"/>\n')
+    p.append(text((uav[0] + nearest[0]) / 2 + 4, (uav[1] + nearest[1]) / 2 - 8, 'nearest anomaly', 'tiny', 'start'))
 
-    for cx, cy in radar_centers:
-        p.append(f'<circle cx="{cx}" cy="{cy}" r="120" fill="none" stroke="#22c55e" stroke-width="2"/>\n')
-
-    p.append(text(760, 150, 'Script excerpt', 'label', 'start'))
+    p.append(text(760, 150, 'FTCL script excerpt', 'label', 'start'))
     script_lines = [
-        'set world [geom uvec_points $map_points cuda:0]',
-        'set enemy [geom uvec_points $enemy_points cuda:0]',
-        'set player [geom uvec_points {{$px $py}} cuda:0]',
-        'set nearest [geom nearest_point $enemy $player cuda:0]',
-        'set count [geom range_count_circle $enemy $radar 8.0 cuda:0]',
-        'set hit [geom collision_aabb $player_box $wall_box cuda:0]',
+        'set sensors [geom uvec_points $buoys cuda:0]',
+        'set targets [geom uvec_points $floating_objects cuda:0]',
+        'set uav [geom uvec_points {{$ux $uy}} cuda:0]',
+        'set near [geom nearest_point $targets $uav cuda:0]',
+        'set cover [geom range_count_circle $targets $sonar 120 cuda:0]',
+        'set risk [geom collision_aabb $ship_box $restricted cuda:0]',
+        'set dist [geom batch_distance_matrix $sensors $targets cuda:0]',
     ]
-    p.append('<rect x="740" y="160" width="450" height="340" rx="14" fill="#0f172a"/>\n')
+    p.append('<rect x="740" y="160" width="450" height="378" rx="14" fill="#0f172a"/>\n')
     for i, line in enumerate(script_lines):
-        p.append(f'<text class="code" x="762" y="{198 + i * 48}">{esc(line)}</text>\n')
+        p.append(f'<text class="code" x="762" y="{196 + i * 44}">{esc(line)}</text>\n')
 
-    p.append(multiline_text(945, 520, [
+    p.append(multiline_text(965, 572, [
         'Output semantics:',
-        'nearest -> point handle',
-        'count -> per-radar integer handle',
-        'hit -> collision flags',
+        'near -> abnormal target handle',
+        'cover -> per-sonar target counts',
+        'risk -> ship/obstacle collision flags',
+        'dist -> large sensor-target matrix',
     ], 'small', 'middle'))
 
     p.append(svg_footer())
@@ -649,7 +667,7 @@ def draw_concurrency_throughput(rows: List[Dict[str, str]], out: Path) -> None:
         out,
         'Concurrent geometry throughput',
         'Workload: thread-channel pipeline + geom nearest_point worker tasks.',
-        'Worker threads',
+        'Worker threads (count)',
         'Throughput (requests/s)',
         series,
         0.0,
@@ -672,7 +690,7 @@ def draw_concurrency_latency(rows: List[Dict[str, str]], out: Path) -> None:
         out,
         'Concurrent geometry latency tail',
         'P95 one-request latency in the same worker/channel experiment; lower is better.',
-        'Worker threads',
+        'Worker threads (count)',
         'Latency (microseconds)',
         series,
         0.0,
@@ -707,8 +725,8 @@ def draw_multi_gpu_scaling(rows: List[Dict[str, str]], out: Path) -> None:
         out,
         'Multi-GPU geometry scaling',
         'Weak scaling with fixed per-GPU work; queries are partitioned across CUDA devices 0 to 7.',
-        'GPU count',
-        'Speedup vs 1 GPU',
+        'GPU count (devices)',
+        'Speedup vs 1 GPU (x)',
         series,
         0.0,
         1.0,

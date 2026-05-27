@@ -1,16 +1,38 @@
 \chapter{Applications and Discussion}
 
-\section{Geometry Application Demo}
-Figure \ref{fig:real-demo} presents a scene-style geometry demo. The scene contains a player, enemies, obstacles, radar ranges, and target points. A script can use \texttt{geom nearest\_point} to find the nearest enemy, \texttt{geom range\_count\_circle} to count enemies in a radar region, and \texttt{geom collision\_aabb} to check collisions with walls.
+\section{Ocean-Oriented Spatial Computing Demo}
+Figure \ref{fig:real-demo} presents an ocean-oriented spatial computing demo. Instead of using a game scene, the demo models a coastal application scenario that is closer to marine ranching, smart ports, ship navigation, and unmanned inspection. Sensor buoys, unmanned aerial vehicles, floating objects, ships, aquaculture cages, port obstacles, and sonar/radar coverage regions are all represented as geometric data.
+
+In this scenario, points represent sensor locations, floating objects, target observations, and UAV positions. Circles represent radar, sonar, or camera coverage. Axis-aligned boxes represent ships, cages, restricted port regions, or rectangular obstacles. Batch distance matrices represent large-scale relationships between sensors and abnormal targets. With UVec, these objects can stay on CUDA devices across several commands instead of being repeatedly converted back to script strings.
 
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.90\textwidth]{geometry-real-demo.png}
-  \caption{A realistic geometry application scene controlled by FTCL scripts}
+  \caption{Ocean-oriented spatial computing scene controlled by FTCL scripts}
   \label{fig:real-demo}
 \end{figure}
 
-This example helps non-specialist readers understand why the geometry commands matter. They are not isolated mathematical functions. They can be composed into a practical script pipeline.
+The script pipeline in the figure uses the same geometry commands as the benchmark section, but the meaning of the data changes. The command \texttt{geom nearest\_point} can find the closest abnormal floating object to a UAV or patrol vessel. The command \texttt{geom range\_count\_circle} can count how many targets fall inside a radar, sonar, or camera coverage region. The command \texttt{geom collision\_aabb} can check whether a ship bounding box overlaps a reef, cage, pier, or restricted region. The command \texttt{geom batch\_distance\_matrix} can compute large sensor-target distance relationships for later assignment or alert scoring.
+
+\section{Marine Ranch Spatial Perception}
+In a marine ranch, buoys and underwater sensors continuously observe water quality, fish cage status, floating debris, and abnormal surface targets. A simple FTCL script can load sensor locations and object detections into UVec handles, run range queries for each sonar coverage circle, and report the nearest abnormal object to each inspection point.
+
+This scenario is suitable for FTCL because the input naturally forms large point sets. Many queries are independent: each sensor coverage region can be processed separately, and each target-to-sensor distance can be computed in parallel. CUDA is useful when the number of detections or sensors becomes large, while the script layer remains convenient for combining several operations into one pipeline.
+
+\section{Smart Port Spatial Computing}
+A smart port contains berths, cranes, containers, ship boxes, navigation channels, and restricted regions. These objects can be represented using points, line segments, polygons, and bounding boxes. FTCL can use \texttt{geom collision\_aabb} to check coarse collisions between ships and port obstacles, \texttt{geom range\_count\_rect} to count objects inside management regions, and \texttt{geom nearest\_point} to find the closest available resource or warning target.
+
+The value here is not that FTCL replaces a complete port information system. Instead, it provides a lightweight spatial-computing layer. A user can prototype port-side spatial rules in a script, then move large batch operations to the CUDA backend without changing the high-level command structure.
+
+\section{UAV Inspection of Floating Objects}
+Unmanned aerial vehicles are often used to inspect nearshore water surfaces. The UAV trajectory can be stored as a point sequence, detected floating objects can be stored as another point set, and camera coverage can be represented as circle queries. FTCL can compute nearest abnormal targets, count detections in each frame coverage region, and build a distance matrix between UAV sample points and suspicious objects.
+
+This is a good example of why script-level heterogeneous computing is useful. The high-level inspection logic changes frequently: thresholds, target classes, and coverage radii may change from one task to another. The geometry kernels, however, remain stable and can be accelerated on GPU.
+
+\section{Ship Path Planning and Collision Checking}
+For ship navigation, a planned path must be checked against static and dynamic obstacles. In the current FTCL geometry subset, coarse collision checking can be performed using AABB commands, while segment intersection and distance commands can support later path-level checks. A ship route can also be evaluated against aquaculture cages, reefs, port boundaries, and moving obstacle boxes.
+
+This scenario points to a natural extension direction. After the current batch geometry commands, future work can add spatial grids, polyline distance, route risk scoring, and dynamic obstacle prediction. These extensions would make FTCL more directly useful for marine and port spatial computing tasks.
 
 \section{Algorithm Visualization}
 Figure \ref{fig:geom-visual} visualizes representative algorithms: point-in-polygon classification, nearest point, circle range query, and AABB collision. Such figures are useful in a thesis defense because they explain the workload without requiring the reader to inspect code.
@@ -35,6 +57,8 @@ FTCL is different in four ways.
 \end{itemize}
 
 Therefore, the project is not simply a geometry function collection. Its value is the integration of interpreter design, data management, heterogeneous computing, and experimental validation.
+
+From an application perspective, this also changes the positioning of the project. FTCL is not only a computational geometry scripting system. It can be described as a prototype heterogeneous computing substrate for ocean and port spatial analysis. The geometry commands are the first algorithmic layer; UVec and CUDA provide the execution substrate; the script language provides the control layer.
 
 \section{Limitations}
 The current system has several limitations.

@@ -28,6 +28,13 @@ The main derived metrics are defined as follows:
 \]
 For distance matrix, nearest point, and range-count workloads, \(N\) denotes the number of data points and \(Q\) denotes the number of query points or query regions.
 
+\subsection{CPU Baseline Definition}
+The CPU baseline in this thesis is the FTCL CPU geometry backend, not a hand-tuned parallel CPU library. This distinction matters. The comparison is designed to answer the question a script user would ask: if the same FTCL command is executed with a CPU device and then with a CUDA device, how much end-to-end improvement is observed?
+
+The CPU and CUDA rows therefore share the same script-level command path as much as possible. Inputs are prebuilt as UVec handles before timing in the main performance-scale benchmark. The timed section includes command dispatch, handle lookup, output UVec allocation, backend execution, and required synchronization. For the CPU row, the backend uses C++ scalar loops over CPU-resident UVec data. For the CUDA row, the backend uses CUDA device buffers and kernels, and the current CUDA helper calls \texttt{cudaDeviceSynchronize} after kernel launch so the command returns only after the backend work is complete.
+
+This baseline is fair for evaluating FTCL as a heterogeneous scripting system, but it should not be interpreted as a comparison against an optimized all-core CPU geometry library. The server has 128 logical CPU threads, while the current CPU geometry backend is intentionally simple. Therefore, the reported speedup measures the benefit of moving the FTCL backend from its scalar CPU implementation to CUDA under the same command interface. A future all-core CPU backend would be a useful additional baseline.
+
 \begin{table}[H]
 \centering
 \caption{Experimental environment information recorded for reproducibility}
@@ -117,6 +124,8 @@ The observed errors are close to zero in the generated data. This supports the c
 \section{Geometry Performance Scaling}
 The performance experiment focuses on three representative algorithms: distance matrix, nearest point, and circle range count. They are chosen because each contains many independent work items. Table \ref{tab:geom-speedup} summarizes the end-to-end speedup values computed from the stored performance CSV.
 
+The single-GPU performance-scale experiment uses one FTCL interpreter and one CUDA device. For each scale, the benchmark constructs CPU and CUDA UVec inputs before timing, performs an untimed warmup when supported, and reports median command time. This means the input point-list parsing cost is excluded from the main timing, while output allocation and backend synchronization remain included. The goal is to measure the cost of using prebuilt UVec handles inside a realistic script pipeline.
+
 \begin{table}[H]
 \centering
 \caption{End-to-end CPU/CUDA speedup for representative geometry algorithms}
@@ -164,6 +173,17 @@ Figures \ref{fig:execution-bars} and \ref{fig:throughput} show execution time an
 \section{Multi-GPU Scaling}
 The server contains eight A800 GPUs, so the evaluation also measures whether FTCL can expose more than one CUDA device to script-level geometry workloads. The multi-GPU benchmark uses weak scaling: each GPU receives the same number of query points, while the total number of queries grows with the GPU count. Each worker owns an independent FTCL interpreter, creates UVec inputs on a different CUDA device, and launches the same geometry command on \texttt{cuda:0}, \texttt{cuda:1}, \ldots, \texttt{cuda:7}. The reported speedup is throughput speedup relative to one GPU.
 
+The benchmark must be run with all devices visible, for example:
+
+\begin{lstlisting}[language=bash]
+CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 \
+FTCL_MULTI_GPU_MODE=paper \
+FTCL_MULTI_GPU_SCALING=weak \
+test/bench_geometry_multi_gpu
+\end{lstlisting}
+
+In the recorded run, \(N=32768\), each GPU receives \(Q=4096\) query objects, and each row reports the median of three rounds. Thus the total query count is \(4096\), \(8192\), \(16384\), and \(32768\) for 1, 2, 4, and 8 GPUs respectively. The timer measures the wall-clock interval from simultaneously releasing all worker threads to all workers receiving their output UVec handles. Length checking and output destruction are performed after the timed region, so the timing focuses on command dispatch, UVec handle lookup, output allocation, CUDA launch, backend synchronization, and result-handle creation.
+
 This experiment also revealed an important runtime bottleneck. The original UVec command manager protected the whole handle table with one global mutex and executed geometry commands while holding that mutex. As a result, independent CUDA commands could be serialized at the script runtime layer. The implementation was changed so that the global mutex only protects handle-table lookup, while each UVec handle has its own entry mutex. This allows independent UVec handles on different GPUs to execute concurrently.
 
 \begin{table}[H]
@@ -188,6 +208,8 @@ Circle range count & 1.00x & 1.98x & 3.97x & 7.90x \\
   \label{fig:multi-gpu-scaling}
 \end{figure}
 
+Direct conclusion: circle range count shows near-linear multi-GPU throughput scaling, while distance matrix exposes output-dominant bottlenecks.
+
 The result shows that multi-GPU execution is useful but algorithm-dependent. Circle range counting scales almost linearly to eight GPUs because each query produces one compact result and has regular independent work. Nearest point scales well to four GPUs and then drops at eight GPUs, suggesting that runtime overhead, allocation, and synchronization begin to dominate. Distance matrix has the weakest multi-GPU scaling because every query produces a large output row; output allocation and global memory traffic dominate the total command time. This is a useful negative result: the system can use eight GPUs, but future work needs memory pools, persistent output buffers, and CUDA streams to make large-output kernels scale better.
 
 \section{Break-even Analysis}
@@ -199,6 +221,8 @@ CUDA acceleration has fixed overhead. A small workload may be slower on CUDA bec
   \caption{CUDA break-even analysis by work items}
   \label{fig:break-even}
 \end{figure}
+
+Direct conclusion: CUDA becomes worthwhile only after the work-item count is large enough to amortize launch, allocation, synchronization, and UVec management costs.
 
 The stored data estimates the break-even point at about 8192 work items for distance matrix, about 47848 for nearest point, and about 121209 for circle range count. These values are not universal constants. They depend on hardware, driver state, input size, output size, and whether the measurement includes readback.
 
@@ -233,11 +257,15 @@ The concurrent geometry experiment is shown in Figures \ref{fig:concurrency-thro
   \label{fig:concurrency-throughput}
 \end{figure}
 
+Direct conclusion: more script workers improve throughput only until the shared runtime or GPU resource becomes the bottleneck.
+
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.78\textwidth]{geometry-concurrency-latency.png}
   \caption{P95 latency of concurrent geometry workloads}
   \label{fig:concurrency-latency}
 \end{figure}
+
+Direct conclusion: P95 latency grows under contention, which motivates dedicated scheduling, memory pooling, and stream-based CUDA execution.
 
 This result suggests an important future direction: the interpreter can express concurrent workloads, but the GPU backend should add a more deliberate scheduling layer.
