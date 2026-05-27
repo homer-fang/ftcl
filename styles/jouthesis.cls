@@ -213,21 +213,21 @@
       \JOUCoverLine{指导教师：}{\JOUAdvisor}
     \end{minipage}\par
     \vspace{1.02cm}
-    {\sffamily\bfseries\fontsize{16pt}{24pt}\selectfont 年\qquad 月\par}
+    {\sffamily\bfseries\fontsize{16pt}{24pt}\selectfont 2026 年\qquad 5 月\par}
     \restoregeometry
   \end{titlepage}
   \cleardoublepage
 }
 
 \newenvironment{cnabstract}{%
-  \chapter*{Abstract}
-  \addcontentsline{toc}{chapter}{Abstract}
+  \chapter*{摘要}
+  \addcontentsline{toc}{chapter}{摘要}
 }{\cleardoublepage}
-\newcommand{\cnkeywords}[1]{\par\vspace{1em}\noindent\textbf{Keywords: }#1}
+\newcommand{\cnkeywords}[1]{\par\vspace{1em}\noindent\textbf{关键字：}#1}
 
 \newenvironment{enabstract}{%
-  \chapter*{Extended Abstract}
-  \addcontentsline{toc}{chapter}{Extended Abstract}
+  \chapter*{Abstract}
+  \addcontentsline{toc}{chapter}{Abstract}
 }{\cleardoublepage}
 \newcommand{\enkeywords}[1]{\par\vspace{1em}\noindent\textbf{Keywords: }#1}
 
