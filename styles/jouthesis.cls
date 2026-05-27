@@ -6,6 +6,7 @@
 \RequirePackage{amsmath,amssymb,amsthm}
 \RequirePackage{booktabs,longtable,tabularx,array,multirow}
 \RequirePackage{graphicx,float}
+\RequirePackage[ruled,vlined,linesnumbered]{algorithm2e}
 \RequirePackage{xcolor}
 \RequirePackage{listings}
 \RequirePackage{caption}
@@ -32,6 +33,17 @@
 \setlength{\headheight}{14pt}
 \captionsetup{font=small,labelfont=bf}
 \setlist{nosep,leftmargin=2.0em}
+
+\SetAlgoCaptionSeparator{:}
+\SetAlFnt{\small}
+\SetAlgoNlRelativeSize{-1}
+\SetAlgoInsideSkip{smallskip}
+\SetKwInput{KwInput}{Input}
+\SetKwInput{KwData}{Data}
+\SetKwInput{KwOutput}{Output}
+\SetKw{KwReturn}{return}
+\SetKwProg{Fn}{Function}{:}{end}
+\SetKwProg{Proc}{Procedure}{:}{end}
 
 \pagestyle{fancy}
 \fancyhf{}

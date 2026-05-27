@@ -93,16 +93,18 @@ def draw_semantic_pass_rate(csv_path: str, out_path: str) -> None:
         f.write("".join(s))
 
 
-def histogram(values: List[float], bins: int) -> Tuple[List[int], List[float]]:
+def histogram(values: List[float], bins: int, vmin: float = None, vmax: float = None) -> Tuple[List[int], List[float]]:
     if not values:
         return [0] * bins, [0.0] * (bins + 1)
-    vmin = min(values)
-    vmax = max(values)
+    vmin = min(values) if vmin is None else vmin
+    vmax = max(values) if vmax is None else vmax
     if vmax <= vmin:
         vmax = vmin + 1.0
     edges = [vmin + (vmax - vmin) * i / bins for i in range(bins + 1)]
     counts = [0] * bins
     for v in values:
+        if v < vmin or v > vmax:
+            continue
         idx = int((v - vmin) / (vmax - vmin) * bins)
         if idx == bins:
             idx = bins - 1
@@ -113,6 +115,28 @@ def histogram(values: List[float], bins: int) -> Tuple[List[int], List[float]]:
 def parse_summary(summary_path: str) -> dict:
     rows = read_csv_rows(summary_path)
     return rows[0] if rows else {}
+
+
+def nice_axis_ceiling(value: float, ticks: int = 8) -> float:
+    step = nice_tick_step(value, ticks)
+    return math.ceil(value / step) * step
+
+
+def focused_histogram_range(values: List[float], p95: float, p99: float) -> Tuple[float, float, int]:
+    if not values:
+        return 0.0, 1.0, 0
+
+    raw_max = max(values)
+    focus_target = max(p99 * 1.6, p95 * 1.25, 1.0)
+
+    if raw_max > focus_target * 1.35:
+        vmax = nice_axis_ceiling(focus_target, 8)
+    else:
+        vmax = nice_axis_ceiling(raw_max, 8)
+
+    vmax = max(vmax, 1.0)
+    clipped = sum(1 for v in values if v > vmax)
+    return 0.0, vmax, clipped
 
 
 def draw_distribution(
@@ -132,12 +156,10 @@ def draw_distribution(
     p99 = float(summary.get("p99_us", 0.0))
 
     bins = 40
-    counts, edges = histogram(values, bins)
+    vmin, vmax, clipped = focused_histogram_range(values, p95, p99)
+    counts, edges = histogram(values, bins, vmin, vmax)
     max_count = max(counts) if counts else 1
     max_count = max(max_count, 1)
-
-    vmin = edges[0] if edges else 0.0
-    vmax = edges[-1] if edges else 1.0
 
     w, h = 1100, 620
     ml, mr, mt, mb = 90, 40, 80, 120
@@ -155,7 +177,10 @@ def draw_distribution(
     s = [svg_header(w, h)]
     s.append(f'<rect x="0" y="0" width="{w}" height="{h}" fill="#ffffff"/>\n')
     s.append(f'<text class="title" x="{ml}" y="42">{title}</text>\n')
-    s.append(f'<text class="small" x="{ml}" y="62">Histogram with percentile markers (P50/P95/P99)</text>\n')
+    subtitle = "Histogram with percentile markers (P50/P95/P99)"
+    if clipped:
+        subtitle += f"; x-axis focuses on main mass, tail clipped: {clipped} samples"
+    s.append(f'<text class="small" x="{ml}" y="62">{subtitle}</text>\n')
 
     # grid y
     y_step = nice_tick_step(float(max_count), 6)
@@ -198,10 +223,17 @@ def draw_distribution(
         (p95, "P95", "#f59e0b"),
         (p99, "P99", "#dc2626"),
     ]:
+        if val > vmax:
+            continue
         x = x_of(val)
         s.append(f'<line x1="{x:.2f}" y1="{mt}" x2="{x:.2f}" y2="{mt + ph}" stroke="{clr}" stroke-width="2"/>\n')
         s.append(
             f'<text class="axis" x="{x + 4:.2f}" y="{mt + 14:.2f}" text-anchor="start" fill="{clr}">{label} {val:.2f} us</text>\n'
+        )
+
+    if clipped:
+        s.append(
+            f'<text class="small" x="{w - mr}" y="{mt + 34}" text-anchor="end">max {max(values):.2f} us; {clipped} samples &gt; {vmax:.1f} us</text>\n'
         )
 
     s.append(f'<text class="axis" x="{ml + pw / 2:.2f}" y="{h - 30}" text-anchor="middle">{x_label}</text>\n')
@@ -252,4 +284,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

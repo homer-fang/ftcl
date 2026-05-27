@@ -30,172 +30,205 @@ This structure is intentionally close to Tcl. It makes the language small but ex
 \section{Lexical Analysis Flow}
 The lexical layer converts a raw script string into a stream of tokens. FTCL's token-stream direction keeps token text and token boundaries so later stages can reason about command endings, comments, whitespace, braces, brackets, variable references, and ordinary text. The following pseudocode summarizes the intended lexer flow.
 
-\begin{lstlisting}[caption={Pseudocode for FTCL lexical analysis}]
-procedure TOKENIZE(source):
-    tokens = []
-    cursor = 0
-
-    while cursor < length(source):
-        ch = source[cursor]
-
-        if ch is space or tab:
-            start = cursor
-            consume horizontal whitespace
-            tokens.push(Token(Whitespace, source[start:cursor]))
-
-        else if ch is newline or ch is ';':
-            tokens.push(Token(CommandEnd, ch))
-            cursor = cursor + 1
-
-        else if ch is '#'
-             and current position is at command start:
-            start = cursor
-            consume until newline or end of file
-            tokens.push(Token(Comment, source[start:cursor]))
-
-        else if ch is one of '{', '}', '[', ']', '$', '"', '\\':
-            tokens.push(Token(Special, ch))
-            cursor = cursor + 1
-
-        else:
-            start = cursor
-            consume ordinary characters until a special boundary
-            tokens.push(Token(Text, source[start:cursor]))
-
-    tokens.push(Token(EndOfFile, ""))
-    return tokens
-\end{lstlisting}
+\begin{algorithm}[H]
+\caption{FTCL Lexical Analysis}
+\label{alg:lexer}
+\KwInput{source string $source$}
+\KwOutput{token stream $tokens$}
+$tokens \leftarrow [\ ]$\;
+$cursor \leftarrow 0$\;
+\While{$cursor < |source|$}{
+  $ch \leftarrow source[cursor]$\;
+  \uIf{$ch \in \{\mathrm{space},\mathrm{tab}\}$}{
+    $start \leftarrow cursor$\;
+    consume horizontal whitespace\;
+    append \textsc{Token}(\textsc{Whitespace}, $source[start:cursor]$) to $tokens$\;
+  }
+  \uElseIf{$ch$ is a newline or $ch = \texttt{;}$}{
+    append \textsc{Token}(\textsc{CommandEnd}, $ch$) to $tokens$\;
+    $cursor \leftarrow cursor + 1$\;
+  }
+  \uElseIf{$ch = \texttt{\#}$ and $cursor$ is at command start}{
+    $start \leftarrow cursor$\;
+    consume until newline or end of file\;
+    append \textsc{Token}(\textsc{Comment}, $source[start:cursor]$) to $tokens$\;
+  }
+  \uElseIf{$ch$ is a Tcl special delimiter}{
+    append \textsc{Token}(\textsc{Special}, $ch$) to $tokens$\;
+    $cursor \leftarrow cursor + 1$\;
+  }
+  \Else{
+    $start \leftarrow cursor$\;
+    consume ordinary characters until a token boundary\;
+    append \textsc{Token}(\textsc{Text}, $source[start:cursor]$) to $tokens$\;
+  }
+}
+append \textsc{Token}(\textsc{EndOfFile}, empty string) to $tokens$\;
+\KwReturn{$tokens$}\;
+\end{algorithm}
 
 The lexer does not execute substitutions. It only records the observable structure of the input. This separation is useful because Tcl-style substitution is semantic: a dollar sign may later require variable lookup, and a bracketed script may later require recursive command evaluation.
 
 \section{Syntax Analysis Flow}
 The parser consumes tokens and groups them into commands and words. A command ends at a newline, semicolon, or end-of-file, except when the parser is inside braces, quotes, or brackets. The parser does not execute commands. It only builds a script representation that can be evaluated later.
 
-\begin{lstlisting}[caption={Pseudocode for token-stream command parsing}]
-procedure PARSE_SCRIPT(tokens):
-    cursor = TokenCursor(tokens)
-    script = []
-
-    while not cursor.at_end():
-        cursor.skip_whitespace_and_comments()
-
-        if cursor.at_command_end():
-            cursor.next()
-            continue
-
-        command = PARSE_COMMAND(cursor)
-        script.commands.push(command)
-
-        if cursor.at_command_end():
-            cursor.next()
-        else if not cursor.at_end():
-            error("expected command boundary")
-
-    return script
-
-procedure PARSE_COMMAND(cursor):
-    words = []
-
-    while not cursor.at_end() and not cursor.at_command_end():
-        cursor.skip_inline_whitespace()
-
-        if cursor.at_command_end() or cursor.at_end():
-            break
-
-        word = PARSE_WORD(cursor)
-        words.push(word)
-
-    return Command(words)
-\end{lstlisting}
+\begin{algorithm}[H]
+\caption{Token-stream Command Parsing}
+\label{alg:parse-script}
+\KwInput{token stream $tokens$}
+\KwOutput{script object $script$}
+\Proc{\textsc{ParseScript}($tokens$)}{
+  $cursor \leftarrow \textsc{TokenCursor}(tokens)$\;
+  $script \leftarrow [\ ]$\;
+  \While{not $cursor.atEnd()$}{
+    $cursor.skipWhitespaceAndComments()$\;
+    \If{$cursor.atCommandEnd()$}{
+      $cursor.next()$\;
+      \textbf{continue}\;
+    }
+    $command \leftarrow \textsc{ParseCommand}(cursor)$\;
+    append $command$ to $script.commands$\;
+    \uIf{$cursor.atCommandEnd()$}{
+      $cursor.next()$\;
+    }
+    \uElseIf{not $cursor.atEnd()$}{
+      raise ``expected command boundary''\;
+    }
+  }
+  \KwReturn{$script$}\;
+}
+\Proc{\textsc{ParseCommand}($cursor$)}{
+  $words \leftarrow [\ ]$\;
+  \While{not $cursor.atEnd()$ and not $cursor.atCommandEnd()$}{
+    $cursor.skipInlineWhitespace()$\;
+    \If{$cursor.atCommandEnd()$ or $cursor.atEnd()$}{
+      \textbf{break}\;
+    }
+    $word \leftarrow \textsc{ParseWord}(cursor)$\;
+    append $word$ to $words$\;
+  }
+  \KwReturn{\textsc{Command}($words$)}\;
+}
+\end{algorithm}
 
 The word parser is more detailed than the command parser because a word may contain literal text, variable references, command substitutions, array references, braced literals, quoted strings, and expansion syntax. The important design decision is that the parser stores these pieces as structured word nodes, while the interpreter decides their runtime values.
 
-\begin{lstlisting}[caption={Pseudocode for word parsing}]
-procedure PARSE_WORD(cursor):
-    if cursor.match("{"):
-        return Word.Value(read_balanced_braced_text(cursor))
-
-    if cursor.match("\""):
-        parts = []
-        while not cursor.match("\""):
-            parts.push(PARSE_WORD_PART(cursor, quoted = true))
-        return Word.Tokens(parts)
-
-    if cursor.match("{*}"):
-        child = PARSE_WORD(cursor)
-        return Word.Expand(child)
-
-    parts = []
-    while not cursor.at_word_boundary():
-        parts.push(PARSE_WORD_PART(cursor, quoted = false))
-
-    if parts has one literal part:
-        return Word.Value(parts[0])
-    return Word.Tokens(parts)
-
-procedure PARSE_WORD_PART(cursor, quoted):
-    if cursor.peek() == '$':
-        return PARSE_VARIABLE_REFERENCE(cursor)
-    if cursor.peek() == '[':
-        return Word.Script(read_balanced_bracket_script(cursor))
-    if cursor.peek() == '\\':
-        return Word.String(parse_backslash_sequence(cursor))
-    return Word.String(read_literal_text(cursor, quoted))
-\end{lstlisting}
+\begin{algorithm}[H]
+\caption{Word Parsing}
+\label{alg:parse-word}
+\KwInput{token cursor $cursor$}
+\KwOutput{word node}
+\Proc{\textsc{ParseWord}($cursor$)}{
+  \uIf{$cursor$ matches an open brace}{
+    \KwReturn{\textsc{Word.Value}(\textsc{ReadBalancedBracedText}($cursor$))}\;
+  }
+  \uElseIf{$cursor$ matches a quote}{
+    $parts \leftarrow [\ ]$\;
+    \While{$cursor$ does not match the closing quote}{
+      append \textsc{ParseWordPart}($cursor$, true) to $parts$\;
+    }
+    \KwReturn{\textsc{Word.Tokens}($parts$)}\;
+  }
+  \uElseIf{$cursor$ matches the expansion prefix \texttt{\{*\}}}{
+    $child \leftarrow \textsc{ParseWord}(cursor)$\;
+    \KwReturn{\textsc{Word.Expand}($child$)}\;
+  }
+  $parts \leftarrow [\ ]$\;
+  \While{not $cursor.atWordBoundary()$}{
+    append \textsc{ParseWordPart}($cursor$, false) to $parts$\;
+  }
+  \uIf{$parts$ contains one literal part}{
+    \KwReturn{\textsc{Word.Value}($parts[0]$)}\;
+  }
+  \Else{
+    \KwReturn{\textsc{Word.Tokens}($parts$)}\;
+  }
+}
+\Proc{\textsc{ParseWordPart}($cursor$, $quoted$)}{
+  \uIf{$cursor.peek() = \texttt{\$}$}{
+    \KwReturn{\textsc{ParseVariableReference}($cursor$)}\;
+  }
+  \uElseIf{$cursor.peek() = \texttt{[}$}{
+    \KwReturn{\textsc{Word.Script}(\textsc{ReadBalancedBracketScript}($cursor$))}\;
+  }
+  \uElseIf{$cursor.peek()$ is a backslash}{
+    \KwReturn{\textsc{Word.String}(\textsc{ParseBackslashSequence}($cursor$))}\;
+  }
+  \Else{
+    \KwReturn{\textsc{Word.String}(\textsc{ReadLiteralText}($cursor$, $quoted$))}\;
+  }
+}
+\end{algorithm}
 
 \section{Semantic Execution Flow}
 Semantic execution begins after parsing. The interpreter evaluates each command in order. Each word is resolved into a runtime value. The first value becomes the command name, and the remaining values become arguments. The command function then performs the actual operation.
 
-\begin{lstlisting}[caption={Pseudocode for FTCL semantic execution}]
-procedure EVAL_SCRIPT(interp, script):
-    result = empty string
+\begin{algorithm}[H]
+\caption{Command-level Semantic Execution}
+\label{alg:semantic-exec}
+\KwInput{interpreter $interp$, parsed script $script$}
+\KwOutput{last command result}
+\Proc{\textsc{EvalScript}($interp$, $script$)}{
+  $result \leftarrow$ empty string\;
+  \ForEach{$command \in script.commands$}{
+    \If{$command.words$ is empty}{
+      \textbf{continue}\;
+    }
+    $values \leftarrow [\ ]$\;
+    \ForEach{$word \in command.words$}{
+      $value \leftarrow \textsc{EvalWord}(interp, word)$\;
+      \uIf{$word$ is an expansion word}{
+        extend $values$ by \textsc{ParseList}($value$)\;
+      }
+      \Else{
+        append $value$ to $values$\;
+      }
+    }
+    $name \leftarrow values[0].asString()$\;
+    $proc \leftarrow interp.lookupCommand(name)$\;
+    \If{$proc$ is missing}{
+      raise ``invalid command name''\;
+    }
+    $result \leftarrow proc(interp, values)$\;
+    \If{$result.code$ is \textsc{Return}, \textsc{Break}, \textsc{Continue}, or \textsc{Error}}{
+      propagate $result$ according to the current context\;
+    }
+  }
+  \KwReturn{$result$}\;
+}
+\end{algorithm}
 
-    for command in script.commands:
-        if command.words is empty:
-            continue
-
-        values = []
-        for word in command.words:
-            value_or_values = EVAL_WORD(interp, word)
-
-            if word is Expand:
-                values.extend(parse_list(value_or_values))
-            else:
-                values.push(value_or_values)
-
-        command_name = values[0].as_string()
-        arguments = values
-
-        command_proc = interp.lookup_command(command_name)
-        if command_proc is missing:
-            error("invalid command name")
-
-        result = command_proc(interp, arguments)
-
-        if result.code is RETURN, BREAK, CONTINUE, or ERROR:
-            propagate result according to the current context
-
-    return result
-
-procedure EVAL_WORD(interp, word):
-    match word.kind:
-        Value:
-            return word.literal
-        String:
-            return word.text
-        VarRef:
-            return interp.lookup_variable(word.name)
-        ArrayRef:
-            index = EVAL_WORD(interp, word.index)
-            return interp.lookup_array_element(word.name, index)
-        Script:
-            return EVAL_SCRIPT(interp, PARSE_SCRIPT(TOKENIZE(word.script)))
-        Tokens:
-            output = ""
-            for part in word.parts:
-                output = output + EVAL_WORD(interp, part).as_string()
-            return output
-\end{lstlisting}
+\begin{algorithm}[H]
+\caption{Word Evaluation}
+\label{alg:word-eval}
+\KwInput{interpreter $interp$, word node $word$}
+\KwOutput{runtime value}
+\Proc{\textsc{EvalWord}($interp$, $word$)}{
+  \uIf{$word.kind = \textsc{Value}$}{
+    \KwReturn{$word.literal$}\;
+  }
+  \uElseIf{$word.kind = \textsc{String}$}{
+    \KwReturn{$word.text$}\;
+  }
+  \uElseIf{$word.kind = \textsc{VarRef}$}{
+    \KwReturn{$interp.lookupVariable(word.name)$}\;
+  }
+  \uElseIf{$word.kind = \textsc{ArrayRef}$}{
+    $index \leftarrow \textsc{EvalWord}(interp, word.index)$\;
+    \KwReturn{$interp.lookupArrayElement(word.name, index)$}\;
+  }
+  \uElseIf{$word.kind = \textsc{Script}$}{
+    \KwReturn{\textsc{EvalScript}($interp$, \textsc{ParseScript}(\textsc{Tokenize}($word.script$)))}\;
+  }
+  \Else{
+    $output \leftarrow$ empty string\;
+    \ForEach{$part \in word.parts$}{
+      $output \leftarrow output + \textsc{EvalWord}(interp, part).asString()$\;
+    }
+    \KwReturn{$output$}\;
+  }
+}
+\end{algorithm}
 
 \section{UVec Cross-device Design}
 UVec is designed as a vector-like container that can own both CPU and CUDA storage. A normal \texttt{std::vector<T>} owns only CPU memory. UVec owns a CPU buffer and optional CUDA buffers. It also records which device currently has a valid and up-to-date copy.

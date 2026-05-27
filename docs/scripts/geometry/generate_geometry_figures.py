@@ -460,9 +460,10 @@ def draw_error_hist(rows: List[Dict[str, str]], out: Path) -> None:
     pw, ph = w - ml - mr, h - mt - mb
     if not values:
         values = [0.0]
-    if max(values) == min(values):
-        edges = [-0.5e-12, 0.5e-12]
+    all_same = max(values) == min(values)
+    if all_same:
         counts = [len(values)]
+        edges = [values[0], values[0]]
     else:
         bins = 16
         lo, hi = min(values), max(values)
@@ -489,10 +490,25 @@ def draw_error_hist(rows: List[Dict[str, str]], out: Path) -> None:
         p.append(text(ml - 12, y + 4, str(i), "axis", "end"))
     p.append(f'<line x1="{ml}" y1="{mt}" x2="{ml}" y2="{mt + ph}" stroke="#111827" stroke-width="1.4"/>\n')
     p.append(f'<line x1="{ml}" y1="{mt + ph}" x2="{ml + pw}" y2="{mt + ph}" stroke="#111827" stroke-width="1.4"/>\n')
-    for i, c in enumerate(counts):
-        x0, x1 = x_of(edges[i]), x_of(edges[i + 1])
-        y = y_of(c)
-        p.append(f'<rect x="{x0:.2f}" y="{y:.2f}" width="{max(2, x1 - x0 - 2):.2f}" height="{mt + ph - y:.2f}" fill="#16a34a" opacity="0.78"/>\n')
+
+    if all_same:
+        bar_w = min(180.0, pw * 0.22)
+        x = ml + (pw - bar_w) / 2.0
+        y = y_of(counts[0])
+        p.append(f'<rect x="{x:.2f}" y="{y:.2f}" width="{bar_w:.2f}" height="{mt + ph - y:.2f}" fill="#16a34a" opacity="0.78" rx="6"/>\n')
+        p.append(text(x + bar_w / 2, y - 10, str(counts[0]), "small"))
+        p.append(text(x + bar_w / 2, mt + ph + 25, format_axis(values[0]), "axis"))
+        p.append(
+            f'<rect x="{ml + pw - 270}" y="{mt + 22}" width="250" height="62" rx="12" fill="#ecfdf5" stroke="#16a34a" stroke-width="1.2"/>\n'
+        )
+        p.append(text(ml + pw - 145, mt + 48, "all checks exact match", "label"))
+        p.append(text(ml + pw - 145, mt + 70, "max_abs_error = 0 for every sample", "tiny"))
+    else:
+        for i, c in enumerate(counts):
+            x0, x1 = x_of(edges[i]), x_of(edges[i + 1])
+            y = y_of(c)
+            p.append(f'<rect x="{x0:.2f}" y="{y:.2f}" width="{max(2, x1 - x0 - 2):.2f}" height="{mt + ph - y:.2f}" fill="#16a34a" opacity="0.78"/>\n')
+
     p.append(text(ml + pw / 2, h - 34, "Max absolute error", "axis"))
     p.append(f'<text class="axis" x="28" y="{mt + ph/2:.2f}" transform="rotate(-90 28 {mt + ph/2:.2f})">Check count</text>\n')
     p.append(text(ml + pw - 8, mt + 20, f"samples={len(values)}, max={max(values):.3g}", "small", "end"))

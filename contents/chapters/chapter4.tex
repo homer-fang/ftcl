@@ -12,94 +12,117 @@ For example, \texttt{a || b \&\& c} is parsed by the logical OR layer. The left 
 
 The parser also supports short-circuit evaluation. If the left operand of \texttt{||} is true, the right operand is parsed but not evaluated. This prevents side effects in skipped branches while preserving syntax validation and parser position.
 
-\begin{lstlisting}[caption={Pseudocode for expression evaluation}]
-procedure EVAL_EXPR(interp, input):
-    parser = ExprParser(interp, input)
-    value = parser.parse_conditional()
-    parser.skip_whitespace()
+\begin{algorithm}[H]
+\caption{Expression Evaluation and Conditional Operator}
+\label{alg:expr-eval}
+\KwInput{interpreter $interp$, expression string $input$}
+\KwOutput{expression value}
+\Proc{\textsc{EvalExpr}($interp$, $input$)}{
+  $parser \leftarrow \textsc{ExprParser}(interp, input)$\;
+  $value \leftarrow parser.parseConditional()$\;
+  $parser.skipWhitespace()$\;
+  \If{not $parser.atEnd()$}{
+    raise ``unexpected token in expression''\;
+  }
+  \KwReturn{$value$}\;
+}
+\Proc{\textsc{ParseConditional}($parser$)}{
+  $condition \leftarrow \textsc{ParseLogicalOr}(parser)$\;
+  \If{not $parser.match(\texttt{?})$}{
+    \KwReturn{$condition$}\;
+  }
+  $takeTrue \leftarrow condition.isTrue()$\;
+  $parser.setEvaluationEnabled(takeTrue)$\;
+  $trueValue \leftarrow \textsc{ParseLogicalOr}(parser)$\;
+  $parser.expect(\texttt{:})$\;
+  $parser.setEvaluationEnabled(\neg takeTrue)$\;
+  $falseValue \leftarrow \textsc{ParseConditional}(parser)$\;
+  $parser.restoreEvaluationMode()$\;
+  \uIf{$takeTrue$}{
+    \KwReturn{$trueValue$}\;
+  }
+  \Else{
+    \KwReturn{$falseValue$}\;
+  }
+}
+\end{algorithm}
 
-    if not parser.at_end():
-        error("unexpected token in expression")
-
-    return value
-
-procedure PARSE_CONDITIONAL(parser):
-    condition = PARSE_LOGICAL_OR(parser)
-
-    if not parser.match("?"):
-        return condition
-
-    take_true = condition.is_true()
-
-    parser.set_evaluation_enabled(take_true)
-    true_value = PARSE_LOGICAL_OR(parser)
-
-    parser.expect(":")
-
-    parser.set_evaluation_enabled(not take_true)
-    false_value = PARSE_CONDITIONAL(parser)
-
-    parser.restore_evaluation_mode()
-    if take_true:
-        return true_value
-    return false_value
-
-procedure PARSE_LOGICAL_OR(parser):
-    lhs = PARSE_LOGICAL_AND(parser)
-
-    while parser.match("||"):
-        if lhs.is_true():
-            parser.set_evaluation_enabled(false)
-            PARSE_LOGICAL_AND(parser)   // parse only, no side effects
-            parser.restore_evaluation_mode()
-            lhs = 1
-        else:
-            rhs = PARSE_LOGICAL_AND(parser)
-            lhs = bool(lhs) or bool(rhs)
-
-    return lhs
-\end{lstlisting}
+\begin{algorithm}[H]
+\caption{Logical OR Short-circuit Evaluation}
+\label{alg:expr-or}
+\KwInput{expression parser $parser$}
+\KwOutput{logical OR result}
+\Proc{\textsc{ParseLogicalOr}($parser$)}{
+  $lhs \leftarrow \textsc{ParseLogicalAnd}(parser)$\;
+  \While{$parser.match(\texttt{||})$}{
+    \uIf{$lhs.isTrue()$}{
+      $parser.setEvaluationEnabled(false)$\;
+      \textsc{ParseLogicalAnd}($parser$)\tcp*[r]{parse only; no side effects}
+      $parser.restoreEvaluationMode()$\;
+      $lhs \leftarrow 1$\;
+    }
+    \Else{
+      $rhs \leftarrow \textsc{ParseLogicalAnd}(parser)$\;
+      $lhs \leftarrow bool(lhs) \lor bool(rhs)$\;
+    }
+  }
+  \KwReturn{$lhs$}\;
+}
+\end{algorithm}
 
 \section{UVec Implementation}
 UVec requires its element type to be trivially copyable. This is necessary because CPU/CUDA transfers are implemented as byte copies. The main supporting types are \texttt{Device}, \texttt{RawUPtr<T>}, \texttt{RawUMutPtr<T>}, \texttt{UniversalCopy}, and \texttt{Zeroable}.
 
 The script-level \texttt{uvec} command manages UVec handles. It can create vectors from lists, create filled or zeroed vectors, get or set elements, return vector length, synchronize to a device, and convert a vector back to a script list. The command manager stores handle-to-UVec mappings under a mutex so that scripts can pass handles safely between commands.
 
-\begin{lstlisting}[caption={Pseudocode for UVec read synchronization}]
-procedure AS_UPTR(uvec, device):
-    if device is CPU:
-        if CPU buffer is not valid:
-            source = find any valid CUDA buffer
-            copy source CUDA buffer to CPU buffer
-            mark CPU buffer valid
-        return RawUPtr(CPU pointer, length, CPU)
+\begin{algorithm}[H]
+\caption{UVec Read Synchronization}
+\label{alg:uvec-read}
+\KwInput{UVec object $uvec$, target device $device$}
+\KwOutput{read-only unified pointer}
+\Proc{\textsc{AsUPtr}($uvec$, $device$)}{
+  \uIf{$device = \mathrm{CPU}$}{
+    \If{CPU buffer is not valid}{
+      $source \leftarrow$ any valid CUDA buffer\;
+      copy $source$ CUDA buffer to CPU buffer\;
+      mark CPU buffer valid\;
+    }
+    \KwReturn{\textsc{RawUPtr}(CPU pointer, length, CPU)}\;
+  }
+  \Else{
+    ensure CUDA buffer for $device$ exists\;
+    \If{target CUDA buffer is not valid}{
+      \uIf{CPU buffer is valid}{
+        copy CPU buffer to target CUDA buffer\;
+      }
+      \Else{
+        $source \leftarrow$ another valid CUDA buffer\;
+        copy $source$ CUDA buffer to target CUDA buffer\;
+      }
+      mark target CUDA buffer valid\;
+    }
+    \KwReturn{\textsc{RawUPtr}(CUDA pointer, length, $device$)}\;
+  }
+}
+\end{algorithm}
 
-    if device is CUDA:
-        ensure CUDA buffer for device exists
-
-        if CUDA buffer is not valid:
-            if CPU buffer is valid:
-                copy CPU buffer to CUDA buffer
-            else:
-                source = find another valid CUDA buffer
-                copy source CUDA buffer to target CUDA buffer
-            mark target CUDA buffer valid
-
-        return RawUPtr(CUDA pointer, length, device)
-\end{lstlisting}
-
-\begin{lstlisting}[caption={Pseudocode for UVec mutable pointer access}]
-procedure AS_MUT_UPTR(uvec, device):
-    ensure storage exists on target device
-
-    if target device is not valid:
-        synchronize latest data to target device
-
-    mark every other device invalid
-    mark target device valid and newest
-
-    return RawUMutPtr(target pointer, length, device)
-\end{lstlisting}
+\begin{algorithm}[H]
+\caption{UVec Mutable Pointer Access}
+\label{alg:uvec-write}
+\KwInput{UVec object $uvec$, target device $device$}
+\KwOutput{mutable unified pointer}
+\Proc{\textsc{AsMutUPtr}($uvec$, $device$)}{
+  ensure storage exists on $device$\;
+  \If{target device is not valid}{
+    synchronize latest data to target device\;
+  }
+  \ForEach{$other \in$ devices and $other \ne device$}{
+    mark $other$ invalid\;
+  }
+  mark $device$ valid and newest\;
+  \KwReturn{\textsc{RawUMutPtr}(target pointer, length, $device$)}\;
+}
+\end{algorithm}
 
 \section{CPU Geometry Algorithms}
 The CPU geometry library is implemented in \texttt{include/geometry.hpp}. The basic types are Point, Segment, and BoundingBox. The library includes distance, squared distance, dot product, cross product, orientation, point-on-segment checks, segment intersection, line intersection, point-line distance, point-segment distance, polygon area, polygon perimeter, point-in-polygon classification, convex hull, bounding box, and closest-pair distance.
@@ -110,30 +133,34 @@ Batch algorithms use flattened arrays. A point set is stored as \(x_0,y_0,x_1,y_
 \centering
 \caption{Representative geometry algorithms and asymptotic costs}
 \label{tab:algorithm-complexity}
-\begin{tabular}{llll}
+\footnotesize
+\setlength{\tabcolsep}{3.5pt}
+\begin{tabularx}{\textwidth}{@{}>{\ttfamily\raggedright\arraybackslash}p{0.31\textwidth} >{\raggedright\arraybackslash}X >{\centering\arraybackslash}p{0.12\textwidth} >{\raggedright\arraybackslash}X@{}}
 \toprule
 Command or function & Input scale & CPU complexity & GPU suitability \\
 \midrule
-\texttt{distance} & one point pair & \(O(1)\) & Low; scalar command \\
-\texttt{segment\_intersect} & one segment pair & \(O(1)\) & Low; scalar command \\
-\texttt{polygon\_area} & \(P\) polygon vertices & \(O(P)\) & Medium for batched polygons \\
-\texttt{convex\_hull} & \(N\) points & \(O(N \log N)\) & Low in this project \\
-\texttt{bbox\_reduce} & \(N\) points & \(O(N)\) & High with parallel reduction \\
-\texttt{centroid} & \(N\) points & \(O(N)\) & High with parallel reduction \\
-\texttt{batch\_distance\_matrix} & \(N\) by \(Q\) points & \(O(NQ)\) & Very high; independent outputs \\
-\texttt{nearest\_point} & \(N\) data, \(Q\) queries & \(O(NQ)\) & High; independent queries \\
-\texttt{range\_count\_circle} & \(N\) points, \(Q\) circles & \(O(NQ)\) & High; independent queries \\
-\texttt{batch\_segment\_intersect} & \(K\) segment pairs & \(O(K)\) & High; independent pairs \\
-\texttt{collision\_aabb} & \(K\) box pairs & \(O(K)\) & High; independent pairs \\
-\texttt{transform\_points} & \(N\) points & \(O(N)\) & Very high; independent points \\
+distance & one point pair & \(O(1)\) & Low; scalar command \\
+segment\_intersect & one segment pair & \(O(1)\) & Low; scalar command \\
+polygon\_area & \(P\) polygon vertices & \(O(P)\) & Medium for batched polygons \\
+convex\_hull & \(N\) points & \(O(N\log N)\) & Low in this project \\
+bbox\_reduce & \(N\) points & \(O(N)\) & High with parallel reduction \\
+centroid & \(N\) points & \(O(N)\) & High with parallel reduction \\
+batch\_distance\_matrix & \(N\) by \(Q\) points & \(O(NQ)\) & Very high; independent outputs \\
+nearest\_point & \(N\) data, \(Q\) queries & \(O(NQ)\) & High; independent queries \\
+range\_count\_circle & \(N\) points, \(Q\) circles & \(O(NQ)\) & High; independent queries \\
+batch\_segment\_intersect & \(K\) segment pairs & \(O(K)\) & High; independent pairs \\
+collision\_aabb & \(K\) box pairs & \(O(K)\) & High; independent pairs \\
+transform\_points & \(N\) points & \(O(N)\) & Very high; independent points \\
 \bottomrule
-\end{tabular}
+\end{tabularx}
 \end{table}
 
 The table explains why not every geometry command is accelerated in the same way. Scalar commands are useful for script expressiveness but are too small to amortize CUDA launch overhead. Batch commands with \(O(NQ)\) or \(O(N)\) independent work items are more suitable for GPU execution. Algorithms such as convex hull require sorting and sequential stack-like structure, so they are kept as CPU-first algorithms in this thesis.
 
 \section{CUDA Geometry Backend}
-The CUDA backend is implemented in \texttt{src/geometry\_cuda.cu} and declared in \texttt{include/geometry\_cuda.hpp}. It supports data-parallel algorithms such as distance matrix, nearest point, circle range count, point transformation, batch orientation, AABB collision, polygon batch area, and distance to polyline.
+The CUDA backend is implemented in \texttt{src/geometry\_cuda.cu}.
+It is declared in \texttt{include/geometry\_cuda.hpp}.
+It supports data-parallel algorithms such as distance matrix, nearest point, circle range count, point transformation, batch orientation, AABB collision, polygon batch area, and distance to polyline.
 
 For a distance matrix with \(N\) source points and \(Q\) query points, the output has \(NQ\) entries. A CUDA thread computes one output entry by loading one source point and one query point, computing the Euclidean distance, and writing the result. This mapping is simple and effective because each output element is independent.
 
@@ -149,30 +176,31 @@ puts [uvec to_list $result]
 
 The user does not manually allocate device memory. The script describes the task, UVec manages synchronization, and the geom command selects the backend.
 
-\begin{lstlisting}[caption={Pseudocode for geometry command dispatch}]
-procedure GEOM_NEAREST_POINT(interp, argv):
-    dataset_id = parse_handle(argv[2])
-    query_id = parse_handle(argv[3])
-    device = parse_optional_device(argv[4], default = CPU)
-
-    dataset = uvec_manager.lookup(dataset_id)
-    queries = uvec_manager.lookup(query_id)
-
-    if device is CUDA:
-        dataset_ptr = dataset.as_uptr(device)
-        query_ptr = queries.as_uptr(device)
-
-        output = UVec.uninitialized(query_count * 2, device)
-        output_ptr = output.as_mut_uptr(device)
-
-        launch nearest_point_cuda(output_ptr, dataset_ptr, query_ptr)
-        return uvec_manager.create(output)
-
-    else:
-        dataset_cpu = dataset.cpu_vector()
-        queries_cpu = queries.cpu_vector()
-        output_values = nearest_point_cpu(dataset_cpu, queries_cpu)
-
-        output = UVec.from_cpu(output_values)
-        return uvec_manager.create(output)
-\end{lstlisting}
+\begin{algorithm}[H]
+\caption{Geometry Command Dispatch for Nearest-point Query}
+\label{alg:geom-dispatch}
+\KwInput{interpreter $interp$, command arguments $argv$}
+\KwOutput{UVec handle containing nearest-point results}
+\Proc{\textsc{GeomNearestPoint}($interp$, $argv$)}{
+  $datasetId \leftarrow \textsc{ParseHandle}(argv[2])$\;
+  $queryId \leftarrow \textsc{ParseHandle}(argv[3])$\;
+  $device \leftarrow \textsc{ParseOptionalDevice}(argv[4], \mathrm{CPU})$\;
+  $dataset \leftarrow uvecManager.lookup(datasetId)$\;
+  $queries \leftarrow uvecManager.lookup(queryId)$\;
+  \uIf{$device$ is CUDA}{
+    $datasetPtr \leftarrow dataset.asUPtr(device)$\;
+    $queryPtr \leftarrow queries.asUPtr(device)$\;
+    $output \leftarrow \textsc{UVec.Uninitialized}(queryCount \times 2, device)$\;
+    $outputPtr \leftarrow output.asMutUPtr(device)$\;
+    launch \textsc{NearestPointCuda}($outputPtr$, $datasetPtr$, $queryPtr$)\;
+    \KwReturn{$uvecManager.create(output)$}\;
+  }
+  \Else{
+    $datasetCpu \leftarrow dataset.cpuVector()$\;
+    $queriesCpu \leftarrow queries.cpuVector()$\;
+    $values \leftarrow \textsc{NearestPointCpu}(datasetCpu, queriesCpu)$\;
+    $output \leftarrow \textsc{UVec.FromCpu}(values)$\;
+    \KwReturn{$uvecManager.create(output)$}\;
+  }
+}
+\end{algorithm}
