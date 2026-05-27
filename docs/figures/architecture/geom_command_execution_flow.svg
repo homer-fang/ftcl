@@ -34,28 +34,20 @@ text{font-family:Arial,Helvetica,sans-serif;fill:#111827;}
 <text class="small" x="780.00" y="489.00" text-anchor="middle"><tspan x="780.00" dy="0.00">CUDA path</tspan><tspan x="780.00" dy="17.00">sync to device</tspan><tspan x="780.00" dy="17.00">launch kernel</tspan></text>
 <rect class="box" x="475.00" y="620.00" width="250.00" height="76.00" fill="#fff7ed" stroke="#1f2937" filter="url(#shadow)"/>
 <text class="small" x="600.00" y="654.50" text-anchor="middle"><tspan x="600.00" dy="0.00">Create result UVec</tspan><tspan x="600.00" dy="17.00">return handle to script</tspan></text>
-<line x1="215.00" y1="201.00" x2="215.00" y2="255.00" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
-<rect x="153.00" y="210.00" width="124" height="20" rx="10" fill="#ffffff" opacity="0.92"/>
-<text class="tiny" x="215.00" y="224.00" text-anchor="middle">eval</text>
-<line x1="340.00" y1="293.00" x2="475.00" y2="293.00" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
-<rect x="345.50" y="275.00" width="124" height="20" rx="10" fill="#ffffff" opacity="0.92"/>
-<text class="tiny" x="407.50" y="289.00" text-anchor="middle">argv</text>
-<line x1="725.00" y1="293.00" x2="860.00" y2="293.00" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
-<rect x="730.50" y="275.00" width="124" height="20" rx="10" fill="#ffffff" opacity="0.92"/>
-<text class="tiny" x="792.50" y="289.00" text-anchor="middle">handles</text>
-<line x1="985.00" y1="331.00" x2="420.00" y2="460.00" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
-<rect x="640.50" y="377.50" width="124" height="20" rx="10" fill="#ffffff" opacity="0.92"/>
-<text class="tiny" x="702.50" y="391.50" text-anchor="middle">device=cpu</text>
-<line x1="985.00" y1="331.00" x2="780.00" y2="460.00" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
-<rect x="820.50" y="377.50" width="124" height="20" rx="10" fill="#ffffff" opacity="0.92"/>
-<text class="tiny" x="882.50" y="391.50" text-anchor="middle">device=cuda:0</text>
-<line x1="420.00" y1="542.00" x2="535.00" y2="620.00" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
-<rect x="415.50" y="563.00" width="124" height="20" rx="10" fill="#ffffff" opacity="0.92"/>
-<text class="tiny" x="477.50" y="577.00" text-anchor="middle">values</text>
-<line x1="780.00" y1="542.00" x2="665.00" y2="620.00" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
-<rect x="660.50" y="563.00" width="124" height="20" rx="10" fill="#ffffff" opacity="0.92"/>
-<text class="tiny" x="722.50" y="577.00" text-anchor="middle">device result</text>
-<line x1="475.00" y1="658.00" x2="340.00" y2="293.00" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
-<rect x="345.50" y="457.50" width="124" height="20" rx="10" fill="#ffffff" opacity="0.92"/>
-<text class="tiny" x="407.50" y="471.50" text-anchor="middle">FTCL value</text>
+<line x1="215.00" y1="201.00" x2="215.00" y2="255.00" stroke="#334155" stroke-width="2.2" marker-end="url(#arrow)"/>
+<text class="tiny" x="215.00" y="218.00" text-anchor="middle">eval</text>
+<line x1="340.00" y1="293.00" x2="475.00" y2="293.00" stroke="#334155" stroke-width="2.2" marker-end="url(#arrow)"/>
+<text class="tiny" x="407.50" y="283.00" text-anchor="middle">argv</text>
+<line x1="725.00" y1="293.00" x2="860.00" y2="293.00" stroke="#334155" stroke-width="2.2" marker-end="url(#arrow)"/>
+<text class="tiny" x="792.50" y="283.00" text-anchor="middle">handles</text>
+<line x1="985.00" y1="331.00" x2="420.00" y2="460.00" stroke="#334155" stroke-width="2.2" marker-end="url(#arrow)"/>
+<text class="tiny" x="702.50" y="385.50" text-anchor="middle">device=cpu</text>
+<line x1="985.00" y1="331.00" x2="780.00" y2="460.00" stroke="#334155" stroke-width="2.2" marker-end="url(#arrow)"/>
+<text class="tiny" x="882.50" y="385.50" text-anchor="middle">device=cuda:0</text>
+<line x1="420.00" y1="542.00" x2="535.00" y2="620.00" stroke="#334155" stroke-width="2.2" marker-end="url(#arrow)"/>
+<text class="tiny" x="477.50" y="571.00" text-anchor="middle">values</text>
+<line x1="780.00" y1="542.00" x2="665.00" y2="620.00" stroke="#334155" stroke-width="2.2" marker-end="url(#arrow)"/>
+<text class="tiny" x="722.50" y="571.00" text-anchor="middle">device result</text>
+<line x1="475.00" y1="658.00" x2="340.00" y2="293.00" stroke="#334155" stroke-width="2.2" marker-end="url(#arrow)"/>
+<text class="tiny" x="407.50" y="465.50" text-anchor="middle">FTCL value</text>
 </svg>

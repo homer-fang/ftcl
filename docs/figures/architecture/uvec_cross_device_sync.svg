@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="680" viewBox="0 0 1200 680" role="img">
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720" role="img">
 <style>
 text{font-family:Arial,Helvetica,sans-serif;fill:#111827;}
 .title{font-size:24px;font-weight:700;}
@@ -17,38 +17,34 @@ text{font-family:Arial,Helvetica,sans-serif;fill:#111827;}
 <feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#0f172a" flood-opacity="0.12"/>
 </filter>
 </defs>
-<rect x="0" y="0" width="1200" height="680" fill="#ffffff"/>
+<rect x="0" y="0" width="1280" height="720" fill="#ffffff"/>
 <text class="title" x="70.00" y="44.00" text-anchor="start">UVec cross-device synchronization</text>
-<text class="subtitle" x="70.00" y="66.00" text-anchor="start">Only the latest buffer is authoritative. Reads trigger copy; writes invalidate stale copies.</text>
-<rect class="box" x="90.00" y="180.00" width="300.00" height="120.00" fill="#dbeafe" stroke="#1f2937" filter="url(#shadow)"/>
-<text class="small" x="240.00" y="228.00" text-anchor="middle"><tspan x="240.00" dy="0.00">CPU buffer</tspan><tspan x="240.00" dy="17.00">host pointer</tspan><tspan x="240.00" dy="17.00">valid flag: 0/1</tspan></text>
-<rect class="box" x="810.00" y="180.00" width="300.00" height="120.00" fill="#ede9fe" stroke="#1f2937" filter="url(#shadow)"/>
-<text class="small" x="960.00" y="228.00" text-anchor="middle"><tspan x="960.00" dy="0.00">CUDA buffer</tspan><tspan x="960.00" dy="17.00">device pointer</tspan><tspan x="960.00" dy="17.00">valid flag: 0/1</tspan></text>
-<rect class="box" x="475.00" y="190.00" width="250.00" height="100.00" fill="#fef3c7" stroke="#1f2937" filter="url(#shadow)"/>
-<text class="small" x="600.00" y="228.00" text-anchor="middle"><tspan x="600.00" dy="0.00">UVec metadata</tspan><tspan x="600.00" dy="17.00">latest = cpu/cuda:0</tspan><tspan x="600.00" dy="17.00">length, type, buffers</tspan></text>
-<line x1="390.00" y1="225.00" x2="475.00" y2="225.00" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
-<rect x="370.50" y="207.00" width="124" height="20" rx="10" fill="#ffffff" opacity="0.92"/>
-<text class="tiny" x="432.50" y="221.00" text-anchor="middle">read/write</text>
-<line x1="725.00" y1="225.00" x2="810.00" y2="225.00" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
-<rect x="705.50" y="207.00" width="124" height="20" rx="10" fill="#ffffff" opacity="0.92"/>
-<text class="tiny" x="767.50" y="221.00" text-anchor="middle">read/write</text>
-<line x1="395.00" y1="275.00" x2="805.00" y2="275.00" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
-<rect x="538.00" y="257.00" width="124" height="20" rx="10" fill="#ffffff" opacity="0.92"/>
-<text class="tiny" x="600.00" y="271.00" text-anchor="middle">CPU -&gt; CUDA copy</text>
-<line x1="805.00" y1="205.00" x2="395.00" y2="205.00" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
-<rect x="538.00" y="187.00" width="124" height="20" rx="10" fill="#ffffff" opacity="0.92"/>
-<text class="tiny" x="600.00" y="201.00" text-anchor="middle">CUDA -&gt; CPU copy</text>
-<rect class="box" x="110.00" y="430.00" width="260.00" height="92.00" fill="#eff6ff" stroke="#1f2937" filter="url(#shadow)"/>
-<text class="small" x="240.00" y="464.00" text-anchor="middle"><tspan x="240.00" dy="0.00">CPU write</tspan><tspan x="240.00" dy="17.00">cpu valid = 1</tspan><tspan x="240.00" dy="17.00">cuda valid = 0</tspan></text>
-<rect class="box" x="470.00" y="430.00" width="260.00" height="92.00" fill="#f5f3ff" stroke="#1f2937" filter="url(#shadow)"/>
-<text class="small" x="600.00" y="464.00" text-anchor="middle"><tspan x="600.00" dy="0.00">CUDA read</tspan><tspan x="600.00" dy="17.00">if cuda invalid</tspan><tspan x="600.00" dy="17.00">copy CPU -&gt; CUDA</tspan></text>
-<rect class="box" x="830.00" y="430.00" width="260.00" height="92.00" fill="#f5f3ff" stroke="#1f2937" filter="url(#shadow)"/>
-<text class="small" x="960.00" y="464.00" text-anchor="middle"><tspan x="960.00" dy="0.00">CUDA write</tspan><tspan x="960.00" dy="17.00">cuda valid = 1</tspan><tspan x="960.00" dy="17.00">cpu valid = 0</tspan></text>
-<line x1="370.00" y1="476.00" x2="470.00" y2="476.00" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
-<rect x="358.00" y="458.00" width="124" height="20" rx="10" fill="#ffffff" opacity="0.92"/>
-<text class="tiny" x="420.00" y="472.00" text-anchor="middle">kernel input</text>
-<line x1="730.00" y1="476.00" x2="830.00" y2="476.00" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
-<rect x="718.00" y="458.00" width="124" height="20" rx="10" fill="#ffffff" opacity="0.92"/>
-<text class="tiny" x="780.00" y="472.00" text-anchor="middle">kernel output</text>
-<text class="subtitle" x="600.00" y="594.00" text-anchor="middle">This is the bridge that lets FTCL scripts call CPU and CUDA kernels through the same UVec handle.</text>
+<text class="subtitle" x="70.00" y="66.00" text-anchor="start">Reads make a target device valid; mutable writes make other copies stale.</text>
+<rect x="80" y="115" width="1120" height="245" rx="22" fill="#f8fafc" stroke="#e2e8f0"/>
+<text class="label" x="104.00" y="145.00" text-anchor="start">Read path: make data available without destroying other valid copies</text>
+<rect x="80" y="405" width="1120" height="220" rx="22" fill="#f8fafc" stroke="#e2e8f0"/>
+<text class="label" x="104.00" y="435.00" text-anchor="start">Write path: grant one mutable pointer and invalidate stale copies</text>
+<rect class="box" x="135.00" y="190.00" width="220.00" height="92.00" fill="#dbeafe" stroke="#1f2937" filter="url(#shadow)"/>
+<text class="small" x="245.00" y="224.00" text-anchor="middle"><tspan x="245.00" dy="0.00">Before</tspan><tspan x="245.00" dy="17.00">CPU valid</tspan><tspan x="245.00" dy="17.00">CUDA invalid</tspan></text>
+<rect class="box" x="510.00" y="185.00" width="260.00" height="102.00" fill="#fef3c7" stroke="#1f2937" filter="url(#shadow)"/>
+<text class="small" x="640.00" y="224.00" text-anchor="middle"><tspan x="640.00" dy="0.00">as_uptr(cuda:0)</tspan><tspan x="640.00" dy="17.00">copy CPU -&gt; CUDA</tspan><tspan x="640.00" dy="17.00">return const pointer</tspan></text>
+<rect class="box" x="925.00" y="190.00" width="220.00" height="92.00" fill="#dcfce7" stroke="#1f2937" filter="url(#shadow)"/>
+<text class="small" x="1035.00" y="215.50" text-anchor="middle"><tspan x="1035.00" dy="0.00">After</tspan><tspan x="1035.00" dy="17.00">CPU valid</tspan><tspan x="1035.00" dy="17.00">CUDA valid</tspan><tspan x="1035.00" dy="17.00">both readable</tspan></text>
+<line x1="355.00" y1="236.00" x2="510.00" y2="236.00" stroke="#334155" stroke-width="2.2" marker-end="url(#arrow)"/>
+<text class="tiny" x="432.50" y="226.00" text-anchor="middle">request CUDA read</text>
+<line x1="770.00" y1="236.00" x2="925.00" y2="236.00" stroke="#16a34a" stroke-width="2.2" marker-end="url(#arrow)"/>
+<text class="tiny" x="847.50" y="226.00" text-anchor="middle">synchronized read</text>
+<line x1="340.00" y1="307.00" x2="955.00" y2="307.00" stroke="#0ea5e9" stroke-width="2.2" stroke-dasharray="8 6" marker-end="url(#arrow)"/>
+<text class="tiny" x="647.50" y="297.00" text-anchor="middle">physical copy happens only when target flag is invalid</text>
+<rect class="box" x="135.00" y="475.00" width="220.00" height="90.00" fill="#dcfce7" stroke="#1f2937" filter="url(#shadow)"/>
+<text class="small" x="245.00" y="508.00" text-anchor="middle"><tspan x="245.00" dy="0.00">Before</tspan><tspan x="245.00" dy="17.00">CPU valid</tspan><tspan x="245.00" dy="17.00">CUDA valid</tspan></text>
+<rect class="box" x="510.00" y="470.00" width="260.00" height="100.00" fill="#fef3c7" stroke="#1f2937" filter="url(#shadow)"/>
+<text class="small" x="640.00" y="508.00" text-anchor="middle"><tspan x="640.00" dy="0.00">as_mut_uptr(cuda:0)</tspan><tspan x="640.00" dy="17.00">prepare writable pointer</tspan><tspan x="640.00" dy="17.00">latest = cuda:0</tspan></text>
+<rect class="box" x="925.00" y="475.00" width="220.00" height="90.00" fill="#ede9fe" stroke="#1f2937" filter="url(#shadow)"/>
+<text class="small" x="1035.00" y="508.00" text-anchor="middle"><tspan x="1035.00" dy="0.00">After</tspan><tspan x="1035.00" dy="17.00">CUDA valid</tspan><tspan x="1035.00" dy="17.00">CPU invalid</tspan></text>
+<line x1="355.00" y1="520.00" x2="510.00" y2="520.00" stroke="#334155" stroke-width="2.2" marker-end="url(#arrow)"/>
+<text class="tiny" x="432.50" y="510.00" text-anchor="middle">request CUDA write</text>
+<line x1="770.00" y1="520.00" x2="925.00" y2="520.00" stroke="#dc2626" stroke-width="2.2" marker-end="url(#arrow)"/>
+<text class="tiny" x="847.50" y="510.00" text-anchor="middle">invalidate CPU copy</text>
+<text class="subtitle" x="600.00" y="665.00" text-anchor="middle">The same handle is stable at script level; UVec decides when copy or invalidation is required.</text>
 </svg>

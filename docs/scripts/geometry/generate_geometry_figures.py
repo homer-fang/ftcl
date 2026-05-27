@@ -102,69 +102,95 @@ def box(x: float, y: float, w: float, h: float, lines: Sequence[str], fill: str,
     )
 
 
-def arrow(x1: float, y1: float, x2: float, y2: float, label: str = "") -> str:
+def arrow(x1: float, y1: float, x2: float, y2: float, label: str = "", color: str = "#334155",
+          dash: str = "") -> str:
     midx = (x1 + x2) / 2.0
     midy = (y1 + y2) / 2.0
-    out = f'<line x1="{x1:.2f}" y1="{y1:.2f}" x2="{x2:.2f}" y2="{y2:.2f}" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>\n'
+    dash_attr = f' stroke-dasharray="{dash}"' if dash else ""
+    out = (
+        f'<line x1="{x1:.2f}" y1="{y1:.2f}" x2="{x2:.2f}" y2="{y2:.2f}" '
+        f'stroke="{color}" stroke-width="2.2"{dash_attr} marker-end="url(#arrow)"/>\n'
+    )
     if label:
-        out += f'<rect x="{midx - 62:.2f}" y="{midy - 18:.2f}" width="124" height="20" rx="10" fill="#ffffff" opacity="0.92"/>\n'
-        out += text(midx, midy - 4, label, "tiny")
+        out += text(midx, midy - 10, label, "tiny")
     return out
 
 
 def draw_system_architecture(out: Path) -> None:
-    w, h = 1200, 680
+    w, h = 1280, 720
     p = [svg_header(w, h)]
     p.append(f'<rect x="0" y="0" width="{w}" height="{h}" fill="#ffffff"/>\n')
     p.append(text(70, 44, "FTCL geometry system architecture", "title", "start"))
-    p.append(text(70, 66, "Script level commands are lowered to UVec-backed CPU/CUDA geometry kernels.", "subtitle", "start"))
+    p.append(text(70, 66, "A script control plane drives a UVec data plane, which selects CPU or CUDA execution backends.", "subtitle", "start"))
 
-    p.append(box(80, 150, 190, 88, ["FTCL Script", "geom nearest_point", "thread channel"], "#dbeafe"))
-    p.append(box(350, 150, 220, 88, ["Parser / Interpreter", "word parsing", "command dispatch"], "#e0f2fe"))
-    p.append(box(650, 150, 190, 88, ["geom command", "argument decode", "device select"], "#dcfce7"))
-    p.append(box(940, 150, 180, 88, ["UVec", "typed handle", "valid flags"], "#fef3c7"))
+    lanes = [
+        (80, 120, 1120, 150, "1  Script control plane", "#eff6ff"),
+        (80, 305, 1120, 160, "2  UVec data abstraction plane", "#fffbeb"),
+        (80, 500, 1120, 135, "3  Execution backend plane", "#f8fafc"),
+    ]
+    for x, y, bw, bh, name, fill in lanes:
+        p.append(f'<rect x="{x}" y="{y}" width="{bw}" height="{bh}" rx="22" fill="{fill}" stroke="#e2e8f0"/>\n')
+        p.append(text(x + 22, y + 28, name, "label", "start"))
 
-    p.append(arrow(270, 194, 350, 194, "parse/eval"))
-    p.append(arrow(570, 194, 650, 194, "dispatch"))
-    p.append(arrow(840, 194, 940, 194, "handles"))
+    p.append(box(125, 165, 170, 72, ["FTCL script", "geom ...", "thread channel"], "#dbeafe"))
+    p.append(box(355, 165, 180, 72, ["Lexer / Parser", "command + words"], "#e0f2fe"))
+    p.append(box(595, 165, 205, 72, ["Interpreter", "substitution", "command dispatch"], "#e0f2fe"))
+    p.append(box(875, 165, 190, 72, ["geom command", "decode args", "select device"], "#dcfce7"))
 
-    p.append(box(760, 380, 180, 86, ["CPU backend", "std::vector", "scalar loops"], "#f1f5f9"))
-    p.append(box(980, 380, 180, 86, ["CUDA backend", "device buffer", "kernels"], "#ede9fe"))
-    p.append(arrow(1000, 238, 850, 380, "cpu"))
-    p.append(arrow(1040, 238, 1070, 380, "cuda:0"))
-    p.append(arrow(850, 466, 1000, 238, "result UVec"))
-    p.append(arrow(1070, 466, 1040, 238, "result UVec"))
+    p.append(arrow(295, 201, 355, 201, "parse"))
+    p.append(arrow(535, 201, 595, 201, "evaluate"))
+    p.append(arrow(800, 201, 875, 201, "dispatch"))
 
-    p.append(box(80, 390, 490, 74, ["Result returns as an FTCL value", "Most batch algorithms return a UVec handle, so scripts can continue without copying immediately."], "#fff7ed"))
-    p.append(arrow(940, 194, 570, 427, "return handle"))
-    p.append(arrow(350, 427, 270, 194, "script value"))
+    p.append(box(180, 350, 220, 76, ["Result value", "usually a UVec handle"], "#fff7ed"))
+    p.append(box(480, 330, 360, 116, ["UVec handle manager", "id -> typed vector", "per-handle lock"], "#fef3c7"))
+    p.append(box(920, 330, 220, 116, ["UVec object", "CPU/CUDA buffers", "valid flags"], "#fef3c7"))
+
+    p.append(arrow(970, 237, 1030, 330, "lookup handle"))
+    p.append(arrow(840, 388, 920, 388, "typed access"))
+    p.append(arrow(480, 388, 400, 388, "return handle", COLORS["orange"]))
+
+    p.append(box(190, 545, 220, 72, ["CPU backend", "std::vector view", "scalar loops"], "#f1f5f9"))
+    p.append(box(530, 545, 230, 72, ["CUDA backend", "device pointer", "kernel launch"], "#ede9fe"))
+    p.append(box(875, 545, 230, 72, ["Multi-GPU workers", "cuda:0 ... cuda:7", "independent handles"], "#ede9fe"))
+
+    p.append(arrow(985, 446, 300, 545, "as_uptr(cpu)", COLORS["slate"]))
+    p.append(arrow(1030, 446, 645, 545, "as_uptr(cuda:0)", COLORS["purple"]))
+    p.append(arrow(1070, 446, 990, 545, "partitioned handles", COLORS["purple"], "7 5"))
+
+    p.append(text(140, 680, "Key idea:", "label", "start"))
+    p.append(text(225, 680, "scripts move small handles; UVec keeps large geometry arrays resident until a final readback is needed.", "subtitle", "start"))
     p.append(svg_footer())
     write_text(out, "".join(p))
 
 
 def draw_uvec_sync(out: Path) -> None:
-    w, h = 1200, 680
+    w, h = 1280, 720
     p = [svg_header(w, h)]
     p.append(f'<rect x="0" y="0" width="{w}" height="{h}" fill="#ffffff"/>\n')
     p.append(text(70, 44, "UVec cross-device synchronization", "title", "start"))
-    p.append(text(70, 66, "Only the latest buffer is authoritative. Reads trigger copy; writes invalidate stale copies.", "subtitle", "start"))
+    p.append(text(70, 66, "Reads make a target device valid; mutable writes make other copies stale.", "subtitle", "start"))
 
-    p.append(box(90, 180, 300, 120, ["CPU buffer", "host pointer", "valid flag: 0/1"], "#dbeafe"))
-    p.append(box(810, 180, 300, 120, ["CUDA buffer", "device pointer", "valid flag: 0/1"], "#ede9fe"))
-    p.append(box(475, 190, 250, 100, ["UVec metadata", "latest = cpu/cuda:0", "length, type, buffers"], "#fef3c7"))
+    panels = [
+        (80, 115, 1120, 245, "Read path: make data available without destroying other valid copies"),
+        (80, 405, 1120, 220, "Write path: grant one mutable pointer and invalidate stale copies"),
+    ]
+    for x, y, bw, bh, title in panels:
+        p.append(f'<rect x="{x}" y="{y}" width="{bw}" height="{bh}" rx="22" fill="#f8fafc" stroke="#e2e8f0"/>\n')
+        p.append(text(x + 24, y + 30, title, "label", "start"))
 
-    p.append(arrow(390, 225, 475, 225, "read/write"))
-    p.append(arrow(725, 225, 810, 225, "read/write"))
-    p.append(arrow(395, 275, 805, 275, "CPU -> CUDA copy"))
-    p.append(arrow(805, 205, 395, 205, "CUDA -> CPU copy"))
+    p.append(box(135, 190, 220, 92, ["Before", "CPU valid", "CUDA invalid"], "#dbeafe"))
+    p.append(box(510, 185, 260, 102, ["as_uptr(cuda:0)", "copy CPU -> CUDA", "return const pointer"], "#fef3c7"))
+    p.append(box(925, 190, 220, 92, ["After", "CPU valid", "CUDA valid", "both readable"], "#dcfce7"))
+    p.append(arrow(355, 236, 510, 236, "request CUDA read", COLORS["slate"]))
+    p.append(arrow(770, 236, 925, 236, "synchronized read", COLORS["green"]))
+    p.append(arrow(340, 307, 955, 307, "physical copy happens only when target flag is invalid", COLORS["sky"], "8 6"))
 
-    p.append(box(110, 430, 260, 92, ["CPU write", "cpu valid = 1", "cuda valid = 0"], "#eff6ff"))
-    p.append(box(470, 430, 260, 92, ["CUDA read", "if cuda invalid", "copy CPU -> CUDA"], "#f5f3ff"))
-    p.append(box(830, 430, 260, 92, ["CUDA write", "cuda valid = 1", "cpu valid = 0"], "#f5f3ff"))
-    p.append(arrow(370, 476, 470, 476, "kernel input"))
-    p.append(arrow(730, 476, 830, 476, "kernel output"))
-
-    p.append(text(600, 594, "This is the bridge that lets FTCL scripts call CPU and CUDA kernels through the same UVec handle.", "subtitle"))
+    p.append(box(135, 475, 220, 90, ["Before", "CPU valid", "CUDA valid"], "#dcfce7"))
+    p.append(box(510, 470, 260, 100, ["as_mut_uptr(cuda:0)", "prepare writable pointer", "latest = cuda:0"], "#fef3c7"))
+    p.append(box(925, 475, 220, 90, ["After", "CUDA valid", "CPU invalid"], "#ede9fe"))
+    p.append(arrow(355, 520, 510, 520, "request CUDA write", COLORS["slate"]))
+    p.append(arrow(770, 520, 925, 520, "invalidate CPU copy", COLORS["red"]))
+    p.append(text(600, 665, "The same handle is stable at script level; UVec decides when copy or invalidation is required.", "subtitle"))
     p.append(svg_footer())
     write_text(out, "".join(p))
 

@@ -532,39 +532,53 @@ def write_ablation_table(ablation_rows: List[Dict[str, str]], out: Path) -> None
 
 
 def draw_uvec_state_machine(out: Path) -> None:
-    w, h = 1200, 760
+    w, h = 1280, 760
     p = [svg_header(w, h)]
     p.append(f'<rect x="0" y="0" width="{w}" height="{h}" fill="{COLORS["paper"]}"/>\n')
     p.append(text(70, 44, 'UVec state machine', 'title', 'start'))
-    p.append(text(70, 66, 'Write invalidates the opposite side; read may trigger synchronization copy.', 'subtitle', 'start'))
+    p.append(text(70, 66, 'A read can create a shared readable state; a mutable write returns to a single latest writer.', 'subtitle', 'start'))
 
     states = {
-        'cpu': (170, 220, 240, 90, ['CPU valid', 'cuda invalid']),
-        'cuda': (790, 220, 240, 90, ['CUDA valid', 'cpu invalid']),
-        'both': (480, 430, 240, 90, ['CPU+CUDA valid', 'both readable']),
+        'cpu': (155, 230, 260, 96, ['CPU latest', 'CPU valid = 1', 'CUDA valid = 0'], '#dbeafe'),
+        'both': (510, 465, 260, 96, ['Shared readable', 'CPU valid = 1', 'CUDA valid = 1'], '#dcfce7'),
+        'cuda': (865, 230, 260, 96, ['CUDA latest', 'CUDA valid = 1', 'CPU valid = 0'], '#ede9fe'),
     }
 
-    for x, y, bw, bh, lines in states.values():
-        p.append(f'<rect class="box" x="{x}" y="{y}" width="{bw}" height="{bh}" fill="#f8fafc"/>\n')
-        p.append(multiline_text(x + bw / 2, y + bh / 2 - 8, lines, 'label'))
+    for x, y, bw, bh, lines, fill in states.values():
+        p.append(f'<rect class="box" x="{x}" y="{y}" width="{bw}" height="{bh}" fill="{fill}" filter="url(#shadow)"/>\n')
+        p.append(multiline_text(x + bw / 2, y + bh / 2 - 18, lines, 'small', 'middle', 18))
 
-    def arr(x1: float, y1: float, x2: float, y2: float, label: str) -> str:
+    def arr(x1: float, y1: float, x2: float, y2: float, label: str = '', color: str = '#334155',
+            dash: str = '') -> str:
         midx = (x1 + x2) / 2.0
         midy = (y1 + y2) / 2.0
-        return (
-            f'<line x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>\n'
-            f'<rect x="{midx - 86:.1f}" y="{midy - 17:.1f}" width="172" height="20" rx="10" fill="#ffffff" opacity="0.92"/>\n'
-            + text(midx, midy - 3, label, 'tiny')
+        dash_attr = f' stroke-dasharray="{dash}"' if dash else ''
+        out = (
+            f'<line x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}" stroke="{color}" stroke-width="2.4"{dash_attr} marker-end="url(#arrow)"/>\n'
         )
+        if label:
+            out += text(midx, midy - 12, label, 'tiny')
+        return out
 
-    p.append(arr(410, 265, 790, 265, 'as_uptr(cuda) copy CPU->CUDA'))
-    p.append(arr(790, 238, 410, 238, 'as_uptr(cpu) copy CUDA->CPU'))
-    p.append(arr(290, 310, 530, 430, 'sync read -> both valid'))
-    p.append(arr(910, 310, 670, 430, 'sync read -> both valid'))
-    p.append(arr(600, 430, 290, 310, 'as_mut_uptr(cpu) write'))
-    p.append(arr(600, 430, 910, 310, 'as_mut_uptr(cuda) write'))
+    p.append(arr(310, 326, 545, 465, color=COLORS['green']))
+    p.append(arr(610, 465, 375, 326, color=COLORS['red']))
+    p.append(arr(970, 326, 735, 465, color=COLORS['green']))
+    p.append(arr(670, 465, 905, 326, color=COLORS['red']))
+    p.append(arr(415, 260, 865, 260, color=COLORS['purple'], dash='7 5'))
+    p.append(arr(865, 296, 415, 296, color=COLORS['blue'], dash='7 5'))
 
-    p.append(text(600, 680, 'Init examples: from_cpu() starts in CPU-valid; uninitialized(..., cuda:0) starts in CUDA-valid.', 'small'))
+    p.append(f'<rect x="145" y="610" width="990" height="92" rx="18" fill="#f8fafc" stroke="#e2e8f0"/>\n')
+    legend = [
+        (190, 642, COLORS['green'], '', 'Read on a stale device: copy data and enter the shared-readable state.'),
+        (190, 672, COLORS['red'], '', 'Mutable write from shared-readable: invalidate the other device copy.'),
+        (690, 642, COLORS['purple'], '7 5', 'Direct mutable CUDA write from CPU-latest: CUDA becomes the only latest writer.'),
+        (690, 672, COLORS['blue'], '7 5', 'Direct mutable CPU write from CUDA-latest: CPU becomes the only latest writer.'),
+    ]
+    for x, y, color, dash, label in legend:
+        dash_attr = f' stroke-dasharray="{dash}"' if dash else ''
+        p.append(f'<line x1="{x}" y1="{y}" x2="{x + 42}" y2="{y}" stroke="{color}" stroke-width="3"{dash_attr}/>\n')
+        p.append(text(x + 54, y + 5, label, 'tiny', 'start'))
+    p.append(text(190, 695, 'Invariant: at least one physical buffer is valid; reads may increase the valid set, writes shrink it to one latest writer.', 'tiny', 'start'))
     p.append(svg_footer())
     write_text(out, ''.join(p))
 
