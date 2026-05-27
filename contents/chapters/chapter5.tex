@@ -34,9 +34,18 @@ For distance matrix, nearest point, and range-count workloads, \(N\) denotes the
 \label{tab:environment}
 \begin{tabularx}{\textwidth}{lX}
 \toprule
-Item & Recorded or recommended value \\
+Item & Recorded value \\
 \midrule
-Operating system & WSL Ubuntu environment used for build and tests \\
+Operating system & WSL Ubuntu environment used for build, tests, CUDA execution, and figure generation \\
+CPU model & Intel Xeon Platinum 8358 CPU at 2.60 GHz \\
+CPU topology & 2 sockets, 32 cores per socket, 2 hardware threads per core, 128 logical CPUs \\
+CPU frequency & 800 MHz minimum, 3.40 GHz maximum as reported by \texttt{lscpu} \\
+NUMA layout & 2 NUMA nodes; node 0 contains CPUs 0--31 and 64--95, node 1 contains CPUs 32--63 and 96--127 \\
+Main memory & 1.0 TiB total memory; about 623 GiB available when the environment was recorded \\
+GPU model & 8 NVIDIA A800-SXM4-80GB GPUs \\
+GPU memory & 81920 MiB per GPU, approximately 640 GiB aggregate device memory \\
+GPU driver & NVIDIA driver 530.30.02 \\
+CUDA compute capability & 8.0 for each A800 GPU \\
 Build system & CMake with Release configuration \\
 C++ standard & C++20, selected by \texttt{FTCL\_CXX\_STANDARD=20} \\
 Compiler & GCC or Clang available inside WSL \\
@@ -45,12 +54,12 @@ CPU build path & \texttt{build} or \texttt{/tmp/ftcl-build-geometry-cpu} \\
 CUDA build path & \texttt{/tmp/ftcl-build-geometry-cuda} \\
 Benchmark data & CSV files under \texttt{docs/data/benchmarks} and \texttt{docs/data/geometry} \\
 Generated figures & SVG/PNG figures under \texttt{docs/figures} and \texttt{contents/figures} \\
-Important note & Hardware model, GPU model, driver version, and commit hash should be recorded in the final defense version \\
+Important note & Free GPU memory is time-dependent because other users or jobs may share the same server \\
 \bottomrule
 \end{tabularx}
 \end{table}
 
-Table \ref{tab:environment} is intentionally written as an environment record rather than a universal claim. Performance numbers in this thesis should be interpreted as measurements from the recorded environment, not as hardware-independent constants.
+Table \ref{tab:environment} is intentionally written as an environment record rather than a universal claim. Performance numbers in this thesis should be interpreted as measurements from this recorded multi-GPU server, not as hardware-independent constants. The large CPU core count also means that CPU baselines are not weak baselines; they are measured on a high-end dual-socket server.
 
 \section{Semantic Regression Tests}
 The semantic regression tests cover core commands, collections, control flow, expressions, and threading. Figure \ref{fig:semantic-pass} shows that the currently measured suites reach 100 percent pass rate.
