@@ -316,6 +316,77 @@ def collect_study_data(build_dir: Path, data_dir: Path) -> Tuple[List[Dict[str, 
     return ablation, concurrency
 
 
+def parse_multi_gpu_output(raw: str) -> List[Dict[str, str]]:
+    rows: List[Dict[str, str]] = []
+    header = [
+        'metric',
+        'gpu_count',
+        'n',
+        'total_q',
+        'per_gpu_q',
+        'rounds',
+        'time_us',
+        'total_work_items',
+        'throughput_items_per_s',
+        'speedup_vs_1gpu',
+        'parallel_efficiency',
+    ]
+
+    for line in raw.splitlines():
+        text_line = line.strip()
+        if not text_line or text_line.startswith('===') or text_line.startswith('#'):
+            continue
+        if text_line == ','.join(header):
+            continue
+        parts = [x.strip() for x in text_line.split(',')]
+        if len(parts) != len(header):
+            continue
+        if parts[0] not in ALGO_LABELS:
+            continue
+        rows.append(dict(zip(header, parts)))
+
+    return rows
+
+
+def load_or_collect_multi_gpu(build_dir: Path, data_dir: Path, mode: str, scaling: str) -> List[Dict[str, str]]:
+    csv_path = data_dir / 'geometry_multi_gpu_scaling.csv'
+    exe = build_dir / 'test' / 'bench_geometry_multi_gpu'
+
+    if exe.exists():
+        env = os.environ.copy()
+        env['FTCL_MULTI_GPU_MODE'] = mode
+        env['FTCL_MULTI_GPU_SCALING'] = scaling
+        proc = subprocess.run([str(exe)], text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=True, env=env)
+        rows = parse_multi_gpu_output(proc.stdout)
+        if rows:
+            with csv_path.open('w', newline='', encoding='utf-8') as f:
+                writer = csv.DictWriter(
+                    f,
+                    fieldnames=[
+                        'metric',
+                        'gpu_count',
+                        'n',
+                        'total_q',
+                        'per_gpu_q',
+                        'rounds',
+                        'time_us',
+                        'total_work_items',
+                        'throughput_items_per_s',
+                        'speedup_vs_1gpu',
+                        'parallel_efficiency',
+                    ],
+                )
+                writer.writeheader()
+                writer.writerows(rows)
+            return rows
+
+    if csv_path.exists():
+        with csv_path.open('r', newline='', encoding='utf-8') as f:
+            return list(csv.DictReader(f))
+
+    return []
+
+
 def compute_break_even(perf_rows: List[Dict[str, str]]) -> Tuple[List[Dict[str, object]], List[Dict[str, object]]]:
     grouped: Dict[str, Dict[int, Dict[str, float]]] = {}
     meta: Dict[int, Tuple[int, int]] = {}
@@ -609,6 +680,41 @@ def draw_concurrency_latency(rows: List[Dict[str, str]], out: Path) -> None:
     )
 
 
+def draw_multi_gpu_scaling(rows: List[Dict[str, str]], out: Path) -> None:
+    if not rows:
+        return
+
+    gpu_counts = sorted({int(r['gpu_count']) for r in rows})
+    series: List[Dict[str, object]] = []
+
+    if gpu_counts:
+        series.append({
+            'name': 'ideal linear scaling',
+            'values': [(count, float(count)) for count in gpu_counts],
+            'color': COLORS['muted'],
+        })
+
+    for metric in ALGO_LABELS:
+        values = []
+        for r in sorted(rows, key=lambda x: int(x['gpu_count'])):
+            if r['metric'] != metric:
+                continue
+            values.append((int(r['gpu_count']), float(r['speedup_vs_1gpu'])))
+        if values:
+            series.append({'name': ALGO_LABELS[metric], 'values': values, 'color': ALGO_COLORS[metric]})
+
+    line_chart(
+        out,
+        'Multi-GPU geometry scaling',
+        'Weak scaling with fixed per-GPU work; queries are partitioned across CUDA devices 0 to 7.',
+        'GPU count',
+        'Speedup vs 1 GPU',
+        series,
+        0.0,
+        1.0,
+    )
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description='Generate FTCL geometry study add-on figures and tables.')
     parser.add_argument('--build-dir', default=str(DEFAULT_BUILD_DIR))
@@ -616,6 +722,8 @@ def main() -> int:
     parser.add_argument('--fig-dir', default=str(DEFAULT_FIG_DIR))
     parser.add_argument('--break-even-mode', default='break_even')
     parser.add_argument('--break-even-fallback-mode', default='smoke')
+    parser.add_argument('--multi-gpu-mode', default='paper')
+    parser.add_argument('--multi-gpu-scaling', default='weak')
     args = parser.parse_args()
 
     build_dir = Path(args.build_dir)
@@ -646,6 +754,9 @@ def main() -> int:
     draw_uvec_state_machine(arch_fig_dir / 'uvec_state_machine.svg')
     draw_concurrency_throughput(concurrency_rows, geom_fig_dir / 'geometry_concurrency_throughput.svg')
     draw_concurrency_latency(concurrency_rows, geom_fig_dir / 'geometry_concurrency_latency_p95.svg')
+
+    multi_gpu_rows = load_or_collect_multi_gpu(build_dir, data_dir, args.multi_gpu_mode, args.multi_gpu_scaling)
+    draw_multi_gpu_scaling(multi_gpu_rows, geom_fig_dir / 'geometry_multi_gpu_scaling.svg')
 
     print(f'Wrote add-on study data to {data_dir}')
     print(f'Wrote add-on study figures to {geom_fig_dir} and {arch_fig_dir}')

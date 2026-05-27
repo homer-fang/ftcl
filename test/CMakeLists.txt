@@ -159,6 +159,10 @@ target_link_libraries(bench_ftcl PRIVATE ftcl)
 add_executable(bench_geometry_studies bench_geometry_studies.cpp)
 target_link_libraries(bench_geometry_studies PRIVATE ftcl)
 
+# Geometry multi-GPU scaling benchmark executable.
+add_executable(bench_geometry_multi_gpu bench_geometry_multi_gpu.cpp)
+target_link_libraries(bench_geometry_multi_gpu PRIVATE ftcl)
+
 # Run original ftcl Tcl test suite via ftcl test_harness.
 add_executable(test_ftcl_suite test_ftcl_suite.cpp)
 target_link_libraries(test_ftcl_suite PRIVATE ftcl)

@@ -161,6 +161,35 @@ Figures \ref{fig:execution-bars} and \ref{fig:throughput} show execution time an
   \label{fig:throughput}
 \end{figure}
 
+\section{Multi-GPU Scaling}
+The server contains eight A800 GPUs, so the evaluation also measures whether FTCL can expose more than one CUDA device to script-level geometry workloads. The multi-GPU benchmark uses weak scaling: each GPU receives the same number of query points, while the total number of queries grows with the GPU count. Each worker owns an independent FTCL interpreter, creates UVec inputs on a different CUDA device, and launches the same geometry command on \texttt{cuda:0}, \texttt{cuda:1}, \ldots, \texttt{cuda:7}. The reported speedup is throughput speedup relative to one GPU.
+
+This experiment also revealed an important runtime bottleneck. The original UVec command manager protected the whole handle table with one global mutex and executed geometry commands while holding that mutex. As a result, independent CUDA commands could be serialized at the script runtime layer. The implementation was changed so that the global mutex only protects handle-table lookup, while each UVec handle has its own entry mutex. This allows independent UVec handles on different GPUs to execute concurrently.
+
+\begin{table}[H]
+\centering
+\caption{Weak-scaling speedup for multi-GPU geometry commands}
+\label{tab:multi-gpu-speedup}
+\begin{tabular}{lrrrr}
+\toprule
+Algorithm & 1 GPU & 2 GPUs & 4 GPUs & 8 GPUs \\
+\midrule
+Distance matrix & 1.00x & 0.96x & 0.97x & 1.12x \\
+Nearest point & 1.00x & 2.00x & 3.99x & 3.74x \\
+Circle range count & 1.00x & 1.98x & 3.97x & 7.90x \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.82\textwidth]{geometry-multi-gpu-scaling.png}
+  \caption{Weak-scaling speedup across 1, 2, 4, and 8 A800 GPUs}
+  \label{fig:multi-gpu-scaling}
+\end{figure}
+
+The result shows that multi-GPU execution is useful but algorithm-dependent. Circle range counting scales almost linearly to eight GPUs because each query produces one compact result and has regular independent work. Nearest point scales well to four GPUs and then drops at eight GPUs, suggesting that runtime overhead, allocation, and synchronization begin to dominate. Distance matrix has the weakest multi-GPU scaling because every query produces a large output row; output allocation and global memory traffic dominate the total command time. This is a useful negative result: the system can use eight GPUs, but future work needs memory pools, persistent output buffers, and CUDA streams to make large-output kernels scale better.
+
 \section{Break-even Analysis}
 CUDA acceleration has fixed overhead. A small workload may be slower on CUDA because kernel launch, synchronization, allocation, and command dispatch dominate the useful computation. Figure \ref{fig:break-even} uses work items \(N \times Q\) as the horizontal axis and speedup as the vertical axis.
 

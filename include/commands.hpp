@@ -25,6 +25,7 @@
 #include <future>
 #include <iostream>
 #include <limits>
+#include <memory>
 #include <sstream>
 #include <mutex>
 #include <string>
@@ -2171,7 +2172,7 @@ public:
     ftclInt create(UVec<ftclFloat> vec) {
         std::lock_guard<std::mutex> lock(mu_);
         const ftclInt id = next_id_++;
-        vectors_.emplace(id, std::move(vec));
+        vectors_.emplace(id, std::make_shared<Entry>(std::move(vec)));
         return id;
     }
 
@@ -2197,31 +2198,58 @@ public:
 
     template <class Func>
     ftclResult with_vec(ftclInt id, Func&& func) {
-        std::lock_guard<std::mutex> lock(mu_);
-        auto it = vectors_.find(id);
-        if (it == vectors_.end()) {
-            return ftcl_err("unknown uvec handle \"" + std::to_string(id) + "\"");
+        std::shared_ptr<Entry> entry;
+        {
+            std::lock_guard<std::mutex> lock(mu_);
+            auto it = vectors_.find(id);
+            if (it == vectors_.end()) {
+                return ftcl_err("unknown uvec handle \"" + std::to_string(id) + "\"");
+            }
+            entry = it->second;
         }
-        return func(it->second);
+
+        std::lock_guard<std::mutex> entry_lock(entry->mu);
+        return func(entry->vec);
     }
 
     template <class Func>
     ftclResult with_two(ftclInt dst_id, ftclInt src_id, Func&& func) {
-        std::lock_guard<std::mutex> lock(mu_);
-        auto dst = vectors_.find(dst_id);
-        if (dst == vectors_.end()) {
-            return ftcl_err("unknown uvec handle \"" + std::to_string(dst_id) + "\"");
+        std::shared_ptr<Entry> dst_entry;
+        std::shared_ptr<Entry> src_entry;
+        {
+            std::lock_guard<std::mutex> lock(mu_);
+            auto dst = vectors_.find(dst_id);
+            if (dst == vectors_.end()) {
+                return ftcl_err("unknown uvec handle \"" + std::to_string(dst_id) + "\"");
+            }
+            auto src = vectors_.find(src_id);
+            if (src == vectors_.end()) {
+                return ftcl_err("unknown uvec handle \"" + std::to_string(src_id) + "\"");
+            }
+            dst_entry = dst->second;
+            src_entry = src->second;
         }
-        auto src = vectors_.find(src_id);
-        if (src == vectors_.end()) {
-            return ftcl_err("unknown uvec handle \"" + std::to_string(src_id) + "\"");
+
+        if (dst_entry == src_entry) {
+            std::lock_guard<std::mutex> entry_lock(dst_entry->mu);
+            return func(dst_entry->vec, src_entry->vec);
         }
-        return func(dst->second, src->second);
+
+        std::scoped_lock entry_locks(dst_entry->mu, src_entry->mu);
+        return func(dst_entry->vec, src_entry->vec);
     }
 
 private:
+    struct Entry {
+        explicit Entry(UVec<ftclFloat> value)
+            : vec(std::move(value)) {}
+
+        std::mutex mu;
+        UVec<ftclFloat> vec;
+    };
+
     mutable std::mutex mu_;
-    std::unordered_map<ftclInt, UVec<ftclFloat>> vectors_;
+    std::unordered_map<ftclInt, std::shared_ptr<Entry>> vectors_;
     ftclInt next_id_ = 1;
 };
 

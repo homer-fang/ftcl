@@ -38,8 +38,20 @@ Additional outputs:
 - `docs/data/geometry/geometry_ablation.csv`
 - `docs/data/geometry/geometry_ablation_table.md`
 - `docs/data/geometry/geometry_concurrency.csv`
+- `docs/data/geometry/geometry_multi_gpu_scaling.csv`
 - `docs/figures/geometry/geometry_break_even_point.svg`
 - `docs/figures/geometry/geometry_real_application_demo.svg`
 - `docs/figures/geometry/geometry_concurrency_throughput.svg`
 - `docs/figures/geometry/geometry_concurrency_latency_p95.svg`
+- `docs/figures/geometry/geometry_multi_gpu_scaling.svg`
 - `docs/figures/architecture/uvec_state_machine.svg`
+
+For the 8-GPU server experiment, expose all devices explicitly before running the add-on script:
+
+```bash
+CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 \
+python3 docs/scripts/geometry/generate_geometry_study_addons.py \
+  --build-dir /tmp/ftcl-build-geometry-cuda \
+  --multi-gpu-mode paper \
+  --multi-gpu-scaling weak
+```

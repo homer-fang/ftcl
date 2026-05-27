@@ -335,6 +335,13 @@ python3 docs/scripts/geometry/generate_geometry_figures.py \
 - Worker-count sweep for thread-channel geometry workload.
 - Includes throughput and P50/P95/P99 one-request latency under pipelined load.
 
+`geometry_multi_gpu_scaling.csv`
+
+- Weak-scaling measurements for 1, 2, 4, and 8 CUDA devices.
+- Each GPU receives the same number of query points; total work grows with GPU count.
+- Includes wall-clock command time, throughput, speedup versus one GPU, and parallel efficiency.
+- Requires all target devices to be visible through `CUDA_VISIBLE_DEVICES`.
+
 ### Figures
 
 `geometry_break_even_point.svg`
@@ -353,6 +360,12 @@ python3 docs/scripts/geometry/generate_geometry_figures.py \
 
 - P95 latency versus worker count for the same concurrency experiment.
 
+`geometry_multi_gpu_scaling.svg`
+
+- Shows throughput speedup for the multi-GPU weak-scaling experiment.
+- Use it to demonstrate whether FTCL can actually use the eight A800 GPUs rather than only one CUDA device.
+- A near-linear curve means the algorithm has enough independent work and compact outputs; a flat curve suggests command overhead, allocation, synchronization, or output bandwidth bottlenecks.
+
 `uvec_state_machine.svg`
 
 - Explicit state machine view of CPU-valid / CUDA-valid / both-valid transitions for UVec.
@@ -362,4 +375,14 @@ python3 docs/scripts/geometry/generate_geometry_figures.py \
 ```bash
 python3 docs/scripts/geometry/generate_geometry_study_addons.py \
   --build-dir /tmp/ftcl-build-geometry-cuda
+```
+
+For the multi-GPU server run:
+
+```bash
+CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 \
+python3 docs/scripts/geometry/generate_geometry_study_addons.py \
+  --build-dir /tmp/ftcl-build-geometry-cuda \
+  --multi-gpu-mode paper \
+  --multi-gpu-scaling weak
 ```
