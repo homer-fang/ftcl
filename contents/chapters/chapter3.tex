@@ -1,81 +1,81 @@
-\chapter{System Design}
+﻿\chapter{系统设计}
 
-\section{Overview}
-The architecture of FTCL is shown in Figure \ref{fig:system-arch}. A script is parsed into commands and words. The interpreter evaluates words, performs substitutions, and dispatches commands. The \texttt{geom} command parses geometry arguments or UVec handles and then selects either the CPU backend or the CUDA backend. UVec sits between the interpreter and the backends, managing cross-device data movement.
+\section{总体架构}
+FTCL 的总体架构如图 \ref{fig:system-arch} 所示。一个脚本首先被解析为 commands 和 words，随后由 interpreter 对 word 进行求值，完成变量替换、命令替换、数组访问和字符串拼接，最后将第一个求值结果作为 command name 进行分发。\texttt{geom} command 位于语言层和计算层之间：它负责解析几何参数或 UVec handle，并根据用户指定的 device 选择 CPU backend 或 CUDA backend。UVec 则处在 command layer 和 backend layer 之间，负责维护跨设备数据的位置、有效性和同步过程。
 
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.96\textwidth]{system-architecture.png}
-  \caption{Overall architecture of the FTCL geometry scripting system}
+  \caption{FTCL 几何脚本系统总体架构（FTCL geometry scripting system architecture）}
   \label{fig:system-arch}
 \end{figure}
 
-The architecture separates concerns clearly. The parser and interpreter handle language semantics. The command layer exposes stable user-facing operations. UVec manages data location and synchronization. The CPU and CUDA backends implement algorithms.
+这个设计的核心是分层而不是堆叠。Parser 和 interpreter 专注于语言语义；command layer 提供稳定的用户接口；UVec 负责 data residency 和 synchronization；CPU/CUDA backend 只实现具体算法。这样做的好处是：语言可以继续扩展，几何算法可以继续增加，CUDA 路径也可以在不破坏脚本接口的情况下逐步优化。
 
-\section{Engineering Scope}
-Table \ref{tab:engineering-scope} summarizes the main engineering components of the project. The goal of this table is to make the system scale visible: FTCL is not only a set of isolated algorithms, but an integrated interpreter, memory abstraction, geometry library, CUDA backend, testing framework, and benchmark pipeline.
+\section{工程规模}
+表 \ref{tab:engineering-scope} 总结了项目的主要工程组成。列出这张表的目的不是简单展示文件数量，而是让系统边界变得清楚：FTCL 不是几个孤立的几何函数，而是由 interpreter、memory abstraction、geometry library、CUDA backend、testing framework 和 benchmark pipeline 共同组成的完整原型系统。
 
 \begin{table}[htbp]
 \centering
-\caption{Engineering scope of the FTCL system}
+\caption{FTCL 系统工程组成（Engineering scope）}
 \label{tab:engineering-scope}
 \small
 \begin{tabularx}{\textwidth}{lXXX}
 \toprule
 Component & Main files & Main classes/functions & Role \\
 \midrule
-Interpreter core & \texttt{interp.hpp}, \texttt{type.hpp}, \texttt{parser.hpp} & \texttt{Interp}, \texttt{Value}, \texttt{Word}, \texttt{Script} & Script parsing, evaluation, variables, procedures, and command dispatch. \\
-Expression parser & \texttt{expr.hpp} & \texttt{ExprParser}, \texttt{Datum} & Arithmetic, comparison, logical, bitwise, ternary, and substitution-aware expressions. \\
-UVec layer & \texttt{uvec.hpp}, \texttt{commands.hpp} & \texttt{UVec<T>}, pointer wrappers, handle manager & Cross-device vector storage, CPU/CUDA synchronization, and script-visible handles. \\
-Geometry CPU backend & \texttt{geometry.hpp} & \texttt{Point}, \texttt{Segment}, \texttt{BoundingBox}, batch algorithms & Scalar and batch two-dimensional geometry algorithms on CPU data. \\
-CUDA backend & \texttt{geometry\_cuda.*} & kernels and launch wrappers & GPU acceleration for independent-work-item geometry algorithms. \\
-Tests & \texttt{test/*.cpp} & semantic, equivalence, random, edge, stress tests & Language validation, UVec consistency, and CPU/GPU correctness checks. \\
-Benchmarks and figures & \texttt{docs/data}, \texttt{docs/scripts}, \texttt{docs/figures} & CSV files and Python generators & Reproducible performance data and thesis-ready figures. \\
+Interpreter core & \texttt{interp.hpp}, \texttt{type.hpp}, \texttt{parser.hpp} & \texttt{Interp}, \texttt{Value}, \texttt{Word}, \texttt{Script} & 负责 script parsing、evaluation、variables、procedures 和 command dispatch。 \\
+Expression parser & \texttt{expr.hpp} & \texttt{ExprParser}, \texttt{Datum} & 支持 arithmetic、comparison、logical、bitwise、ternary 以及 substitution-aware expressions。 \\
+UVec layer & \texttt{uvec.hpp}, \texttt{commands.hpp} & \texttt{UVec<T>}, pointer wrappers, handle manager & 提供 cross-device vector storage、CPU/CUDA synchronization 和 script-visible handles。 \\
+Geometry CPU backend & \texttt{geometry.hpp} & \texttt{Point}, \texttt{Segment}, \texttt{BoundingBox}, batch algorithms & 在 CPU data 上实现 scalar 和 batch two-dimensional geometry algorithms。 \\
+CUDA backend & \texttt{geometry\_cuda.*} & kernels and launch wrappers & 为 independent-work-item geometry algorithms 提供 GPU acceleration。 \\
+Tests & \texttt{test/*.cpp} & semantic, equivalence, random, edge, stress tests & 验证 language semantics、UVec consistency 和 CPU/GPU correctness。 \\
+Benchmarks and figures & \texttt{docs/data}, \texttt{docs/scripts}, \texttt{docs/figures} & CSV files and Python generators & 生成 reproducible performance data 和 thesis-ready figures。 \\
 \bottomrule
 \end{tabularx}
 \end{table}
 
 \begin{table}[htbp]
 \centering
-\caption{Quantitative implementation statistics}
+\caption{实现规模统计（Quantitative implementation statistics）}
 \label{tab:implementation-statistics}
 \small
 \begin{tabularx}{\textwidth}{lrX}
 \toprule
 Metric & Value & Meaning \\
 \midrule
-C++/CUDA source files & 56 & Header, source, CUDA, benchmark, and test files under \texttt{include}, \texttt{src}, and \texttt{test}. \\
-C++/CUDA source lines & 19151 & Total line count of \texttt{.hpp}, \texttt{.cpp}, and \texttt{.cu} files in the implementation and tests. \\
-Header/interface lines & 12881 & Core interpreter, UVec, parser, expression, command, and geometry interfaces. \\
-CUDA/source implementation lines & 642 & CUDA backend and non-header source files. \\
-Test source lines & 5628 & Regression, equivalence, edge-case, random, stress, and benchmark-related test code. \\
-CTest entries & 31 & Build-system registered tests used for regression and validation. \\
-CUDA kernels & 17 & Device kernels found in the CUDA geometry backend and related test paths. \\
-Benchmark executables & 6 & Non-interactive benchmark programs for runtime, geometry, and multi-GPU experiments. \\
-Benchmark/figure scripts & 5 & Scripts and documents under \texttt{docs/scripts} for data and figure generation. \\
-Generated SVG figures & 18 & Reproducible vector figures under \texttt{docs/figures}. \\
-Thesis PNG figures & 18 & Rendered figures copied into \texttt{contents/figures} for thesis compilation. \\
+C++/CUDA source files & 56 & \texttt{include}、\texttt{src} 和 \texttt{test} 下的 header、source、CUDA、benchmark 和 test files。 \\
+C++/CUDA source lines & 19151 & \texttt{.hpp}、\texttt{.cpp} 和 \texttt{.cu} 文件总行数。 \\
+Header/interface lines & 12881 & 核心 interpreter、UVec、parser、expression、command 和 geometry interfaces。 \\
+CUDA/source implementation lines & 642 & CUDA backend 和非 header source files。 \\
+Test source lines & 5628 & Regression、equivalence、edge-case、random、stress 和 benchmark-related test code。 \\
+CTest entries & 31 & Build-system registered tests，用于 regression 和 validation。 \\
+CUDA kernels & 17 & CUDA geometry backend 以及相关 test path 中的 device kernels。 \\
+Benchmark executables & 6 & 用于 runtime、geometry 和 multi-GPU experiments 的 non-interactive benchmark programs。 \\
+Benchmark/figure scripts & 5 & \texttt{docs/scripts} 下的数据和图表生成脚本。 \\
+Generated SVG figures & 18 & \texttt{docs/figures} 下的 reproducible vector figures。 \\
+Thesis PNG figures & 18 & 复制到 \texttt{contents/figures} 中用于论文编译的 rendered figures。 \\
 \bottomrule
 \end{tabularx}
 \end{table}
 
 \section{Interpreter Runtime}
-The runtime contains values, words, scripts, scopes, and commands. A Value stores the script-level value. A Word represents one command argument before or after substitution. A Script is a list of commands. The interpreter maintains command tables and variable scopes.
+Runtime 由 values、words、scripts、scopes 和 commands 组成。Value 表示脚本层的值；Word 表示一个 command argument 在求值前后的结构；Script 是 command list；Interpreter 维护 command tables 和 variable scopes。FTCL 的执行路径保持 Tcl-style 的简单性，但在内部为后续扩展保留了结构化表示。
 
-The normal execution path is:
+一个普通脚本的执行过程如下：
 
 \begin{enumerate}
-  \item Parse the source text into a script structure.
-  \item Evaluate one command at a time.
-  \item Evaluate each word by applying variable substitution, command substitution, array lookup, and string concatenation as needed.
-  \item Use the first evaluated word as the command name.
-  \item Call the native C++ command function and return either a value or an exception.
+  \item 将 source text 解析为 script structure。
+  \item 按顺序执行一个个 command。
+  \item 对每个 word 执行 variable substitution、command substitution、array lookup 和 string concatenation。
+  \item 将第一个求值后的 word 作为 command name。
+  \item 调用对应的 native C++ command function，并返回 value 或 exception。
 \end{enumerate}
 
-This structure is intentionally close to Tcl. It makes the language small but extensible. New capabilities such as \texttt{thread}, \texttt{uvec}, and \texttt{geom} are integrated as commands rather than as new syntax.
+这种结构有一个重要优势：新能力不需要发明新语法。\texttt{thread}、\texttt{uvec} 和 \texttt{geom} 都是 command，而不是语言核心的特殊分支。因此 FTCL 可以保持小而清晰，同时承载并发、跨设备内存和几何算法。
 
-\section{Lexical Analysis Flow}
-The lexical layer converts a raw script string into a stream of tokens. FTCL's token-stream direction keeps token text and token boundaries so later stages can reason about command endings, comments, whitespace, braces, brackets, variable references, and ordinary text. The following pseudocode summarizes the intended lexer flow.
+\section{词法分析流程（Lexical Analysis Flow）}
+Lexical layer 将原始 script string 转换为 token stream。FTCL 的 token-stream 方向会保留 token text 和 token boundaries，使后续阶段能明确识别 command endings、comments、whitespace、braces、brackets、variable references 和 ordinary text。算法 \ref{alg:lexer} 描述了 lexer 的基本流程。
 
 \begin{algorithm}[H]
 \caption{FTCL Lexical Analysis}
@@ -114,10 +114,10 @@ append \textsc{Token}(\textsc{EndOfFile}, empty string) to $tokens$\;
 \KwReturn{$tokens$}\;
 \end{algorithm}
 
-The lexer does not execute substitutions. It only records the observable structure of the input. This separation is useful because Tcl-style substitution is semantic: a dollar sign may later require variable lookup, and a bracketed script may later require recursive command evaluation.
+Lexer 不执行 substitution。它只记录输入中可观察的结构。这样做非常重要，因为 Tcl-style substitution 本质上是 semantic action：\texttt{\$} 可能需要 variable lookup，\texttt{[...]} 可能需要 recursive command evaluation。把 tokenization 和 evaluation 分开，可以让 parser 更稳定，也便于错误定位和回归测试。
 
-\section{Syntax Analysis Flow}
-The parser consumes tokens and groups them into commands and words. A command ends at a newline, semicolon, or end-of-file, except when the parser is inside braces, quotes, or brackets. The parser does not execute commands. It only builds a script representation that can be evaluated later.
+\section{语法分析流程（Syntax Analysis Flow）}
+Parser 消费 token stream，并把 tokens 分组成 commands 和 words。Command 在 newline、semicolon 或 end-of-file 处结束，但如果 parser 位于 braces、quotes 或 brackets 内部，则这些符号不再表示 command boundary。Parser 不执行 command，它只构造后续可执行的 script representation。
 
 \begin{algorithm}[H]
 \caption{Token-stream Command Parsing}
@@ -158,7 +158,7 @@ The parser consumes tokens and groups them into commands and words. A command en
 }
 \end{algorithm}
 
-The word parser is more detailed than the command parser because a word may contain literal text, variable references, command substitutions, array references, braced literals, quoted strings, and expansion syntax. The important design decision is that the parser stores these pieces as structured word nodes, while the interpreter decides their runtime values.
+Word parser 比 command parser 更细，因为一个 word 内部可能包含 literal text、variable references、command substitutions、array references、braced literals、quoted strings 和 expansion syntax。关键设计是：parser 将这些组成部分保存为结构化 word nodes，而 interpreter 负责决定它们在运行时的 value。
 
 \begin{algorithm}[H]
 \caption{Word Parsing}
@@ -207,8 +207,8 @@ The word parser is more detailed than the command parser because a word may cont
 }
 \end{algorithm}
 
-\section{Semantic Execution Flow}
-Semantic execution begins after parsing. The interpreter evaluates each command in order. Each word is resolved into a runtime value. The first value becomes the command name, and the remaining values become arguments. The command function then performs the actual operation.
+\section{语义执行流程（Semantic Execution Flow）}
+Semantic execution 发生在 parsing 之后。Interpreter 逐条执行 command，对每个 word 求值，并把第一个 value 作为 command name，剩余 values 作为 arguments。Command function 才真正改变变量、创建 UVec、启动 CUDA kernel 或返回结果。
 
 \begin{algorithm}[H]
 \caption{Command-level Semantic Execution}
@@ -277,68 +277,71 @@ Semantic execution begins after parsing. The interpreter evaluates each command 
 }
 \end{algorithm}
 
-\section{UVec Cross-device Design}
-UVec is designed as a vector-like container that can own both CPU and CUDA storage. A normal \texttt{std::vector<T>} owns only CPU memory. UVec owns a CPU buffer and optional CUDA buffers. It also records which device currently has a valid and up-to-date copy.
+\section{UVec 跨设备设计}
+UVec 是一个 vector-like container，但它不只拥有 CPU storage。普通 \texttt{std::vector<T>} 只维护 CPU memory；UVec 同时维护 CPU buffer 和 optional CUDA buffers，并记录哪一个 device 上的数据是 valid and up-to-date。
 
-When CPU code asks for the latest data but the newest copy is on CUDA, UVec performs a CUDA-to-CPU copy. When a CUDA kernel asks for the latest data but the newest copy is on CPU, UVec performs a CPU-to-CUDA copy. When a mutable pointer is requested on one device, other copies are marked invalid because the target device may write new data.
-
-Figure \ref{fig:uvec-sync} shows the synchronization idea, and Figure \ref{fig:uvec-state} shows the state-machine view.
+当 CPU code 请求最新数据，而最新副本在 CUDA 上时，UVec 执行 CUDA-to-CPU copy；当 CUDA kernel 请求最新数据，而最新副本在 CPU 上时，UVec 执行 CPU-to-CUDA copy；当某个 device 请求 mutable pointer 时，其他副本会被标记为 invalid，因为该 device 可能写入新值。图 \ref{fig:uvec-sync} 展示同步机制，图 \ref{fig:uvec-state} 展示状态机视角。
 
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.88\textwidth]{uvec-sync.png}
-  \caption{Cross-device synchronization in UVec}
+  \caption{UVec 跨设备同步机制（Cross-device synchronization in UVec）}
   \label{fig:uvec-sync}
 \end{figure}
 
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.75\textwidth]{uvec-state.png}
-  \caption{UVec validity-state machine}
+  \caption{UVec 有效性状态机（UVec validity-state machine）}
   \label{fig:uvec-state}
 \end{figure}
 
-The two most important pointer interfaces are \texttt{as\_uptr(device)} and \texttt{as\_mut\_uptr(device)}. The first returns a read-only pointer after making the target device valid. The second returns a mutable pointer and marks the target device as the newest writer.
+最重要的两个 pointer interfaces 是 \texttt{as\_uptr(device)} 和 \texttt{as\_mut\_uptr(device)}。前者返回 read-only pointer，并保证目标 device 上的数据已经 valid；后者返回 mutable pointer，并将目标 device 标记为 newest writer。这两个接口让 CPU algorithm 和 CUDA kernel 可以共享同一个数据抽象，而不需要脚本用户手动判断数据在哪里。
 
-\section{Formal UVec Consistency Model}
-UVec can be described as a small consistency model over a set of devices. Let
+\section{形式化 UVec 一致性模型}
+UVec 可以被描述为定义在 device set 上的小型 consistency model。令
 \[
   D = \{\mathrm{CPU}, \mathrm{CUDA}_0, \mathrm{CUDA}_1, \ldots\}
 \]
-be the set of possible storage devices. A UVec instance of length \(n\) is represented as
+表示可能的存储设备集合。长度为 \(n\) 的 UVec instance 表示为
 \[
   U = (n, B, V, L),
 \]
-where \(B_d\) is the physical buffer on device \(d \in D\), \(V_d \in \{0,1\}\) indicates whether \(B_d\) contains a valid copy of the logical vector, and \(L \subseteq D\) is the set of devices that may contain the latest value. In the current implementation, the common case behaves like a single latest writer, but the set notation allows a state where CPU and CUDA are both valid after a read synchronization.
+其中 \(B_d\) 是 device \(d \in D\) 上的 physical buffer，\(V_d \in \{0,1\}\) 表示 \(B_d\) 是否包含 valid copy，\(L \subseteq D\) 表示可能包含 latest value 的 device set。当前实现通常表现为 single latest writer，但集合表示允许 CPU 和 CUDA 在一次 read synchronization 后同时 valid。
 
-The two core operations obey the following rules.
+两个核心操作满足以下规则：
 
 \begin{description}
-  \item[Read rule:] \texttt{as\_uptr(d)} must return a pointer on device \(d\) only after ensuring \(V_d = 1\). If \(V_d = 0\), the operation copies from any device \(s\) such that \(V_s = 1\) and then sets \(V_d \leftarrow 1\). This operation does not invalidate other valid copies.
-  \item[Write rule:] \texttt{as\_mut\_uptr(d)} must return a mutable pointer on device \(d\). Before returning, it ensures that \(B_d\) exists and contains the latest value. It then sets \(V_d \leftarrow 1\) and \(V_s \leftarrow 0\) for all \(s \ne d\), because a later write through the returned pointer may change the logical vector.
+  \item[Read rule:] \texttt{as\_uptr(d)} 只有在保证 \(V_d = 1\) 后才能返回 device \(d\) 上的 pointer。如果 \(V_d = 0\)，则从某个满足 \(V_s = 1\) 的 source device \(s\) 复制数据，并设置 \(V_d \leftarrow 1\)。Read operation 不会使其他 valid copies 失效。
+  \item[Write rule:] \texttt{as\_mut\_uptr(d)} 返回 device \(d\) 上的 mutable pointer。返回前必须保证 \(B_d\) 存在且包含 latest value；随后设置 \(V_d \leftarrow 1\)，并对所有 \(s \ne d\) 设置 \(V_s \leftarrow 0\)，因为通过 mutable pointer 的后续写入可能改变 logical vector。
 \end{description}
 
-These rules imply two useful invariants:
+由此得到两个有用的不变式：
 \[
   \exists d \in D,\; V_d = 1
 \]
-after every successfully initialized UVec operation, and every read pointer returned by UVec refers to a valid copy of the logical vector at the time of return. This model is deliberately simple. It is strong enough for synchronous CPU/CUDA command execution, while still leaving room for future extensions such as multiple CUDA devices, asynchronous streams, or copy-on-write policies.
+在每次成功初始化后的 UVec operation 之后成立；并且 UVec 返回的每个 read pointer 在返回时都指向 logical vector 的 valid copy。这个模型刻意保持简单：它足以支撑同步式 CPU/CUDA command execution，同时也为未来的 multiple CUDA devices、asynchronous streams 和 copy-on-write policies 留出空间。
 
 \section{Geometry Command Flow}
-The command execution flow is shown in Figure \ref{fig:geom-flow}. For a command such as \texttt{geom nearest\_point}, the interpreter first evaluates the script arguments. The command then parses UVec handles and device options. If the target device is CPU, the input data is synchronized to CPU and the C++ algorithm is called. If the target device is CUDA, the input data is synchronized to CUDA, an output UVec is created, a CUDA kernel is launched, and the output handle is returned.
+\texttt{geom} command 的执行流程如图 \ref{fig:geom-flow} 所示。以 \texttt{geom nearest\_point} 为例，interpreter 首先求值 script arguments；command 层解析 UVec handles 和 device options；如果目标是 CPU，就把输入同步到 CPU 并调用 C++ algorithm；如果目标是 CUDA，就把输入同步到 CUDA，创建 output UVec，启动 CUDA kernel，并返回 output handle。
 
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.90\textwidth]{geom-flow.png}
-  \caption{Execution flow of a geometry command}
+  \caption{geom 命令执行流程（Execution flow of a geometry command）}
   \label{fig:geom-flow}
 \end{figure}
 
-Using handles is important. Large point sets should not be repeatedly converted into script strings. Instead, a script can create a UVec once, pass its handle to multiple commands, and read back the result only when necessary.
+Handle 机制非常关键。大规模点集不应该在每条命令之间反复转换为 script strings。更合理的方式是：script 创建一次 UVec，把 handle 传给多个 geometry commands，只在最终需要展示或统计时再 read back。这个思路也是后面 performance evaluation 中 speedup 能出现的前提。
 
-\section{Concurrency Design}
-FTCL provides thread tasks and thread channels. A thread task runs a script asynchronously and can be awaited later. A thread channel stores messages in a queue protected by a mutex and a condition variable. It supports blocking receive and non-blocking try-receive.
+\section{并发设计}
+FTCL 提供 thread tasks 和 thread channels。Thread task 可以异步运行一段 script，并在之后被 await；thread channel 是由 mutex 和 condition variable 保护的 message queue，支持 blocking receive 和 non-blocking try-receive。
 
-This concurrency model is useful for experiments. It can drive a game-like demo, simulate producer-consumer workloads, and dispatch multiple geometry requests through worker scripts. The current CUDA concurrency experiment also reveals a limitation: multiple script workers can contend for one GPU, so future work should add streams or a dedicated GPU scheduler.
+这个 concurrency model 对实验很有用。它可以驱动 game-like demo，模拟 producer-consumer workload，也可以通过多个 worker scripts 分发 geometry requests。当前 CUDA concurrency experiment 也暴露出一个限制：多个 script workers 可能竞争同一个 GPU，所以未来需要 streams 或 dedicated GPU scheduler。
 
-The concurrency design is evaluated later in both single-GPU contention and multi-GPU weak-scaling experiments. These experiments motivate the handle-level locking refinement described in Chapter 5.
+后续第 5 章会分别从 single-GPU contention 和 multi-GPU weak-scaling 两个角度评价这个设计。这些实验也解释了为什么实现中需要把 UVec handle manager 从 global lock 细化为 handle-level locking。
+
+\section{小结}
+本章给出了 FTCL 的系统设计：语言层负责表达，command 层负责连接，UVec 层负责跨设备数据一致性，CPU/CUDA backend 负责具体计算。这个架构的关键不在于某一个单独模块，而在于这些模块之间的边界足够清楚，因而能够支持后续测试、benchmark 和应用场景扩展。
+
+FTCL separates control, data residency, and execution backend. UVec is the bridge that keeps script-level geometry commands independent from low-level CPU/CUDA memory management.

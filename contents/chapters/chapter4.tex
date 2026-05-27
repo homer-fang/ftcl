@@ -1,16 +1,18 @@
-\chapter{Implementation}
+﻿\chapter{系统实现}
 
 \section{Interpreter Core}
-The FTCL implementation is mainly header-based and located under the \texttt{include} directory. The interpreter is built as a CMake interface library, while tests and benchmark executables are placed under the \texttt{test} directory. Optional CUDA support is enabled by the \texttt{FTCL\_ENABLE\_CUDA} CMake option.
+FTCL 的实现主要采用 header-based 结构，核心代码位于 \texttt{include} 目录。Interpreter 被构建为 CMake interface library，测试和 benchmark executables 位于 \texttt{test} 目录。CUDA 支持由 \texttt{FTCL\_ENABLE\_CUDA} CMake option 控制，因此同一套代码可以在 CPU-only 环境和 CUDA 环境下分别构建。
 
-Value representation follows the idea that script values are strings but may also cache structured internal data. For example, a value can be constructed from an integer, floating-point number, Boolean, list, dictionary, or variable name. When the string representation is requested, it is generated lazily. This reduces repeated formatting while preserving a string-oriented script interface.
+Value representation 遵循 Tcl-style 的思想：脚本层 value 首先是 string，但内部可以缓存结构化 data representation。例如，一个 value 可以由 integer、floating-point number、Boolean、list、dictionary 或 variable name 构造；当用户请求 string representation 时，再 lazy formatting。这样既保持了 string-oriented script interface，又减少了重复格式化带来的开销。
+
+Interpreter core 的另一个设计目标是保持 command extensibility。语言核心并不直接理解所有高级功能，而是通过 command table 分发。\texttt{expr}、\texttt{thread}、\texttt{uvec} 和 \texttt{geom} 都以 command 的形式进入系统。这使得 FTCL 可以逐步扩展，而不需要频繁改变 parser grammar。
 
 \section{Expression Parser}
-The expression parser implements a recursive-descent precedence hierarchy. The top-level function parses conditional expressions. It then descends through logical OR, logical AND, bitwise operators, equality, relational operators, shifts, additive operators, multiplicative operators, unary operators, and primary expressions.
+Expression parser 使用 recursive-descent precedence hierarchy。顶层函数解析 conditional expressions，然后逐层下降到 logical OR、logical AND、bitwise operators、equality、relational operators、shifts、additive operators、multiplicative operators、unary operators 和 primary expressions。
 
-For example, \texttt{a || b \&\& c} is parsed by the logical OR layer. The left operand is parsed as a logical AND expression. After the OR operator is matched, the right operand is again parsed as a logical AND expression, so \texttt{b \&\& c} is grouped before the OR operation is applied.
+例如，\texttt{a || b \&\& c} 由 logical OR layer 处理。左操作数先被解析为 logical AND expression；匹配到 OR operator 之后，右操作数再次按 logical AND expression 解析，因此 \texttt{b \&\& c} 会先结合，再参与 OR operation。这种写法虽然不是 Pratt parser，但优先级边界非常直观，适合当前表达式子系统。
 
-The parser also supports short-circuit evaluation. If the left operand of \texttt{||} is true, the right operand is parsed but not evaluated. This prevents side effects in skipped branches while preserving syntax validation and parser position.
+Expression parser 还支持 short-circuit evaluation。如果 \texttt{||} 的左操作数已经为 true，右操作数仍然会被 parser 扫过以保持 syntax validation 和 parser position，但不会真正执行变量读取、command substitution 或可能产生 side effects 的求值动作。这一点对 Tcl-style expression 很重要，因为表达式里可能包含 \texttt{\$var} 和 \texttt{[script]}。
 
 \begin{algorithm}[H]
 \caption{Expression Evaluation and Conditional Operator}
@@ -71,9 +73,9 @@ The parser also supports short-circuit evaluation. If the left operand of \textt
 \end{algorithm}
 
 \section{UVec Implementation}
-UVec requires its element type to be trivially copyable. This is necessary because CPU/CUDA transfers are implemented as byte copies. The main supporting types are \texttt{Device}, \texttt{RawUPtr<T>}, \texttt{RawUMutPtr<T>}, \texttt{UniversalCopy}, and \texttt{Zeroable}.
+UVec 要求 element type 满足 trivially copyable。这个约束不是形式主义，而是跨 CPU/CUDA byte copy 的基础：如果一个类型需要复杂构造、析构或内部指针修正，那么直接 memcpy 到 device memory 并不安全。围绕 UVec 的主要辅助类型包括 \texttt{Device}、\texttt{RawUPtr<T>}、\texttt{RawUMutPtr<T>}、\texttt{UniversalCopy} 和 \texttt{Zeroable}。
 
-The script-level \texttt{uvec} command manages UVec handles. It can create vectors from lists, create filled or zeroed vectors, get or set elements, return vector length, synchronize to a device, and convert a vector back to a script list. The command manager stores handle-to-UVec mappings under a mutex so that scripts can pass handles safely between commands.
+Script-level \texttt{uvec} command 负责管理 UVec handles。它可以从 list 创建 vector，创建 filled 或 zeroed vector，读取或设置元素，返回 vector length，同步到指定 device，并将 vector 转回 script list。Command manager 将 handle-to-UVec mapping 放在 mutex 保护下，使脚本可以安全地在不同 command 之间传递 handle。
 
 \begin{algorithm}[H]
 \caption{UVec Read Synchronization}
@@ -125,13 +127,13 @@ The script-level \texttt{uvec} command manages UVec handles. It can create vecto
 \end{algorithm}
 
 \section{CPU Geometry Algorithms}
-The CPU geometry library is implemented in \texttt{include/geometry.hpp}. The basic types are Point, Segment, and BoundingBox. The library includes distance, squared distance, dot product, cross product, orientation, point-on-segment checks, segment intersection, line intersection, point-line distance, point-segment distance, polygon area, polygon perimeter, point-in-polygon classification, convex hull, bounding box, and closest-pair distance.
+CPU geometry library 实现在 \texttt{include/geometry.hpp} 中，基础类型包括 Point、Segment 和 BoundingBox。库中实现了 distance、squared distance、dot product、cross product、orientation、point-on-segment checks、segment intersection、line intersection、point-line distance、point-segment distance、polygon area、polygon perimeter、point-in-polygon classification、convex hull、bounding box 和 closest-pair distance。
 
-Batch algorithms use flattened arrays. A point set is stored as \(x_0,y_0,x_1,y_1,\ldots\). A segment set is stored as \(x_1,y_1,x_2,y_2\) per segment. An AABB set is stored as \(min_x,min_y,max_x,max_y\) per box. This format is easy for scripts, UVec, and CUDA kernels to share.
+Batch algorithms 使用 flattened arrays。点集按 \(x_0,y_0,x_1,y_1,\ldots\) 存储；线段集按每条线段 \(x_1,y_1,x_2,y_2\) 存储；AABB 集合按 \(min_x,min_y,max_x,max_y\) 存储。这个格式对 script、UVec 和 CUDA kernel 都友好，因为它避免了复杂对象布局，也便于跨设备拷贝。
 
 \begin{table}[H]
 \centering
-\caption{Representative geometry algorithms and asymptotic costs}
+\caption{代表性几何算法及复杂度（Representative geometry algorithms and asymptotic costs）}
 \label{tab:algorithm-complexity}
 \footnotesize
 \setlength{\tabcolsep}{3.5pt}
@@ -155,17 +157,15 @@ transform\_points & \(N\) points & \(O(N)\) & Very high; independent points \\
 \end{tabularx}
 \end{table}
 
-The table explains why not every geometry command is accelerated in the same way. Scalar commands are useful for script expressiveness but are too small to amortize CUDA launch overhead. Batch commands with \(O(NQ)\) or \(O(N)\) independent work items are more suitable for GPU execution. Algorithms such as convex hull require sorting and sequential stack-like structure, so they are kept as CPU-first algorithms in this thesis.
+表 \ref{tab:algorithm-complexity} 解释了为什么不是每个 geometry command 都值得用 CUDA 加速。Scalar commands 对脚本表达很有用，但计算量太小，难以摊销 kernel launch overhead。具有 \(O(NQ)\) 或 \(O(N)\) independent work items 的 batch commands 更适合 GPU。Convex hull 这类算法需要 sorting 和 stack-like sequential structure，因此本文将其保留为 CPU-first algorithm。
 
 \section{CUDA Geometry Backend}
-The CUDA backend is implemented in \texttt{src/geometry\_cuda.cu}.
-It is declared in \texttt{include/geometry\_cuda.hpp}.
-It supports data-parallel algorithms such as distance matrix, nearest point, circle range count, point transformation, batch orientation, AABB collision, polygon batch area, and distance to polyline.
+CUDA backend 实现在 \texttt{src/geometry\_cuda.cu} 中，对外声明位于 \texttt{include/geometry\_cuda.hpp}。它支持 distance matrix、nearest point、circle range count、point transformation、batch orientation、AABB collision、polygon batch area 和 distance to polyline 等 data-parallel algorithms。
 
-For a distance matrix with \(N\) source points and \(Q\) query points, the output has \(NQ\) entries. A CUDA thread computes one output entry by loading one source point and one query point, computing the Euclidean distance, and writing the result. This mapping is simple and effective because each output element is independent.
+以 \(N\) 个 source points 和 \(Q\) 个 query points 的 distance matrix 为例，输出规模为 \(NQ\)。CUDA mapping 非常直接：每个 thread 负责一个 output entry，读取一个 source point 和一个 query point，计算 Euclidean distance，并写回结果。这类映射适合 GPU，因为每个 output element 彼此独立，控制分支少，且 work-item 数量可以快速增长。
 
 \section{Script Interface}
-The following example shows how a script can create two point sets, run a CUDA nearest-point query, and read back the result.
+下面的示例展示了脚本如何创建两个 point sets，运行 CUDA nearest-point query，并读取结果。
 
 \begin{lstlisting}[language=bash,caption={FTCL geometry scripting example}]
 set dataset [geom uvec_points {{0 0} {1 2} {3 4} {5 8}} cuda:0]
@@ -174,7 +174,7 @@ set result  [geom nearest_point $dataset $query cuda:0]
 puts [uvec to_list $result]
 \end{lstlisting}
 
-The user does not manually allocate device memory. The script describes the task, UVec manages synchronization, and the geom command selects the backend.
+用户不需要手动分配 device memory。Script 只描述任务；UVec 管理 synchronization；\texttt{geom} command 选择 CPU 或 CUDA backend。这正是 FTCL 作为异构脚本系统的价值：把底层细节收进系统，把表达能力留给用户。
 
 \begin{algorithm}[H]
 \caption{Geometry Command Dispatch for Nearest-point Query}
@@ -204,3 +204,8 @@ The user does not manually allocate device memory. The script describes the task
   }
 }
 \end{algorithm}
+
+\section{小结}
+本章说明了 FTCL 从语言核心到 CUDA backend 的实现方式。Interpreter core 提供可扩展的 command dispatch；expression parser 处理带 short-circuit 的运行时表达式；UVec 把跨设备内存管理压缩为 read/write pointer 接口；geometry library 则把算法暴露为脚本命令。
+
+The implementation is intentionally practical: it favors clear interfaces over hidden magic. FTCL becomes useful because each layer can be tested independently and composed through script-visible commands.

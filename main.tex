@@ -40,10 +40,12 @@
 \input{contents/chapters/chapter6}
 
 \backmatter
-\JOUBackmatterChapter{Conclusion and Future Work}
-This thesis completed an end-to-end system that starts from a Tcl-style interpreter and grows into a CPU/CUDA hybrid computational geometry scripting platform. FTCL now supports a practical language subset, thread channels, UVec cross-device vectors, CPU geometry algorithms, CUDA kernels, tests, benchmarks, and thesis-ready figures. The experiments show that the GPU backend is most useful when work items are numerous and independent, while small inputs and immediate readback may erase the benefit of parallel execution.
+\JOUBackmatterChapter{结论与展望}
+本文完成了一个从 Tcl-style interpreter 出发，并逐步扩展为 CPU/CUDA hybrid computational geometry scripting platform 的端到端系统。FTCL 目前已经支持实用的语言子集、thread channels、UVec cross-device vectors、CPU geometry algorithms、CUDA kernels、测试框架、benchmark pipeline 和论文图表生成流程。实验结果表明，当 work items 足够多且彼此独立时，GPU backend 能够带来明显收益；但当输入规模过小、输出过大或需要立即 readback 时，parallel execution 的优势会被 launch、allocation、synchronization 和 data movement costs 抵消。
 
-Future work should proceed in four directions. First, UVec should be further aligned with the standard vector interface, including iterators, capacity management, insertion, erasure, and stronger exception-safety guarantees. Second, the CUDA backend should add memory pools, asynchronous streams, and better batching to reduce allocation and synchronization costs. Third, the parser path should continue moving toward token-stream parsing, AST representation, bytecode execution, and expression-level Pratt parsing. Fourth, the geometry library can be extended with spatial indexes, dynamic nearest-neighbor search, polygon boolean operations, and more realistic application demos.
+后续工作可以从四个方向继续推进。第一，UVec 应进一步向 standard vector interface 对齐，包括 iterators、capacity management、insertion、erasure 以及更强的 exception-safety guarantees。第二，CUDA backend 应加入 memory pools、asynchronous streams 和 better batching，以降低 allocation 与 synchronization 成本。第三，parser path 可以继续向 token-stream parsing、AST representation、bytecode execution 和 expression-level Pratt parsing 演进。第四，geometry library 可以扩展 spatial indexes、dynamic nearest-neighbor search、polygon boolean operations，并构建更贴近海洋牧场、智慧港口、无人机巡检和船舶避碰的 application demos。
+
+FTCL 的价值不只是“能运行几何命令”，而是把 script-level expression、cross-device memory、concurrent execution 和 reproducible evaluation 放进同一个系统边界中。In future work, the most important direction is to turn FTCL from a prototype platform into a reusable heterogeneous spatial-computing runtime.
 
 \JOUAcknowledgementChapter
 \input{contents/acknowledgements}

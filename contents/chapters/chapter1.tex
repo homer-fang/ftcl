@@ -1,51 +1,56 @@
-\chapter{Introduction}
+﻿\chapter{引言}
 
-\section{Background}
-Scripting languages are often used as glue layers between low-level system capabilities and high-level application logic. Tcl is a representative example of this design philosophy. Its core syntax is simple: a script is a sequence of commands, and each command is a sequence of words. Variable substitution, command substitution, and expression evaluation are performed at runtime \cite{ousterhout1994tcl,tcldocs}. This command-centered model is easy to embed and easy to extend with new native commands.
+\section{研究背景}
+脚本语言常被用作底层系统能力与上层应用逻辑之间的胶水层。Tcl 是这种设计思想的代表之一：脚本由命令组成，命令由若干个词组成，变量替换、命令替换和表达式求值都发生在运行时 \cite{ousterhout1994tcl,tcldocs}。这种 command-centered model 的优势在于语法浅、嵌入方便、扩展自然，新的能力往往可以通过增加一个 native command 完成，而不必重新设计整门语言。
 
-Computational geometry is another important area for algorithm-oriented software. Problems involving points, segments, polygons, bounding boxes, distances, intersections, nearest-neighbor queries, and range queries appear in programming contests, graphics, robotics, games, and map analysis \cite{deberg2008computational,preparata1985computational}. Many geometry workloads are also naturally parallel. For example, each entry of a distance matrix can be computed independently, and each range query can be assigned to a different thread. This makes computational geometry a suitable domain for GPU acceleration \cite{cuda-guide}.
+计算几何（computational geometry）则是算法实验中非常适合展示工程价值的方向。点、线段、多边形、包围盒、距离、相交、最近点和范围查询等问题，广泛出现于程序设计竞赛、图形学、机器人、游戏、地图分析和空间计算任务中 \cite{deberg2008computational,preparata1985computational}。其中大量工作负载具有天然并行性：距离矩阵的每个元素可以独立计算，范围查询的每个查询区域也可以独立处理。这使得计算几何非常适合作为 GPU acceleration 的实验载体 \cite{cuda-guide}。
 
-This thesis combines these two ideas and places them in an ocean-oriented application context. FTCL uses a Tcl-style interpreter as the control layer, C++ as the host implementation language, and CUDA as the acceleration backend for selected batch geometry algorithms. The goal is not merely to implement geometry functions, but to build a scriptable system where a user can describe marine ranch sensing, smart port spatial analysis, UAV inspection, or ship collision checking without manually managing CUDA memory, raw device pointers, or synchronization.
+本文将这两条线结合起来，并放入海洋空间计算的应用语境中。FTCL 使用 Tcl-style interpreter 作为 control layer，以 C++ 作为宿主实现语言，以 CUDA 作为部分批量几何算法的 acceleration backend。本文的目标不是简单实现一组 geometry functions，而是构建一个 scriptable system：使用者可以用脚本描述海洋牧场感知、智慧港口空间分析、无人机巡检或船舶碰撞检测，而无需直接面对 CUDA memory、raw device pointer 和 synchronization 这些底层细节。
 
-\section{Motivation}
-The project is motivated by three observations.
+\section{研究动机}
+本项目的动机来自四个观察。
 
-First, an interpreter project is a good way to demonstrate systems engineering. It requires parsing, value representation, scoping, command dispatch, error handling, testing, and performance evaluation. These components interact heavily, so the project is richer than a single standalone algorithm implementation.
+第一，解释器项目天然具有系统工程深度。它涉及 parsing、value representation、scope、command dispatch、error handling、testing 和 performance evaluation。这些部分彼此牵连，任何一处设计都会影响语言可用性与后续扩展能力，因此它比单个算法实现更能体现完整工程能力。
 
-Second, geometry algorithms are familiar to programming-contest students and easy to validate visually. Basic functions such as orientation and segment intersection are small, while batch tasks such as distance matrices and nearest-point queries are large enough to show performance scaling.
+第二，几何算法既有算法竞赛的亲近感，又容易被可视化验证。orientation、segment intersection 这类基础操作足够小，可以说明算法正确性；distance matrix、nearest point、range query 这类批量任务又足够大，可以展示 CPU/CUDA 与 multi-GPU 的性能差异。
 
-Third, heterogeneous computing needs a practical data abstraction. If every geometry command manually calls cudaMalloc, cudaMemcpy, and cudaFree, the script layer becomes difficult to use and difficult to test. UVec addresses this problem by providing a vector-like object that can hold both CPU and CUDA copies and synchronize them on demand.
+第三，异构计算最难的不只是 kernel，而是数据抽象。如果每一个几何命令都要手工调用 \texttt{cudaMalloc}、\texttt{cudaMemcpy} 和 \texttt{cudaFree}，脚本层会变得难用，也难以测试。UVec 的作用正在于此：它提供一个 vector-like object，同时维护 CPU 与 CUDA 物理副本，并按需完成同步。
 
-Fourth, many realistic spatial-computing tasks are no longer single-device tasks. A marine monitoring or port inspection system may involve many sensors, large detection sets, and multiple independent query regions. If the hardware platform provides several GPUs, the scripting system should be able to expose these devices and dispatch independent workloads without being serialized by the interpreter runtime.
+第四，真实空间计算任务往往不是单设备任务。海洋监测或港口巡检可能同时包含大量传感器、检测目标、查询区域和独立任务。如果硬件平台提供多张 GPU，脚本系统就应当能够暴露这些设备，并把独立工作负载分发出去，而不是被解释器运行时的全局锁串行化。
 
-\section{Research Questions}
-This thesis is organized around the following research questions.
+\section{研究问题}
+本文围绕以下研究问题展开。
 
 \begin{description}
-  \item[RQ1:] Can a compact Tcl-style interpreter provide a stable enough semantic foundation for algorithmic scripts, concurrency primitives, and extension commands?
-  \item[RQ2:] Can a cross-device vector abstraction hide CPU/CUDA data movement while preserving a simple vector-like programming model?
-  \item[RQ3:] Which computational geometry workloads benefit from CUDA acceleration when the measurement is end-to-end script command latency rather than pure kernel time?
-  \item[RQ4:] What runtime overheads limit the acceleration of a script-driven heterogeneous geometry system, and how can these overheads be observed experimentally?
-  \item[RQ5:] Can the same scripting and UVec model express multi-GPU spatial workloads, and what limits the scaling of different geometry algorithms?
+  \item[RQ1:] 一个 compact Tcl-style interpreter 能否为算法脚本、并发原语和扩展命令提供稳定的 semantic foundation？
+  \item[RQ2:] 一个 cross-device vector abstraction 能否隐藏 CPU/CUDA data movement，同时保持接近 \texttt{std::vector} 的编程直觉？
+  \item[RQ3:] 当度量对象是 end-to-end script command latency，而不是 pure kernel time 时，哪些计算几何工作负载真正能从 CUDA acceleration 中受益？
+  \item[RQ4:] 哪些 runtime overhead 会限制 script-driven heterogeneous geometry system 的加速效果，这些开销如何通过实验观察？
+  \item[RQ5:] 同一套 scripting model 与 UVec model 能否表达 multi-GPU spatial workloads，不同几何算法的 scaling bottleneck 又在哪里？
 \end{description}
 
-These questions separate the work into five layers: language semantics, memory abstraction, algorithm acceleration, multi-GPU execution, and experimental analysis. This distinction is important because a successful scripting system must be correct and usable before raw performance becomes meaningful.
+这些问题把全文拆成五个层次：language semantics、memory abstraction、algorithm acceleration、multi-GPU execution 和 experimental analysis。这样的分层很重要，因为脚本系统必须先正确、可用、可复现，性能数字才有意义。
 
-\section{Main Contributions}
-The main contributions of this thesis are as follows.
+\section{主要贡献}
+本文的主要贡献如下。
 
 \begin{enumerate}
-  \item \textbf{A script runtime for algorithm experiments.} FTCL implements a Tcl-style command model, variable substitution, expression evaluation, procedures, collections, source loading, testing commands, and thread channels in C++20.
-  \item \textbf{A cross-device vector abstraction.} UVec models one logical vector with CPU and CUDA physical copies. It tracks valid copies, performs synchronization on demand, and exposes unified read-only and mutable raw pointer interfaces.
-  \item \textbf{A finer-grained UVec handle manager.} The runtime avoids executing long geometry commands while holding a global UVec table lock. The global mutex protects handle-table lookup, while per-handle entry locks protect individual UVec objects. This design allows independent UVec workloads to run concurrently on different CUDA devices.
-  \item \textbf{A script-facing computational geometry library.} The \texttt{geom} command family exposes scalar and batch geometry operations to FTCL scripts, allowing large point sets and query sets to be passed by UVec handles instead of repeated script strings.
-  \item \textbf{CUDA acceleration for batch geometry.} The project implements CUDA backends for representative independent-work-item algorithms such as distance matrix, nearest point, range counting, transformation, orientation, and AABB collision.
-  \item \textbf{A multi-GPU scaling experiment.} The evaluation uses an eight-GPU A800 server to measure 1/2/4/8 GPU weak scaling. The result shows near-linear scaling for compact-output range counting, partial scaling for nearest-point search, and output-bandwidth limitations for distance matrices.
-  \item \textbf{An ocean-oriented application framing.} The thesis maps points, circles, boxes, and distance matrices to marine ranch sensing, smart port spatial computing, UAV floating-object inspection, and ship-path collision checking.
-  \item \textbf{A reproducible evaluation pipeline.} The project includes semantic tests, CPU/GPU equivalence tests, random differential tests, edge-case tests, performance-scale tests, ablation studies, concurrency experiments, multi-GPU CSV outputs, and generated thesis figures.
+  \item \textbf{面向算法实验的脚本运行时。} FTCL 以 C++20 实现 Tcl-style command model，支持变量替换、表达式求值、过程、集合、源码加载、测试命令和 thread channel。
+  \item \textbf{跨设备向量抽象 UVec。} UVec 将一个 logical vector 映射到 CPU 与 CUDA physical buffers，跟踪 valid copies，按需同步，并提供统一的 read-only 与 mutable raw pointer interface。
+  \item \textbf{更细粒度的 UVec handle manager。} 系统避免在执行长时间几何命令时持有全局 UVec table lock。全局锁只保护 handle lookup，单个 UVec 对象由 per-handle entry lock 保护，从而允许不同 CUDA device 上的独立任务并发执行。
+  \item \textbf{脚本可调用的计算几何库。} \texttt{geom} command family 将 scalar geometry 与 batch geometry 暴露给 FTCL scripts，使大规模点集和查询集可以通过 UVec handle 传递，而不是反复序列化为脚本文本。
+  \item \textbf{批量几何算法的 CUDA acceleration。} 项目实现 distance matrix、nearest point、range counting、transform、orientation 和 AABB collision 等 independent-work-item 算法的 CUDA backend。
+  \item \textbf{Multi-GPU scaling experiment。} 评估部分在八卡 A800 server 上测量 1/2/4/8 GPU weak scaling，说明 compact-output 的 range counting 接近线性扩展，而 distance matrix 受 output bandwidth 限制。
+  \item \textbf{Ocean-oriented application framing。} 本文将 points、circles、boxes 和 distance matrices 映射到海洋牧场感知、智慧港口空间计算、无人机漂浮物巡检和船舶路径碰撞检测。
+  \item \textbf{可复现实验流水线。} 项目包含 semantic tests、CPU/GPU equivalence tests、random differential tests、edge-case tests、performance-scale tests、ablation studies、concurrency experiments、multi-GPU CSV outputs 和 thesis figures。
 \end{enumerate}
 
-The novelty of the project lies in the integration of these components. FTCL is not only an interpreter, UVec is not only a container, and the geometry library is not only a set of algorithms. Together they form a script-driven heterogeneous geometry experimentation platform.
+本文的创新性不在于某一个孤立组件，而在于这些组件的整合。FTCL 不是单纯的 interpreter，UVec 不是单纯的 container，geometry library 也不是单纯的算法集合。三者结合后，形成了一个 script-driven heterogeneous geometry experimentation platform。
 
-\section{Thesis Organization}
-Chapter 2 introduces related technologies. Chapter 3 presents the overall system design. Chapter 4 describes the implementation of the interpreter, UVec, and geometry backends. Chapter 5 evaluates correctness and performance. Chapter 6 discusses applications, limitations, and possible improvements. The appendix gives build, test, benchmark, and thesis compilation commands.
+\section{论文组织}
+第 2 章介绍相关技术与研究背景。第 3 章给出系统总体设计。第 4 章描述 interpreter、UVec 与 geometry backend 的实现。第 5 章评估正确性与性能。第 6 章讨论应用场景、局限与改进方向。附录给出 build、test、benchmark 和 thesis compilation commands。
+
+\section{小结}
+本章说明了本文为什么选择“脚本语言 + 计算几何 + 异构计算”这条路线。FTCL 的定位不是追求语法复杂度，而是用一个可控的 command model 承载算法实验、空间计算和 GPU backend。UVec 则把最容易劝退使用者的 device memory problem 收束为一个可解释、可测试、可扩展的数据抽象。
+
+In short, FTCL separates algorithmic expression from device-level execution. The thesis builds its contribution around this separation: scripts express intent, UVec preserves data residency, and CPU/CUDA backends provide execution power.

@@ -1,75 +1,78 @@
-\chapter{Applications and Discussion}
+﻿\chapter{应用与讨论}
 
-\section{Ocean-Oriented Spatial Computing Demo}
-Figure \ref{fig:real-demo} presents an ocean-oriented spatial computing demo. Instead of using a game scene, the demo models a coastal application scenario that is closer to marine ranching, smart ports, ship navigation, and unmanned inspection. Sensor buoys, unmanned aerial vehicles, floating objects, ships, aquaculture cages, port obstacles, and sonar/radar coverage regions are all represented as geometric data.
+\section{面向海洋的空间计算 Demo}
+图 \ref{fig:real-demo} 展示了一个 ocean-oriented spatial computing demo。它不再使用普通游戏场景，而是把系统放到更贴近海洋牧场、智慧港口、船舶导航和无人巡检的应用语境中。sensor buoys、UAV、floating objects、ships、aquaculture cages、port obstacles 以及 sonar/radar coverage regions 都被表示为几何数据。
 
-In this scenario, points represent sensor locations, floating objects, target observations, and UAV positions. Circles represent radar, sonar, or camera coverage. Axis-aligned boxes represent ships, cages, restricted port regions, or rectangular obstacles. Batch distance matrices represent large-scale relationships between sensors and abnormal targets. With UVec, these objects can stay on CUDA devices across several commands instead of being repeatedly converted back to script strings.
+在这个场景中，points 表示传感器位置、漂浮物、目标观测和 UAV 位置；circles 表示 radar、sonar 或 camera coverage；axis-aligned boxes 表示船舶、养殖网箱、港区限制区域或矩形障碍；batch distance matrices 则表示传感器与异常目标之间的大规模关系。借助 UVec，这些对象可以跨多个命令停留在 CUDA devices 上，而不是每一步都被转换回 script strings。
 
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.90\textwidth]{geometry-real-demo.png}
-  \caption{Ocean-oriented spatial computing scene controlled by FTCL scripts}
+  \caption{FTCL 控制的海洋空间计算场景（Ocean-oriented spatial computing scene）}
   \label{fig:real-demo}
 \end{figure}
 
-The script pipeline in the figure uses the same geometry commands as the benchmark section, but the meaning of the data changes. The command \texttt{geom nearest\_point} can find the closest abnormal floating object to a UAV or patrol vessel. The command \texttt{geom range\_count\_circle} can count how many targets fall inside a radar, sonar, or camera coverage region. The command \texttt{geom collision\_aabb} can check whether a ship bounding box overlaps a reef, cage, pier, or restricted region. The command \texttt{geom batch\_distance\_matrix} can compute large sensor-target distance relationships for later assignment or alert scoring.
+图中的脚本流水线使用的仍是 benchmark 章节中的几何命令，但数据语义发生了变化。\texttt{geom nearest\_point} 可以寻找距离 UAV 或巡逻船最近的异常漂浮物；\texttt{geom range\_count\_circle} 可以统计 radar、sonar 或 camera coverage region 内的目标数量；\texttt{geom collision\_aabb} 可以检查船舶 bounding box 是否与礁石、网箱、码头或限制区域重叠；\texttt{geom batch\_distance\_matrix} 可以计算大规模 sensor-target distance relationships，为后续分配或告警评分提供基础。
 
-\section{Marine Ranch Spatial Perception}
-In a marine ranch, buoys and underwater sensors continuously observe water quality, fish cage status, floating debris, and abnormal surface targets. A simple FTCL script can load sensor locations and object detections into UVec handles, run range queries for each sonar coverage circle, and report the nearest abnormal object to each inspection point.
+\section{海洋牧场空间感知}
+在 marine ranch 中，浮标和水下传感器会持续观测水质、网箱状态、漂浮垃圾和异常水面目标。一个简单 FTCL script 可以把 sensor locations 和 object detections 载入 UVec handles，对每个 sonar coverage circle 执行 range query，并报告离每个巡检点最近的异常目标。
 
-This scenario is suitable for FTCL because the input naturally forms large point sets. Many queries are independent: each sensor coverage region can be processed separately, and each target-to-sensor distance can be computed in parallel. CUDA is useful when the number of detections or sensors becomes large, while the script layer remains convenient for combining several operations into one pipeline.
+这个场景适合 FTCL，是因为输入天然形成 large point sets。许多查询彼此独立：每个传感器覆盖区域可以单独处理，每个 target-to-sensor distance 也可以并行计算。当检测目标或传感器数量变大时，CUDA backend 可以承担批量计算，而 script layer 仍然保留组合任务的便利性。
 
-\section{Smart Port Spatial Computing}
-A smart port contains berths, cranes, containers, ship boxes, navigation channels, and restricted regions. These objects can be represented using points, line segments, polygons, and bounding boxes. FTCL can use \texttt{geom collision\_aabb} to check coarse collisions between ships and port obstacles, \texttt{geom range\_count\_rect} to count objects inside management regions, and \texttt{geom nearest\_point} to find the closest available resource or warning target.
+\section{智慧港口空间计算}
+智慧港口包含泊位、吊机、集装箱、船舶包围盒、航道和限制区域。这些对象可以用 points、line segments、polygons 和 bounding boxes 表示。FTCL 可以用 \texttt{geom collision\_aabb} 检查船舶与港口障碍物的粗粒度碰撞，用 \texttt{geom range\_count\_rect} 统计管理区域内对象数量，用 \texttt{geom nearest\_point} 查找最近资源或警戒目标。
 
-The value here is not that FTCL replaces a complete port information system. Instead, it provides a lightweight spatial-computing layer. A user can prototype port-side spatial rules in a script, then move large batch operations to the CUDA backend without changing the high-level command structure.
+这里的价值并不是让 FTCL 替代完整港口信息系统，而是提供一个 lightweight spatial-computing layer。使用者可以先用脚本快速原型化港口空间规则，再把大规模 batch operations 移交给 CUDA backend，而不用改变高层命令结构。
 
-\section{UAV Inspection of Floating Objects}
-Unmanned aerial vehicles are often used to inspect nearshore water surfaces. The UAV trajectory can be stored as a point sequence, detected floating objects can be stored as another point set, and camera coverage can be represented as circle queries. FTCL can compute nearest abnormal targets, count detections in each frame coverage region, and build a distance matrix between UAV sample points and suspicious objects.
+\section{无人机水面漂浮物巡检}
+无人机常用于近岸水面巡检。UAV trajectory 可以存储为点序列，detected floating objects 可以存储为另一个点集，camera coverage 可以表示为 circle queries。FTCL 可以计算最近异常目标、统计每一帧覆盖区域内的检测数量，并构造 UAV sample points 与 suspicious objects 之间的 distance matrix。
 
-This is a good example of why script-level heterogeneous computing is useful. The high-level inspection logic changes frequently: thresholds, target classes, and coverage radii may change from one task to another. The geometry kernels, however, remain stable and can be accelerated on GPU.
+这个例子说明了 script-level heterogeneous computing 的意义。高层巡检逻辑经常变化：thresholds、target classes 和 coverage radii 会随任务调整；而底层 geometry kernels 相对稳定，可以由 GPU acceleration 承担。
 
-\section{Ship Path Planning and Collision Checking}
-For ship navigation, a planned path must be checked against static and dynamic obstacles. In the current FTCL geometry subset, coarse collision checking can be performed using AABB commands, while segment intersection and distance commands can support later path-level checks. A ship route can also be evaluated against aquaculture cages, reefs, port boundaries, and moving obstacle boxes.
+\section{船舶路径规划与碰撞检测}
+船舶导航需要把 planned path 与静态、动态障碍物进行检查。在当前 FTCL geometry subset 中，粗粒度 collision checking 可以由 AABB commands 完成，segment intersection 与 distance commands 则可以支撑后续路径级检查。船舶路线也可以与 aquaculture cages、reefs、port boundaries 和 moving obstacle boxes 进行风险评估。
 
-This scenario points to a natural extension direction. After the current batch geometry commands, future work can add spatial grids, polyline distance, route risk scoring, and dynamic obstacle prediction. These extensions would make FTCL more directly useful for marine and port spatial computing tasks.
+这一场景指向自然的扩展方向。在当前 batch geometry commands 之后，系统可以继续加入 spatial grids、polyline distance、route risk scoring 和 dynamic obstacle prediction。这些扩展会让 FTCL 更直接服务于海洋与港口空间计算任务。
 
-\section{Algorithm Visualization}
-Figure \ref{fig:geom-visual} visualizes representative algorithms: point-in-polygon classification, nearest point, circle range query, and AABB collision. Such figures are useful in a thesis defense because they explain the workload without requiring the reader to inspect code.
+\section{算法可视化}
+图 \ref{fig:geom-visual} 展示了几个代表性算法：point-in-polygon classification、nearest point、circle range query 和 AABB collision。这样的图对答辩非常有价值，因为它让评阅者不看代码也能理解工作负载本身。
 
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.88\textwidth]{geometry_algorithm_visualization.png}
-  \caption{Visualization of representative geometry algorithms}
+  \caption{代表性几何算法可视化（Representative geometry algorithms）}
   \label{fig:geom-visual}
 \end{figure}
 
-\section{Difference from a Normal Geometry Library}
-A normal geometry library exposes C++ functions such as \texttt{distance(a,b)}.
-Another common example is \texttt{segments\_intersect(a,b,c,d)}.
-FTCL is different in four ways.
+\section{与普通几何库的区别}
+普通 geometry library 通常提供 C++ 函数，例如 \texttt{distance(a,b)} 或 \texttt{segments\_intersect(a,b,c,d)}。FTCL 与它们的区别主要有四点。
 
 \begin{itemize}
-  \item It exposes geometry operations through scripts, so users can combine tasks without recompiling C++.
-  \item It uses UVec handles to avoid repeatedly converting large arrays into script strings.
-  \item It supports both CPU and CUDA backends under one command interface.
-  \item It includes tests, random differential checks, equivalence checks, and generated figures for thesis-level evaluation.
+  \item 它通过 scripts 暴露几何操作，使用者可以组合任务而不必重新编译 C++。
+  \item 它使用 UVec handles，避免大数组在 script strings 与 native buffers 之间反复转换。
+  \item 它在同一 command interface 下同时支持 CPU backend 和 CUDA backend。
+  \item 它包含 tests、random differential checks、equivalence checks 和 generated figures，能够支撑 thesis-level evaluation。
 \end{itemize}
 
-Therefore, the project is not simply a geometry function collection. Its value is the integration of interpreter design, data management, heterogeneous computing, and experimental validation.
+因此，本项目不是单纯的几何函数集合。它的价值在于 interpreter design、data management、heterogeneous computing 和 experimental validation 的整合。
 
-From an application perspective, this also changes the positioning of the project. FTCL is not only a computational geometry scripting system. It can be described as a prototype heterogeneous computing substrate for ocean and port spatial analysis. The geometry commands are the first algorithmic layer; UVec and CUDA provide the execution substrate; the script language provides the control layer.
+从应用定位看，这也改变了项目的叙事方式。FTCL 不只是 computational geometry scripting system，也可以被描述为面向 ocean and port spatial analysis 的 prototype heterogeneous computing substrate。geometry commands 是第一层算法能力，UVec 与 CUDA 提供 execution substrate，script language 提供 control layer。
 
-\section{Limitations}
-The current system has several limitations.
+\section{局限性}
+当前系统仍有若干局限。
 
-First, UVec is not yet fully aligned with \texttt{std::vector}. It supports cross-device storage and script handles, but it should add more familiar container operations such as iterators, capacity management, insertion, erasure, and stronger exception-safety guarantees.
+第一，UVec 尚未完全对齐 \texttt{std::vector}。它已经支持 cross-device storage 与 script handles，但还应补充 iterators、capacity management、insertion、erasure 和更强的 exception-safety guarantees。
 
-Second, the CUDA backend is still simple. It does not yet use memory pools, asynchronous streams, advanced reductions, shared-memory tiling, or spatial indexes. These techniques are important for reducing overhead and improving performance.
+第二，CUDA backend 仍然比较直接。它尚未使用 memory pools、asynchronous streams、advanced reductions、shared-memory tiling 或 spatial indexes。这些技术对降低 overhead 和提高性能很重要。
 
-Third, the token-stream parser is architecturally cleaner but not always faster than the legacy parser. Future work should reduce token copying, compress whitespace handling, avoid repeated lexing for sub-scripts, and introduce AST or bytecode execution.
+第三，token-stream parser 在架构上更清晰，但不总是比 legacy parser 更快。未来应减少 token copying，压缩 whitespace handling，避免对子脚本重复 lexing，并引入 AST 或 bytecode execution。
 
-Fourth, the benchmark figures should be repeated under a fixed hardware environment with more rounds and confidence intervals. Some CUDA break-even points can fluctuate because end-to-end timing includes allocation, synchronization, and system scheduling noise.
+第四，benchmark figures 应在固定硬件环境下进行更多轮重复，并补充 confidence intervals。部分 CUDA break-even points 会波动，因为 end-to-end timing 包含 allocation、synchronization 和 system scheduling noise。
 
-\section{Practical Value for the Graduation Project}
-This project is suitable as a graduation thesis because it has both engineering depth and algorithmic content. The interpreter demonstrates systems programming. The geometry library demonstrates algorithm design. UVec and CUDA demonstrate heterogeneous computing. The benchmark pipeline demonstrates reproducibility. Together, these parts form a richer result than a single algorithm demo.
+\section{毕业设计价值}
+本项目适合作为毕业设计，是因为它同时具备工程深度与算法内容。interpreter 展示系统编程能力，geometry library 展示算法设计能力，UVec 与 CUDA 展示异构计算能力，benchmark pipeline 展示可复现研究能力。这些部分组合起来，比单个算法 demo 更能体现完整性。
+
+\section{小结}
+本章把 FTCL 从“几何脚本系统”提升到“海洋空间计算原型平台”的叙事层面。通过 marine ranch、smart port、UAV inspection 和 ship collision checking 等场景，本文说明同一组几何原语可以被赋予现实应用意义。
+
+The application layer does not change the core algorithms; it changes their interpretation. FTCL becomes more persuasive when points, circles, boxes, and distance matrices are connected to ocean-oriented spatial decisions.
