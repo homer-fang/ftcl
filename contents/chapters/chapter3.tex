@@ -1,7 +1,7 @@
 ﻿\chapter{系统设计}
 
 \section{总体架构}
-FTCL 的总体架构如图 \ref{fig:system-arch} 所示。一个脚本首先被解析为 commands 和 words，随后由 interpreter 对 word 进行求值，完成变量替换、命令替换、数组访问和字符串拼接，最后将第一个求值结果作为 command name 进行分发。\texttt{geom} command 位于语言层和计算层之间：它负责解析几何参数或 UVec handle，并根据用户指定的 device 选择 CPU backend 或 CUDA backend。UVec 则处在 command layer 和 backend layer 之间，负责维护跨设备数据的位置、有效性和同步过程。
+FTCL 的总体架构如图 \ref{fig:system-arch} 所示。一个脚本首先被解析为命令（commands）和词（words），随后由解释器（interpreter）对词进行求值，完成变量替换、命令替换、数组访问和字符串拼接，最后将第一个求值结果作为命令名进行分发。\texttt{geom} 命令位于语言层和计算层之间：它负责解析几何参数或 UVec 句柄，并根据用户指定的设备（device）选择 CPU 后端或 CUDA 后端。UVec 则处在命令层与后端层之间，负责维护跨设备数据的位置、有效性和同步过程。
 
 \begin{figure}[H]
   \centering
@@ -10,10 +10,10 @@ FTCL 的总体架构如图 \ref{fig:system-arch} 所示。一个脚本首先被�
   \label{fig:system-arch}
 \end{figure}
 
-这个设计的核心是分层而不是堆叠。Parser 和 interpreter 专注于语言语义；command layer 提供稳定的用户接口；UVec 负责 data residency 和 synchronization；CPU/CUDA backend 只实现具体算法。这样做的好处是：语言可以继续扩展，几何算法可以继续增加，CUDA 路径也可以在不破坏脚本接口的情况下逐步优化。
+这一设计的核心是分层而不是堆叠。解析器与解释器专注于语言语义；命令层提供稳定的用户接口；UVec 负责数据驻留（data residency）与同步；CPU/CUDA 后端只实现具体算法。这样做的好处是：语言可以继续扩展，几何算法可以继续增加，CUDA 路径也可以在不破坏脚本接口的情况下逐步优化。
 
 \section{工程规模}
-表 \ref{tab:engineering-scope} 总结了项目的主要工程组成。列出这张表的目的不是简单展示文件数量，而是让系统边界变得清楚：FTCL 不是几个孤立的几何函数，而是由 interpreter、memory abstraction、geometry library、CUDA backend、testing framework 和 benchmark pipeline 共同组成的完整原型系统。
+表 \ref{tab:engineering-scope} 总结了项目的主要工程组成。列出这张表的目的不是简单展示文件数量，而是让系统边界变得清楚：FTCL 不是几个孤立的几何函数，而是由解释器、内存抽象、几何库、CUDA 后端、测试框架和基准流水线共同组成的完整原型系统。
 
 \begin{table}[htbp]
 \centering
@@ -22,15 +22,15 @@ FTCL 的总体架构如图 \ref{fig:system-arch} 所示。一个脚本首先被�
 \small
 \begin{tabularx}{\textwidth}{lXXX}
 \toprule
-Component & Main files & Main classes/functions & Role \\
+组件 & 主要文件 & 主要类/函数 & 作用 \\
 \midrule
-Interpreter core & \texttt{interp.hpp}, \texttt{type.hpp}, \texttt{parser.hpp} & \texttt{Interp}, \texttt{Value}, \texttt{Word}, \texttt{Script} & 负责 script parsing、evaluation、variables、procedures 和 command dispatch。 \\
-Expression parser & \texttt{expr.hpp} & \texttt{ExprParser}, \texttt{Datum} & 支持 arithmetic、comparison、logical、bitwise、ternary 以及 substitution-aware expressions。 \\
-UVec layer & \texttt{uvec.hpp}, \texttt{commands.hpp} & \texttt{UVec<T>}, pointer wrappers, handle manager & 提供 cross-device vector storage、CPU/CUDA synchronization 和 script-visible handles。 \\
-Geometry CPU backend & \texttt{geometry.hpp} & \texttt{Point}, \texttt{Segment}, \texttt{BoundingBox}, batch algorithms & 在 CPU data 上实现 scalar 和 batch two-dimensional geometry algorithms。 \\
-CUDA backend & \texttt{geometry\_cuda.*} & kernels and launch wrappers & 为 independent-work-item geometry algorithms 提供 GPU acceleration。 \\
-Tests & \texttt{test/*.cpp} & semantic, equivalence, random, edge, stress tests & 验证 language semantics、UVec consistency 和 CPU/GPU correctness。 \\
-Benchmarks and figures & \texttt{docs/data}, \texttt{docs/scripts}, \texttt{docs/figures} & CSV files and Python generators & 生成 reproducible performance data 和 thesis-ready figures。 \\
+解释器核心 & \texttt{interp.hpp}, \texttt{type.hpp}, \texttt{parser.hpp} & \texttt{Interp}, \texttt{Value}, \texttt{Word}, \texttt{Script} & 负责脚本解析、求值、变量、过程与命令分发。 \\
+表达式解析器 & \texttt{expr.hpp} & \texttt{ExprParser}, \texttt{Datum} & 支持算术、比较、逻辑、位运算、三目及可替换表达式。 \\
+UVec 层 & \texttt{uvec.hpp}, \texttt{commands.hpp} & \texttt{UVec<T>}, 指针包装器, 句柄管理器 & 提供跨设备向量存储、CPU/CUDA 同步与脚本可见句柄。 \\
+几何 CPU 后端 & \texttt{geometry.hpp} & \texttt{Point}, \texttt{Segment}, \texttt{BoundingBox}, 批量算法 & 在 CPU 数据上实现标量与批量二维几何算法。 \\
+CUDA 后端 & \texttt{geometry\_cuda.*} & kernel 与启动封装 & 为独立工作项几何算法提供 GPU 加速。 \\
+测试 & \texttt{test/*.cpp} & 语义、等价、随机、边界、压力测试 & 验证语言语义、UVec 一致性与 CPU/GPU 正确性。 \\
+基准与图表 & \texttt{docs/data}, \texttt{docs/scripts}, \texttt{docs/figures} & CSV 与 Python 生成器 & 生成可复现性能数据与论文级图表。 \\
 \bottomrule
 \end{tabularx}
 \end{table}
@@ -42,25 +42,25 @@ Benchmarks and figures & \texttt{docs/data}, \texttt{docs/scripts}, \texttt{docs
 \small
 \begin{tabularx}{\textwidth}{lrX}
 \toprule
-Metric & Value & Meaning \\
+指标 & 数值 & 含义 \\
 \midrule
-C++/CUDA source files & 56 & \texttt{include}、\texttt{src} 和 \texttt{test} 下的 header、source、CUDA、benchmark 和 test files。 \\
-C++/CUDA source lines & 19151 & \texttt{.hpp}、\texttt{.cpp} 和 \texttt{.cu} 文件总行数。 \\
-Header/interface lines & 12881 & 核心 interpreter、UVec、parser、expression、command 和 geometry interfaces。 \\
-CUDA/source implementation lines & 642 & CUDA backend 和非 header source files。 \\
-Test source lines & 5628 & Regression、equivalence、edge-case、random、stress 和 benchmark-related test code。 \\
-CTest entries & 31 & Build-system registered tests，用于 regression 和 validation。 \\
-CUDA kernels & 17 & CUDA geometry backend 以及相关 test path 中的 device kernels。 \\
-Benchmark executables & 6 & 用于 runtime、geometry 和 multi-GPU experiments 的 non-interactive benchmark programs。 \\
-Benchmark/figure scripts & 5 & \texttt{docs/scripts} 下的数据和图表生成脚本。 \\
-Generated SVG figures & 18 & \texttt{docs/figures} 下的 reproducible vector figures。 \\
-Thesis PNG figures & 18 & 复制到 \texttt{contents/figures} 中用于论文编译的 rendered figures。 \\
+C++/CUDA 源文件数 & 56 & \texttt{include}、\texttt{src} 和 \texttt{test} 下的头文件、源文件、CUDA、基准与测试文件。 \\
+C++/CUDA 源码行数 & 19151 & \texttt{.hpp}、\texttt{.cpp} 和 \texttt{.cu} 文件总行数。 \\
+头文件/接口行数 & 12881 & 核心解释器、UVec、解析器、表达式、命令与几何接口。 \\
+CUDA/实现行数 & 642 & CUDA 后端与非头文件源文件。 \\
+测试代码行数 & 5628 & 回归、等价、边界、随机、压力与基准相关测试代码。 \\
+CTest 条目 & 31 & 构建系统注册的回归与验证测试。 \\
+CUDA kernel 数 & 17 & CUDA 几何后端及相关测试路径中的 device kernel。 \\
+基准可执行文件 & 6 & 用于运行时、几何与多 GPU 实验的非交互基准程序。 \\
+基准/图表脚本 & 5 & \texttt{docs/scripts} 下的数据与图表生成脚本。 \\
+生成 SVG 图 & 18 & \texttt{docs/figures} 下可复现矢量图。 \\
+论文 PNG 图 & 18 & 复制到 \texttt{contents/figures} 供论文编译使用。 \\
 \bottomrule
 \end{tabularx}
 \end{table}
 
-\section{Interpreter Runtime}
-Runtime 由 values、words、scripts、scopes 和 commands 组成。Value 表示脚本层的值；Word 表示一个 command argument 在求值前后的结构；Script 是 command list；Interpreter 维护 command tables 和 variable scopes。FTCL 的执行路径保持 Tcl-style 的简单性，但在内部为后续扩展保留了结构化表示。
+\section{解释器运行时（Interpreter Runtime）}
+\textbf{运行时}（runtime）由值（values）、词（words）、脚本（scripts）、作用域（scopes）和命令（commands）组成。\texttt{Value} 表示脚本层的值；\texttt{Word} 表示一个命令参数在求值前后的结构；\texttt{Script} 是命令列表；解释器维护命令表与变量作用域。FTCL 的执行路径保持 Tcl 风格的简单性，但在内部为后续扩展保留了结构化表示。
 
 一个普通脚本的执行过程如下：
 
@@ -75,7 +75,7 @@ Runtime 由 values、words、scripts、scopes 和 commands 组成。Value 表示
 这种结构有一个重要优势：新能力不需要发明新语法。\texttt{thread}、\texttt{uvec} 和 \texttt{geom} 都是 command，而不是语言核心的特殊分支。因此 FTCL 可以保持小而清晰，同时承载并发、跨设备内存和几何算法。
 
 \section{词法分析流程（Lexical Analysis Flow）}
-Lexical layer 将原始 script string 转换为 token stream。FTCL 的 token-stream 方向会保留 token text 和 token boundaries，使后续阶段能明确识别 command endings、comments、whitespace、braces、brackets、variable references 和 ordinary text。算法 \ref{alg:lexer} 描述了 lexer 的基本流程。
+\textbf{词法层}（lexical layer）将原始脚本字符串转换为 token 流（token stream）。FTCL 的词法流方向会保留 token 文本与 token 边界，使后续阶段能明确识别命令结束符、注释、空白、花括号、方括号、变量引用和普通文本。算法 \ref{alg:lexer} 描述了词法分析器（lexer）的基本流程。
 
 \begin{algorithm}[H]
 \caption{FTCL Lexical Analysis}
@@ -117,7 +117,7 @@ append \textsc{Token}(\textsc{EndOfFile}, empty string) to $tokens$\;
 Lexer 不执行 substitution。它只记录输入中可观察的结构。这样做非常重要，因为 Tcl-style substitution 本质上是 semantic action：\texttt{\$} 可能需要 variable lookup，\texttt{[...]} 可能需要 recursive command evaluation。把 tokenization 和 evaluation 分开，可以让 parser 更稳定，也便于错误定位和回归测试。
 
 \section{语法分析流程（Syntax Analysis Flow）}
-Parser 消费 token stream，并把 tokens 分组成 commands 和 words。Command 在 newline、semicolon 或 end-of-file 处结束，但如果 parser 位于 braces、quotes 或 brackets 内部，则这些符号不再表示 command boundary。Parser 不执行 command，它只构造后续可执行的 script representation。
+\textbf{解析器}（parser）消费 token 流，并将 token 分组为命令与词。命令在换行、分号或文件结束处终止；若解析器位于花括号、引号或方括号内部，则这些符号不再表示命令边界。解析器不执行命令，只构造后续可执行的脚本表示。
 
 \begin{algorithm}[H]
 \caption{Token-stream Command Parsing}
@@ -158,7 +158,7 @@ Parser 消费 token stream，并把 tokens 分组成 commands 和 words。Comman
 }
 \end{algorithm}
 
-Word parser 比 command parser 更细，因为一个 word 内部可能包含 literal text、variable references、command substitutions、array references、braced literals、quoted strings 和 expansion syntax。关键设计是：parser 将这些组成部分保存为结构化 word nodes，而 interpreter 负责决定它们在运行时的 value。
+\textbf{词法解析器}（word parser）比命令解析器更细，因为一个 word 内部可能包含字面文本、变量引用、命令替换、数组引用、花括号字面量、引号字符串与展开语法。关键设计是：解析器将这些组成部分保存为结构化 word 节点，而解释器负责决定它们在运行时的值。
 
 \begin{algorithm}[H]
 \caption{Word Parsing}
@@ -208,7 +208,7 @@ Word parser 比 command parser 更细，因为一个 word 内部可能包含 lit
 \end{algorithm}
 
 \section{语义执行流程（Semantic Execution Flow）}
-Semantic execution 发生在 parsing 之后。Interpreter 逐条执行 command，对每个 word 求值，并把第一个 value 作为 command name，剩余 values 作为 arguments。Command function 才真正改变变量、创建 UVec、启动 CUDA kernel 或返回结果。
+\textbf{语义执行}（semantic execution）发生在语法分析之后。解释器逐条执行命令，对每个词求值，并把第一个值作为命令名，其余值作为参数。命令函数才真正改变变量、创建 UVec、启动 CUDA kernel 或返回结果。
 
 \begin{algorithm}[H]
 \caption{Command-level Semantic Execution}
@@ -278,7 +278,7 @@ Semantic execution 发生在 parsing 之后。Interpreter 逐条执行 command�
 \end{algorithm}
 
 \section{UVec 跨设备设计}
-UVec 是一个 vector-like container，但它不只拥有 CPU storage。普通 \texttt{std::vector<T>} 只维护 CPU memory；UVec 同时维护 CPU buffer 和 optional CUDA buffers，并记录哪一个 device 上的数据是 valid and up-to-date。
+UVec 是一个\textbf{类向量容器}（vector-like container），但它不只拥有 CPU 存储。普通 \texttt{std::vector<T>} 只维护 CPU 内存；UVec 同时维护 CPU 缓冲区与可选 CUDA 缓冲区，并记录哪一个设备上的数据是有效且最新的。
 
 当 CPU code 请求最新数据，而最新副本在 CUDA 上时，UVec 执行 CUDA-to-CPU copy；当 CUDA kernel 请求最新数据，而最新副本在 CPU 上时，UVec 执行 CPU-to-CUDA copy；当某个 device 请求 mutable pointer 时，其他副本会被标记为 invalid，因为该 device 可能写入新值。图 \ref{fig:uvec-sync} 展示同步机制，图 \ref{fig:uvec-state} 展示状态机视角。
 
@@ -299,7 +299,7 @@ UVec 是一个 vector-like container，但它不只拥有 CPU storage。普通 \
 最重要的两个 pointer interfaces 是 \texttt{as\_uptr(device)} 和 \texttt{as\_mut\_uptr(device)}。前者返回 read-only pointer，并保证目标 device 上的数据已经 valid；后者返回 mutable pointer，并将目标 device 标记为 newest writer。这两个接口让 CPU algorithm 和 CUDA kernel 可以共享同一个数据抽象，而不需要脚本用户手动判断数据在哪里。
 
 \section{形式化 UVec 一致性模型}
-UVec 可以被描述为定义在 device set 上的小型 consistency model。令
+UVec 可以被描述为定义在设备集合上的小型\textbf{一致性模型}（consistency model）。令
 \[
   D = \{\mathrm{CPU}, \mathrm{CUDA}_0, \mathrm{CUDA}_1, \ldots\}
 \]
@@ -322,8 +322,8 @@ UVec 可以被描述为定义在 device set 上的小型 consistency model。令
 \]
 在每次成功初始化后的 UVec operation 之后成立；并且 UVec 返回的每个 read pointer 在返回时都指向 logical vector 的 valid copy。这个模型刻意保持简单：它足以支撑同步式 CPU/CUDA command execution，同时也为未来的 multiple CUDA devices、asynchronous streams 和 copy-on-write policies 留出空间。
 
-\section{Geometry Command Flow}
-\texttt{geom} command 的执行流程如图 \ref{fig:geom-flow} 所示。以 \texttt{geom nearest\_point} 为例，interpreter 首先求值 script arguments；command 层解析 UVec handles 和 device options；如果目标是 CPU，就把输入同步到 CPU 并调用 C++ algorithm；如果目标是 CUDA，就把输入同步到 CUDA，创建 output UVec，启动 CUDA kernel，并返回 output handle。
+\section{几何命令流程（Geometry Command Flow）}
+\texttt{geom} 命令的执行流程如图 \ref{fig:geom-flow} 所示。以 \texttt{geom nearest\_point} 为例，解释器首先求值脚本参数；命令层解析 UVec 句柄与设备选项；若目标是 CPU，则将输入同步到 CPU 并调用 C++ 算法；若目标是 CUDA，则将输入同步到 CUDA，创建输出 UVec，启动 CUDA kernel，并返回输出句柄。
 
 \begin{figure}[H]
   \centering
@@ -335,13 +335,13 @@ UVec 可以被描述为定义在 device set 上的小型 consistency model。令
 Handle 机制非常关键。大规模点集不应该在每条命令之间反复转换为 script strings。更合理的方式是：script 创建一次 UVec，把 handle 传给多个 geometry commands，只在最终需要展示或统计时再 read back。这个思路也是后面 performance evaluation 中 speedup 能出现的前提。
 
 \section{并发设计}
-FTCL 提供 thread tasks 和 thread channels。Thread task 可以异步运行一段 script，并在之后被 await；thread channel 是由 mutex 和 condition variable 保护的 message queue，支持 blocking receive 和 non-blocking try-receive。
+FTCL 提供线程任务（thread tasks）与线程通道（thread channels）。线程任务可以异步运行一段脚本并在之后被等待（await）；线程通道是由互斥锁与条件变量保护的消息队列，支持阻塞接收与非阻塞尝试接收。
 
 这个 concurrency model 对实验很有用。它可以驱动 game-like demo，模拟 producer-consumer workload，也可以通过多个 worker scripts 分发 geometry requests。当前 CUDA concurrency experiment 也暴露出一个限制：多个 script workers 可能竞争同一个 GPU，所以未来需要 streams 或 dedicated GPU scheduler。
 
 后续第 5 章会分别从 single-GPU contention 和 multi-GPU weak-scaling 两个角度评价这个设计。这些实验也解释了为什么实现中需要把 UVec handle manager 从 global lock 细化为 handle-level locking。
 
 \section{小结}
-本章给出了 FTCL 的系统设计：语言层负责表达，command 层负责连接，UVec 层负责跨设备数据一致性，CPU/CUDA backend 负责具体计算。这个架构的关键不在于某一个单独模块，而在于这些模块之间的边界足够清楚，因而能够支持后续测试、benchmark 和应用场景扩展。
+本章给出了 FTCL 的系统设计：语言层负责表达，命令层负责连接，UVec 层负责跨设备数据一致性，CPU/CUDA 后端负责具体计算。这一架构的关键不在于某一个单独模块，而在于模块边界足够清楚，从而能够支持后续测试、基准与应用场景扩展。
 
-FTCL separates control, data residency, and execution backend. UVec is the bridge that keeps script-level geometry commands independent from low-level CPU/CUDA memory management.
+FTCL 将控制、数据驻留与执行后端分离；UVec 是连接脚本层几何命令与底层 CPU/CUDA 内存管理的桥梁。

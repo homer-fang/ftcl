@@ -1,9 +1,9 @@
 ﻿\chapter{应用与讨论}
 
-\section{面向海洋的空间计算 Demo}
-图 \ref{fig:real-demo} 展示了一个 ocean-oriented spatial computing demo。它不再使用普通游戏场景，而是把系统放到更贴近海洋牧场、智慧港口、船舶导航和无人巡检的应用语境中。sensor buoys、UAV、floating objects、ships、aquaculture cages、port obstacles 以及 sonar/radar coverage regions 都被表示为几何数据。
+\section{面向海洋的空间计算演示（Spatial Computing Demo）}
+图 \ref{fig:real-demo} 展示了一个面向海洋的空间计算演示场景。它不再使用普通游戏场景，而是把系统放到更贴近海洋牧场、智慧港口、船舶导航和无人巡检的应用语境中。浮标传感器、无人机、漂浮物、船舶、养殖网箱、港口障碍以及声呐/雷达覆盖区域都被表示为几何数据。
 
-在这个场景中，points 表示传感器位置、漂浮物、目标观测和 UAV 位置；circles 表示 radar、sonar 或 camera coverage；axis-aligned boxes 表示船舶、养殖网箱、港区限制区域或矩形障碍；batch distance matrices 则表示传感器与异常目标之间的大规模关系。借助 UVec，这些对象可以跨多个命令停留在 CUDA devices 上，而不是每一步都被转换回 script strings。
+在这一场景中，点表示传感器位置、漂浮物、目标观测与无人机位置；圆表示雷达、声呐或相机覆盖范围；轴对齐包围盒表示船舶、养殖网箱、港区限制区域或矩形障碍；批量距离矩阵则表示传感器与异常目标之间的大规模关系。借助 UVec，这些对象可以跨多个命令驻留在 CUDA 设备上，而不必每一步都转换回脚本文本。
 
 \begin{figure}[H]
   \centering
@@ -12,30 +12,30 @@
   \label{fig:real-demo}
 \end{figure}
 
-图中的脚本流水线使用的仍是 benchmark 章节中的几何命令，但数据语义发生了变化。\texttt{geom nearest\_point} 可以寻找距离 UAV 或巡逻船最近的异常漂浮物；\texttt{geom range\_count\_circle} 可以统计 radar、sonar 或 camera coverage region 内的目标数量；\texttt{geom collision\_aabb} 可以检查船舶 bounding box 是否与礁石、网箱、码头或限制区域重叠；\texttt{geom batch\_distance\_matrix} 可以计算大规模 sensor-target distance relationships，为后续分配或告警评分提供基础。
+图中的脚本流水线使用的仍是第 5 章中的几何命令，但数据语义发生了变化。\texttt{geom nearest\_point} 可以寻找距离无人机或巡逻船最近的异常漂浮物；\texttt{geom range\_count\_circle} 可以统计雷达、声呐或相机覆盖区域内的目标数量；\texttt{geom collision\_aabb} 可以检查船舶包围盒是否与礁石、网箱、码头或限制区域重叠；\texttt{geom batch\_distance\_matrix} 可以计算大规模传感器—目标距离关系，为后续分配或告警评分提供基础。
 
 \section{海洋牧场空间感知}
-在 marine ranch 中，浮标和水下传感器会持续观测水质、网箱状态、漂浮垃圾和异常水面目标。一个简单 FTCL script 可以把 sensor locations 和 object detections 载入 UVec handles，对每个 sonar coverage circle 执行 range query，并报告离每个巡检点最近的异常目标。
+在海洋牧场中，浮标和水下传感器会持续观测水质、网箱状态、漂浮垃圾和异常水面目标。一个简单的 FTCL 脚本可以把传感器位置与目标检测结果载入 UVec 句柄，对每个声呐覆盖圆执行范围查询，并报告离每个巡检点最近的异常目标。
 
-这个场景适合 FTCL，是因为输入天然形成 large point sets。许多查询彼此独立：每个传感器覆盖区域可以单独处理，每个 target-to-sensor distance 也可以并行计算。当检测目标或传感器数量变大时，CUDA backend 可以承担批量计算，而 script layer 仍然保留组合任务的便利性。
+这一场景适合 FTCL，是因为输入天然形成大规模点集。许多查询彼此独立：每个传感器覆盖区域可以单独处理，每个目标到传感器的距离也可以并行计算。当检测目标或传感器数量变大时，CUDA 后端可以承担批量计算，而脚本层仍然保留组合任务的便利性。
 
 \section{智慧港口空间计算}
-智慧港口包含泊位、吊机、集装箱、船舶包围盒、航道和限制区域。这些对象可以用 points、line segments、polygons 和 bounding boxes 表示。FTCL 可以用 \texttt{geom collision\_aabb} 检查船舶与港口障碍物的粗粒度碰撞，用 \texttt{geom range\_count\_rect} 统计管理区域内对象数量，用 \texttt{geom nearest\_point} 查找最近资源或警戒目标。
+智慧港口包含泊位、吊机、集装箱、船舶包围盒、航道和限制区域。这些对象可以用点、线段、多边形和包围盒表示。FTCL 可以用 \texttt{geom collision\_aabb} 检查船舶与港口障碍物的粗粒度碰撞，用 \texttt{geom range\_count\_rect} 统计管理区域内对象数量，用 \texttt{geom nearest\_point} 查找最近资源或警戒目标。
 
-这里的价值并不是让 FTCL 替代完整港口信息系统，而是提供一个 lightweight spatial-computing layer。使用者可以先用脚本快速原型化港口空间规则，再把大规模 batch operations 移交给 CUDA backend，而不用改变高层命令结构。
+这里的价值并不是让 FTCL 替代完整港口信息系统，而是提供一个轻量级空间计算层（spatial-computing layer）。使用者可以先用脚本快速原型化港口空间规则，再把大规模批量运算移交给 CUDA 后端，而不必改变高层命令结构。
 
 \section{无人机水面漂浮物巡检}
-无人机常用于近岸水面巡检。UAV trajectory 可以存储为点序列，detected floating objects 可以存储为另一个点集，camera coverage 可以表示为 circle queries。FTCL 可以计算最近异常目标、统计每一帧覆盖区域内的检测数量，并构造 UAV sample points 与 suspicious objects 之间的 distance matrix。
+无人机常用于近岸水面巡检。无人机轨迹可以存储为点序列，检测到的漂浮物可以存储为另一个点集，相机覆盖范围可以表示为圆形查询。FTCL 可以计算最近异常目标、统计每一帧覆盖区域内的检测数量，并构造采样点与可疑目标之间的距离矩阵。
 
-这个例子说明了 script-level heterogeneous computing 的意义。高层巡检逻辑经常变化：thresholds、target classes 和 coverage radii 会随任务调整；而底层 geometry kernels 相对稳定，可以由 GPU acceleration 承担。
+这个例子说明了\textbf{脚本层异构计算}（script-level heterogeneous computing）的意义。高层巡检逻辑经常变化：阈值、目标类别和覆盖半径会随任务调整；而底层几何 kernel 相对稳定，可以由 GPU 加速承担。
 
 \section{船舶路径规划与碰撞检测}
-船舶导航需要把 planned path 与静态、动态障碍物进行检查。在当前 FTCL geometry subset 中，粗粒度 collision checking 可以由 AABB commands 完成，segment intersection 与 distance commands 则可以支撑后续路径级检查。船舶路线也可以与 aquaculture cages、reefs、port boundaries 和 moving obstacle boxes 进行风险评估。
+船舶导航需要把规划路径与静态、动态障碍物进行检查。在当前 FTCL 几何子集中，粗粒度碰撞检测可以由 AABB 命令完成，线段相交与距离命令则可以支撑后续路径级检查。船舶路线也可以与养殖网箱、礁石、港口边界和移动障碍包围盒进行风险评估。
 
-这一场景指向自然的扩展方向。在当前 batch geometry commands 之后，系统可以继续加入 spatial grids、polyline distance、route risk scoring 和 dynamic obstacle prediction。这些扩展会让 FTCL 更直接服务于海洋与港口空间计算任务。
+这一场景指向自然的扩展方向。在当前批量几何命令之后，系统可以继续加入空间网格、折线距离、路径风险评分和动态障碍预测。这些扩展会让 FTCL 更直接服务于海洋与港口空间计算任务。
 
 \section{算法可视化}
-图 \ref{fig:geom-visual} 展示了几个代表性算法：point-in-polygon classification、nearest point、circle range query 和 AABB collision。这样的图对答辩非常有价值，因为它让评阅者不看代码也能理解工作负载本身。
+图 \ref{fig:geom-visual} 展示了几个代表性算法：点在多边形内判定、最近点、圆形范围查询和 AABB 碰撞。这样的图对答辩非常有价值，因为它让评阅者不看代码也能理解工作负载本身。
 
 \begin{figure}[H]
   \centering
@@ -45,34 +45,34 @@
 \end{figure}
 
 \section{与普通几何库的区别}
-普通 geometry library 通常提供 C++ 函数，例如 \texttt{distance(a,b)} 或 \texttt{segments\_intersect(a,b,c,d)}。FTCL 与它们的区别主要有四点。
+普通几何库通常提供 C++ 函数，例如 \texttt{distance(a,b)} 或 \texttt{segments\_intersect(a,b,c,d)}。FTCL 与它们的区别主要有四点。
 
 \begin{itemize}
-  \item 它通过 scripts 暴露几何操作，使用者可以组合任务而不必重新编译 C++。
-  \item 它使用 UVec handles，避免大数组在 script strings 与 native buffers 之间反复转换。
-  \item 它在同一 command interface 下同时支持 CPU backend 和 CUDA backend。
-  \item 它包含 tests、random differential checks、equivalence checks 和 generated figures，能够支撑 thesis-level evaluation。
+  \item 它通过脚本暴露几何操作，使用者可以组合任务而不必重新编译 C++。
+  \item 它使用 UVec 句柄，避免大数组在脚本文本与原生缓冲区之间反复转换。
+  \item 它在同一命令接口下同时支持 CPU 后端与 CUDA 后端。
+  \item 它包含测试、随机差分检查、等价性检查与生成图表，能够支撑论文级评估。
 \end{itemize}
 
-因此，本项目不是单纯的几何函数集合。它的价值在于 interpreter design、data management、heterogeneous computing 和 experimental validation 的整合。
+因此，本项目不是单纯的几何函数集合。它的价值在于解释器设计、数据管理、异构计算与实验验证的整合。
 
-从应用定位看，这也改变了项目的叙事方式。FTCL 不只是 computational geometry scripting system，也可以被描述为面向 ocean and port spatial analysis 的 prototype heterogeneous computing substrate。geometry commands 是第一层算法能力，UVec 与 CUDA 提供 execution substrate，script language 提供 control layer。
+从应用定位看，这也改变了项目的叙事方式。FTCL 不只是计算几何脚本系统，也可以被描述为面向海洋与港口空间分析的原型异构计算底座。几何命令提供第一层算法能力，UVec 与 CUDA 提供执行底座，脚本语言提供控制层。
 
 \section{局限性}
 当前系统仍有若干局限。
 
-第一，UVec 尚未完全对齐 \texttt{std::vector}。它已经支持 cross-device storage 与 script handles，但还应补充 iterators、capacity management、insertion、erasure 和更强的 exception-safety guarantees。
+第一，UVec 尚未完全对齐 \texttt{std::vector}。它已经支持跨设备存储与脚本句柄，但还应补充迭代器、容量管理、插入、删除和更强的异常安全保证。
 
-第二，CUDA backend 仍然比较直接。它尚未使用 memory pools、asynchronous streams、advanced reductions、shared-memory tiling 或 spatial indexes。这些技术对降低 overhead 和提高性能很重要。
+第二，CUDA 后端仍然比较直接。它尚未使用内存池、异步流、高级归约、共享内存分块或空间索引。这些技术对降低开销和提高性能很重要。
 
-第三，token-stream parser 在架构上更清晰，但不总是比 legacy parser 更快。未来应减少 token copying，压缩 whitespace handling，避免对子脚本重复 lexing，并引入 AST 或 bytecode execution。
+第三，词法流解析器在架构上更清晰，但不总是比传统解析器更快。未来应减少 token 拷贝，压缩空白处理，避免对子脚本重复词法分析，并引入 AST 或字节码执行。
 
-第四，benchmark figures 应在固定硬件环境下进行更多轮重复，并补充 confidence intervals。部分 CUDA break-even points 会波动，因为 end-to-end timing 包含 allocation、synchronization 和 system scheduling noise。
+第四，基准图表应在固定硬件环境下进行更多轮重复，并补充置信区间。部分 CUDA 盈亏平衡点会波动，因为端到端计时包含分配、同步与系统调度噪声。
 
 \section{毕业设计价值}
-本项目适合作为毕业设计，是因为它同时具备工程深度与算法内容。interpreter 展示系统编程能力，geometry library 展示算法设计能力，UVec 与 CUDA 展示异构计算能力，benchmark pipeline 展示可复现研究能力。这些部分组合起来，比单个算法 demo 更能体现完整性。
+本项目适合作为毕业设计，是因为它同时具备工程深度与算法内容。解释器展示系统编程能力，几何库展示算法设计能力，UVec 与 CUDA 展示异构计算能力，基准流水线展示可复现研究能力。这些部分组合起来，比单个算法演示更能体现完整性。
 
 \section{小结}
-本章把 FTCL 从“几何脚本系统”提升到“海洋空间计算原型平台”的叙事层面。通过 marine ranch、smart port、UAV inspection 和 ship collision checking 等场景，本文说明同一组几何原语可以被赋予现实应用意义。
+本章把 FTCL 从“几何脚本系统”提升到“海洋空间计算原型平台”的叙事层面。通过海洋牧场、智慧港口、无人机巡检和船舶碰撞检测等场景，本文说明同一组几何原语可以被赋予现实应用意义。
 
-The application layer does not change the core algorithms; it changes their interpretation. FTCL becomes more persuasive when points, circles, boxes, and distance matrices are connected to ocean-oriented spatial decisions.
+应用层并不改变核心算法，而是改变这些算法的解释方式。当点、圆、包围盒和距离矩阵与海洋导向的空间决策联系起来时，FTCL 的论证会更有说服力。

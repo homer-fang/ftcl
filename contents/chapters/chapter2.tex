@@ -1,43 +1,43 @@
 ﻿\chapter{相关工作与技术背景}
 
-\section{Tcl-style Interpretation}
-Tcl-style language 的核心是 command-oriented execution。一个命令的第一个词被解释为 command name，其余词在完成 substitution 后作为 arguments 传入命令函数。这种模型与 expression-centered language 不同：Tcl-like system 的语法层很浅，而真正的语义由命令提供。
+\section{Tcl 风格解释执行（Tcl-style Interpretation）}
+Tcl 风格语言的核心是\textbf{命令导向执行}（command-oriented execution）。一个命令的第一个词被解释为命令名（command name），其余词在完成替换（substitution）后作为参数（arguments）传入命令函数。这种模型与\textbf{以表达式为中心的语言}（expression-centered language）不同：Tcl 类系统的语法层很浅，而真正的语义由命令提供。
 
-FTCL 延续这一思想，但只实现项目所需的受控子集。它支持变量、数组、过程、控制流、列表、字典、表达式求值、源码加载和测试命令。本文并不试图实现完整 Tcl，而是把 FTCL 定位为 geometry 与 heterogeneous-computing experiments 的可控实验平台。
+FTCL 延续这一思想，但只实现项目所需的受控子集。它支持变量、数组、过程、控制流、列表、字典、表达式求值、源码加载和测试命令。本文并不试图实现完整 Tcl，而是把 FTCL 定位为\textbf{计算几何与异构计算实验}（heterogeneous-computing experiments）的可控实验平台。
 
-\section{Parser Design}
-FTCL 当前包含两条 parser 路径。legacy parser 直接读取字符流，常数开销小，适合作为稳定参考；token-stream parser 先进行 lexical analysis，再通过 TokenCursor 识别 command boundary 和 word boundary。token-stream path 并不必然更快，因为它额外存储 token metadata，但它更适合未来扩展 span-based diagnostics、AST construction、bytecode generation 和 parser backend comparison。
+\section{解析器设计（Parser Design）}
+FTCL 当前包含两条\textbf{解析器路径}（parser path）。\textbf{传统解析器}（legacy parser）直接读取字符流，常数开销小，适合作为稳定参考；\textbf{词法流解析器}（token-stream parser）先进行词法分析（lexical analysis），再通过 \texttt{TokenCursor} 识别命令边界（command boundary）和词边界（word boundary）。词法流路径并不必然更快，因为它额外存储 token 元数据，但更适合未来扩展基于 span 的诊断、AST 构建、字节码生成和解析器后端对比。
 
-项目在迁移期间使用 shadow comparison。也就是说，两条 parser path 可以解析同一段输入并比较结构结果。这样做不是为了炫技，而是为了降低替换底层解析逻辑时的语义回归风险。
+项目在迁移期间使用\textbf{影子对比}（shadow comparison）：两条解析器路径解析同一段输入并比较结构结果，以降低替换底层解析逻辑时的语义回归风险。
 
-Parser 与 runtime design 也与经典编译原理和解释器实现密切相关。Compiler textbooks 讨论 lexical analysis、parsing、intermediate representation、optimization 和 code generation \cite{aho2006compilers,muchnick1997advanced}。Interpreter-oriented references 更强调一条务实路线：表示源程序结构、管理运行时值，并通过受控 semantic actions 扩展语言 \cite{nystrom2021crafting}。FTCL 当前选择后一条路线，同时保留 token-stream parser 作为未来进入 AST 与 bytecode execution 的桥。
+\textbf{解析器与运行时设计}（parser and runtime design）也与经典编译原理和解释器实现密切相关。编译原理教材讨论词法分析、语法分析、中间表示、优化与代码生成 \cite{aho2006compilers,muchnick1997advanced}；解释器取向的参考更强调表示源程序结构、管理运行时值，并通过受控语义动作扩展语言 \cite{nystrom2021crafting}。FTCL 当前选择后一条路线，同时保留 token-stream parser 作为未来进入 AST 与字节码执行的桥梁。
 
-\section{Expression Evaluation}
-FTCL 将 expression evaluation 与普通 command parsing 分离。\texttt{expr} command 需要处理 operator precedence、associativity、short-circuit logic、ternary expression、integer overflow、bitwise operation、division semantics、variable reference 和 command substitution。FTCL 使用 layered recursive descent：低优先级函数调用高优先级函数，因此 \texttt{a || b \&\& c} 会先在 logical AND 层组合 \texttt{b \&\& c}，再由 logical OR 层处理整体表达式。
+\section{表达式求值（Expression Evaluation）}
+FTCL 将\textbf{表达式求值}（expression evaluation）与普通命令解析分离。\texttt{expr} 命令需要处理运算符优先级、结合性、短路逻辑、三目表达式、整数溢出、位运算、除法语义、变量引用和命令替换。FTCL 使用分层递归下降：低优先级函数调用高优先级函数，因此 \texttt{a || b \&\& c} 会先在逻辑与（logical AND）层组合 \texttt{b \&\& c}，再由逻辑或（logical OR）层处理整体表达式。
 
-Short-circuit behavior 是表达式求值的关键。当 \texttt{||} 左侧为 true 时，右侧仍然需要被解析，以保证 parser position 正确；但右侧不应产生 side effects。FTCL 使用 evaluation mode guard 实现这一点。
+\textbf{短路求值行为}（short-circuit behavior）是表达式求值的关键。当 \texttt{||} 左侧为 true 时，右侧仍然需要被解析以保证解析位置正确，但不应产生副作用（side effects）。FTCL 使用求值模式守卫（evaluation mode guard）实现这一点。
 
-\section{Computational Geometry}
-计算几何研究 points、segments、polygons 和 regions 等几何对象上的算法。本文聚焦二维几何。基础操作包括 dot product、cross product、orientation、distance、segment intersection、point-to-segment distance、polygon area、point-in-polygon classification 和 convex hull。
+\section{计算几何（Computational Geometry）}
+计算几何研究点、线段、多边形和区域等几何对象上的算法。本文聚焦二维几何。基础操作包括点积、叉积、方向判定、距离、线段相交、点到线段距离、多边形面积、点在多边形内判定和凸包等。
 
-Batch geometry algorithms 尤其适合 GPU acceleration。distance matrix 对每个点对产生一个输出，range-count query 对每个查询区域产生一个输出，nearest-point query 对每个 query point 产生一个输出。这些任务包含大量 independent work items，因此可以自然映射到 CUDA threads。
+\textbf{批量几何算法}（batch geometry algorithms）尤其适合 GPU 加速。距离矩阵对每个点对产生一个输出，范围计数查询对每个查询区域产生一个输出，最近点查询对每个查询点产生一个输出。这些任务包含大量\textbf{独立工作项}（independent work items），因此可以自然映射到 CUDA 线程。
 
-从算法基础看，本文与经典 algorithm analysis 和 data-structure design 一脉相承 \cite{cormen2022introduction,knuth1997fundamental,knuth1998sorting}。range counting、nearest-neighbor search 和 grid-based acceleration 等后续方向，则与 multidimensional data structures 密切相关 \cite{samet2006foundations}。本文首先实现 direct batch algorithms，是因为它们容易验证、易于并行，也适合做 CPU/GPU equivalence testing。
+从算法基础看，本文与经典算法分析和数据结构设计一脉相承 \cite{cormen2022introduction,knuth1997fundamental,knuth1998sorting}。范围计数、最近邻搜索和基于网格的加速等后续方向，则与多维数据结构密切相关 \cite{samet2006foundations}。本文首先实现直接批量算法，是因为它们容易验证、易于并行，也适合做 CPU/GPU 等价性测试。
 
-\section{CUDA 与 End-to-end Performance}
-CUDA 将 GPU 暴露为 massively parallel device。典型 CUDA 程序需要分配 device memory、传输输入、启动 kernel、同步并把结果复制回 host。然而，脚本语言的使用者不应被迫手工管理这些步骤。FTCL 因此把这些底层行为封装在 UVec 与 \texttt{geom} commands 之后。
+\section{CUDA 与端到端性能（End-to-end Performance）}
+CUDA 将 GPU 暴露为大规模并行设备（massively parallel device）。典型 CUDA 程序需要分配设备内存、传输输入、启动 kernel、同步并把结果复制回主机（host）。然而，脚本语言的使用者不应被迫手工管理这些步骤。FTCL 因此把这些底层行为封装在 UVec 与 \texttt{geom} 命令之后。
 
-本文实验度量的是 end-to-end FTCL command time，而不是 pure kernel time。一次 geometry command measurement 包含 command dispatch、handle lookup、UVec synchronization、output allocation、kernel launch、synchronization，有时还包含 readback。这个口径更保守，但更接近脚本用户真实感受到的性能。
+本文实验度量的是\textbf{端到端 FTCL 命令耗时}（end-to-end FTCL command time），而不是纯 kernel 时间。一次几何命令测量包含命令分发、句柄查找、UVec 同步、输出分配、kernel 启动、同步，有时还包含读回（readback）。这个口径更保守，但更接近脚本用户真实感受到的性能。
 
-GPU architecture 与 CUDA system papers 为本文提供了重要参照。NVIDIA Tesla 提出了统一的 graphics and computing architecture；CUDA experience 与 optimization studies 则强调 memory hierarchy、thread organization 和 workload mapping \cite{lindholm2008nvidia,garland2008parallel,ryoo2008optimization,mei2017memory}。OpenCL 与 heterogeneous architecture 的研究进一步说明，portability 与 data movement 是 CPU/GPU system 的核心问题 \cite{stone2010opencl,hennessy2019computer,flynn1972some}。FTCL 的 UVec layer 正是围绕这一点设计：backend code 可以拿到 device pointer，但 script 不需要管理 memory copy。
+GPU 体系结构与 CUDA 系统论文为本文提供了重要参照。NVIDIA Tesla 提出了统一的图形与计算架构；CUDA 经验与优化研究则强调存储层次、线程组织和工作负载映射 \cite{lindholm2008nvidia,garland2008parallel,ryoo2008optimization,mei2017memory}。OpenCL 与异构架构研究进一步说明，可移植性与数据搬运是 CPU/GPU 系统的核心问题 \cite{stone2010opencl,hennessy2019computer,flynn1972some}。FTCL 的 UVec 层正是围绕这一点设计：后端代码可以拿到设备指针，但脚本不需要管理内存拷贝。
 
-\section{Heterogeneous System Case Studies}
-HeteroSTA 是一个具有代表性的 CPU/GPU application-system case。它展示了一个异构引擎不仅需要 parallel kernels，还必须处理 scheduling、memory management 和 industrial workflow constraints \cite{guo2026heterosta}。FTCL 面向的是 computational geometry，而不是 static timing analysis，但系统层面的经验相似：加速效果只有在 runtime、memory abstraction、workload partitioning 和 benchmark methodology 一起被设计时才有说服力。
+\section{异构系统案例研究（Heterogeneous System Case Studies）}
+HeteroSTA 是一个具有代表性的 CPU/GPU 应用系统案例 \cite{guo2026heterosta}。它表明，异构引擎不仅需要并行 kernel，还必须处理调度、内存管理和工业工作流约束。FTCL 面向的是计算几何，而不是静态时序分析，但系统层面经验相似：加速效果只有在运行时、内存抽象、工作负载划分和基准方法一并设计时才有说服力。
 
-\section{Reproducible Experiment Artifacts}
-本文将 benchmark scripts、CSV files 和 SVG/PNG figures 存放在 \texttt{docs} 目录下。这一点对于毕业论文非常重要，因为它把论文中的性能结论与可复现实验产物连接起来。本文的图不是手工画出来的，而是由测试程序、benchmark data 和 figure generation scripts 生成。
+\section{可复现实验产物（Reproducible Experiment Artifacts）}
+本文将基准脚本、CSV 文件和 SVG/PNG 图表存放在 \texttt{docs} 目录下。这一点对于毕业论文非常重要，因为它把论文中的性能结论与可复现实验产物连接起来。本文的图不是手工绘制，而是由测试程序、基准数据和图表生成脚本自动生成。
 
 \section{小结}
-本章说明 FTCL 所处的技术坐标：它借鉴 Tcl 的 shallow syntax 与 command model，采用解释器工程中的可控实现路线，并把 CUDA、UVec 和 batch geometry 组合成一个实验平台。相关工作带来的核心启发是：GPU acceleration 不是单个 kernel 的胜利，而是 language runtime、data movement 和 workload structure 的共同结果。
+本章说明 FTCL 所处的技术坐标：它借鉴 Tcl 的浅层语法与命令模型，采用解释器工程中的可控实现路线，并把 CUDA、UVec 与批量几何组合成一个实验平台。相关工作带来的核心启发是：GPU 加速不是单个 kernel 的胜利，而是语言运行时、数据搬运与工作负载结构共同作用的结果。
 
-Technically, FTCL follows a pragmatic interpreter path rather than a full compiler path. Its research value comes from system integration: a small command language, a cross-device vector abstraction, and reproducible heterogeneous geometry experiments.
+从实现路线看，FTCL 选择务实的解释器路径，而非完整编译器路径；其研究价值来自系统集成——小型命令语言、跨设备向量抽象，以及可复现的异构几何实验。

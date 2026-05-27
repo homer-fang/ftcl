@@ -1,21 +1,21 @@
 ﻿\chapter{实验评估}
 
-\section{Evaluation Goals}
-本章实验回答三个问题。第一，FTCL 的 language runtime 是否保持了预期语义？第二，CPU 和 CUDA geometry backends 是否能产生等价结果？第三，从 FTCL script 用户的角度看，CUDA 在什么规模下能够带来 end-to-end speedup？
+\section{实验目标（Evaluation Goals）}
+本章实验回答三个问题。第一，FTCL 的语言运行时是否保持了预期语义？第二，CPU 与 CUDA 几何后端是否能产生等价结果？第三，从 FTCL 脚本用户的角度看，CUDA 在什么规模下能够带来\textbf{端到端加速比}（end-to-end speedup）？
 
-项目的实验数据、CSV 文件和图表生成脚本都位于 \texttt{docs} 目录下。测量内容包括 semantic pass rate、parser backend timing、thread-channel latency、frame-time distribution、CPU/CUDA geometry speedup、throughput、numerical error、break-even point、ablation data 和 concurrent geometry performance。这些指标共同覆盖 correctness、performance 和 scalability 三个层面。
+项目的实验数据、CSV 文件和图表生成脚本都位于 \texttt{docs} 目录下。测量内容包括语义通过率、解析器后端计时、线程通道延迟、帧时间分布、CPU/CUDA 几何加速比、吞吐量、数值误差、盈亏平衡点、消融数据与并发几何性能。这些指标共同覆盖正确性、性能与可扩展性三个层面。
 
-\section{Experimental Methodology}
-除非特别说明，本文所有 performance results 都被视为 end-to-end system measurements。一次 geometry command measurement 包含 FTCL command dispatch、argument parsing、UVec handle lookup、device synchronization、output UVec allocation、backend execution，以及 CUDA kernel launch 后的 synchronization。它不是纯 CUDA kernel time。本文有意采用这种测量方式，因为论文评价的是脚本用户实际看到的系统性能。
+\section{实验方法（Experimental Methodology）}
+除非特别说明，本文所有性能结果都被视为\textbf{端到端系统测量}（end-to-end system measurements）。一次几何命令测量包含 FTCL 命令分发、参数解析、UVec 句柄查找、设备同步、输出 UVec 分配、后端执行，以及 CUDA kernel 启动后的同步。它不是纯 CUDA kernel time。本文有意采用这种测量方式，因为论文评价的是脚本用户实际看到的系统性能。
 
-Benchmark pipeline 遵循以下原则：
+\textbf{基准流水线}（benchmark pipeline）遵循以下原则：
 
 \begin{enumerate}
-  \item \textbf{使用 Release builds。} Debug builds 不进入性能讨论，因为 interpreter dispatch 和 STL containers 对 optimization level 非常敏感。
-  \item \textbf{区分 warmup 和 measurement。} Parser backend timing 和 geometry timing scripts 在可支持的情况下会先执行 warmup runs，再记录 samples。
-  \item \textbf{优先使用 median 或 percentile。} Latency distributions 使用 P50、P95 和 P99 描述；geometry timing 在有多个样本时使用 representative median command latency。
-  \item \textbf{单独看待 readback cost。} 部分实验将结果保留在 UVec handles 中，ablation experiments 则显式测量将 large UVec outputs 转回 script lists 的成本。
-  \item \textbf{先比较正确性，再解释速度。} 只有 CPU/GPU equivalence tests 在数值容忍范围内通过时，CUDA speedups 才有意义。
+  \item \textbf{使用 Release 构建。} Debug 构建不进入性能讨论，因为解释器分发与 STL 容器对优化级别非常敏感。
+  \item \textbf{区分预热与测量。} 解析器后端计时与几何计时脚本在可支持的情况下会先执行预热运行，再记录样本。
+  \item \textbf{优先使用中位数或分位数。} 延迟分布使用 P50、P95 和 P99 描述；几何计时在有多个样本时使用具有代表性的命令延迟中位数。
+  \item \textbf{单独看待读回成本。} 部分实验将结果保留在 UVec 句柄中，消融实验则显式测量将大规模 UVec 输出转回脚本列表的成本。
+  \item \textbf{先比较正确性，再解释速度。} 只有 CPU/GPU 等价性测试在数值容忍范围内通过时，CUDA 加速比才有意义。
 \end{enumerate}
 
 主要派生指标定义如下：
@@ -26,14 +26,14 @@ Benchmark pipeline 遵循以下原则：
   \quad
   \mathrm{work\ items} = N \times Q.
 \]
-对于 distance matrix、nearest point 和 range-count workloads，\(N\) 表示 data points 数量，\(Q\) 表示 query points 或 query regions 数量。
+对于 distance matrix、nearest point 和 range-count 工作负载，\(N\) 表示数据点数量，\(Q\) 表示查询点或查询区域数量。
 
-\subsection{CPU Baseline Definition}
-本文的 CPU baseline 是 FTCL CPU geometry backend，而不是手工优化的 parallel CPU library。这个区别很重要：实验回答的问题是脚本用户会问的问题，即同一个 FTCL command 在 CPU device 和 CUDA device 上执行时，end-to-end improvement 是多少。
+\subsection{CPU 基线定义（CPU Baseline Definition）}
+本文的 CPU 基线是 FTCL CPU 几何后端，而不是手工优化的并行 CPU 库。这个区别很重要：实验回答的是脚本用户会问的问题——同一个 FTCL 命令在 CPU 设备与 CUDA 设备上执行时，端到端提升是多少。
 
-因此，CPU row 和 CUDA row 尽量共享相同的 script-level command path。主性能实验中，输入会在计时前预先构造为 UVec handles；计时区间包括 command dispatch、handle lookup、output UVec allocation、backend execution 和必要 synchronization。CPU row 使用 C++ scalar loops 处理 CPU-resident UVec data；CUDA row 使用 CUDA device buffers 和 kernels，并且当前 CUDA helper 在 kernel launch 后调用 \texttt{cudaDeviceSynchronize}，保证 command 返回时 backend work 已完成。
+因此，CPU 行与 CUDA 行尽量共享相同的脚本层命令路径。主性能实验中，输入会在计时前预先构造为 UVec 句柄；计时区间包括命令分发、句柄查找、输出 UVec 分配、后端执行与必要同步。CPU 行使用 C++ 标量循环处理驻留在 CPU 的 UVec 数据；CUDA 行使用 CUDA 设备缓冲区与 kernel，且当前 CUDA 辅助函数在 kernel 启动后调用 \texttt{cudaDeviceSynchronize}，保证命令返回时后端工作已完成。
 
-这个 baseline 对评价 FTCL 作为 heterogeneous scripting system 是公平的，但不能被解释为对抗高度优化的 all-core CPU geometry library。实验服务器拥有 128 个 logical CPU threads，而当前 CPU geometry backend 故意保持简单。因此，报告的 speedup 衡量的是在相同 command interface 下，将 FTCL backend 从 scalar CPU implementation 移动到 CUDA implementation 后获得的收益。未来加入 all-core CPU backend 会是有价值的补充 baseline。
+该基线对评价 FTCL 作为异构脚本系统是公平的，但不能被解释为对抗高度优化的全核 CPU 几何库。实验服务器拥有 128 个逻辑 CPU 线程，而当前 CPU 几何后端故意保持简单。因此，报告的加速比衡量的是：在相同命令接口下，将 FTCL 后端从标量 CPU 实现迁移到 CUDA 实现后获得的收益。未来加入全核 CPU 后端将是有价值的补充基线。
 
 \begin{table}[H]
 \centering
@@ -41,35 +41,35 @@ Benchmark pipeline 遵循以下原则：
 \label{tab:environment}
 \begin{tabularx}{\textwidth}{lX}
 \toprule
-Item & Recorded value \\
+Item & 记录值 \\
 \midrule
-Operating system & WSL Ubuntu environment used for build, tests, CUDA execution, and figure generation \\
-CPU model & Intel Xeon Platinum 8358 CPU at 2.60 GHz \\
-CPU topology & 2 sockets, 32 cores per socket, 2 hardware threads per core, 128 logical CPUs \\
-CPU frequency & 800 MHz minimum, 3.40 GHz maximum as reported by \texttt{lscpu} \\
-NUMA layout & 2 NUMA nodes; node 0 contains CPUs 0--31 and 64--95, node 1 contains CPUs 32--63 and 96--127 \\
-Main memory & 1.0 TiB total memory; about 623 GiB available when the environment was recorded \\
-GPU model & 8 NVIDIA A800-SXM4-80GB GPUs \\
-GPU memory & 81920 MiB per GPU, approximately 640 GiB aggregate device memory \\
-GPU driver & NVIDIA driver 530.30.02 \\
-CUDA compute capability & 8.0 for each A800 GPU \\
-Build system & CMake with Release configuration \\
-C++ standard & C++20, selected by \texttt{FTCL\_CXX\_STANDARD=20} \\
-Compiler & GCC or Clang available inside WSL \\
-CUDA option & \texttt{FTCL\_ENABLE\_CUDA=ON} for CUDA geometry experiments \\
-CPU build path & \texttt{build} or \texttt{/tmp/ftcl-build-geometry-cpu} \\
-CUDA build path & \texttt{/tmp/ftcl-build-geometry-cuda} \\
-Benchmark data & CSV files under \texttt{docs/data/benchmarks} and \texttt{docs/data/geometry} \\
-Generated figures & SVG/PNG figures under \texttt{docs/figures} and \texttt{contents/figures} \\
-Important note & Free GPU memory is time-dependent because other users or jobs may share the same server \\
+操作系统 & 用于构建、测试、CUDA 执行与图表生成的 WSL Ubuntu 环境 \\
+CPU 型号 & Intel Xeon Platinum 8358，2.60 GHz \\
+CPU 拓扑 & 2 路插槽，每路 32 核，每核 2 硬件线程，共 128 逻辑 CPU \\
+CPU 频率 & 最低 800 MHz，最高 3.40 GHz（\texttt{lscpu} 报告值） \\
+NUMA 布局 & 2 个 NUMA 节点；节点 0 含 CPU 0--31 与 64--95，节点 1 含 CPU 32--63 与 96--127 \\
+主存 & 总内存 1.0 TiB；记录环境时约 623 GiB 可用 \\
+GPU 型号 & 8 张 NVIDIA A800-SXM4-80GB \\
+GPU 显存 & 每张 81920 MiB，合计约 640 GiB 设备内存 \\
+GPU 驱动 & NVIDIA driver 530.30.02 \\
+CUDA 计算能力 & 每张 A800 GPU 为 8.0 \\
+构建系统 & CMake Release 配置 \\
+C++ 标准 & C++20，由 \texttt{FTCL\_CXX\_STANDARD=20} 指定 \\
+编译器 & WSL 内可用的 GCC 或 Clang \\
+CUDA 选项 & \texttt{FTCL\_ENABLE\_CUDA=ON}，用于 CUDA 几何实验 \\
+CPU 构建路径 & \texttt{build} 或 \texttt{/tmp/ftcl-build-geometry-cpu} \\
+CUDA 构建路径 & \texttt{/tmp/ftcl-build-geometry-cuda} \\
+基准数据 & \texttt{docs/data/benchmarks} 与 \texttt{docs/data/geometry} 下的 CSV 文件 \\
+生成图表 & \texttt{docs/figures} 与 \texttt{contents/figures} 下的 SVG/PNG 图 \\
+重要说明 & 可用 GPU 显存随时间变化，因服务器可能被其他用户或作业共享 \\
 \bottomrule
 \end{tabularx}
 \end{table}
 
-表 \ref{tab:environment} 是环境记录，而不是硬件无关结论。本文所有 performance numbers 都应理解为在该 multi-GPU server 上的实测结果。服务器的 CPU core count 也说明 CPU baseline 并不来自弱硬件；真正的实验边界在于当前 CPU backend 采用 scalar implementation，而不是 fully parallel CPU implementation。
+表 \ref{tab:environment} 是环境记录，而不是硬件无关结论。本文所有性能数据都应理解为在该多 GPU 服务器上的实测结果。服务器的 CPU 核心数也说明 CPU 基线并非来自弱硬件；真正的实验边界在于当前 CPU 后端采用标量实现，而非全并行 CPU 实现。
 
-\section{Semantic Regression Tests}
-Semantic regression tests 覆盖 core commands、collections、control flow、expressions 和 threading。图 \ref{fig:semantic-pass} 显示当前测量的 test suites 达到 100 percent pass rate。
+\section{语义回归测试（Semantic Regression Tests）}
+\textbf{语义回归测试}（semantic regression tests）覆盖核心命令、集合、控制流、表达式与线程。图 \ref{fig:semantic-pass} 显示当前测量的测试套件达到 100\% 通过率。
 
 \begin{figure}[H]
   \centering
@@ -80,8 +80,8 @@ Semantic regression tests 覆盖 core commands、collections、control flow、ex
 
 这个结果并不表示 FTCL 已经完整实现 Tcl。它表示本文选定的 Tcl subset 已经形成稳定 regression baseline。对于 parser 和 expression 这类容易引入细微语义变化的模块，这一点尤其重要。
 
-\section{Parser Backend Timing}
-图 \ref{fig:parser-backend} 比较 legacy parser 和 token-stream parser 在 Tcl subset benchmark 上的耗时。Token-stream path 并不一定更快，因为它增加了 lexing pass，并保存 token metadata。它的价值主要是架构层面的：更好的 diagnostics、更清晰的 command boundaries，以及通向 AST 和 bytecode execution 的路径。
+\section{解析器后端计时（Parser Backend Timing）}
+图 \ref{fig:parser-backend} 比较传统解析器与词法流解析器在 Tcl 子集基准上的耗时。词法流路径并不一定更快，因为它增加了词法分析阶段并保存 token 元数据。其价值主要在架构层面：更好的诊断、更清晰的命令边界，以及通向 AST 与字节码执行的路径。
 
 \begin{figure}[H]
   \centering
@@ -90,10 +90,10 @@ Semantic regression tests 覆盖 core commands、collections、control flow、ex
   \label{fig:parser-backend}
 \end{figure}
 
-直接结论：token-stream parser 的短期意义不是速度，而是可维护性、错误定位和后续编译路径。
+直接结论：token-stream 解析器的短期意义不是速度，而是可维护性、错误定位与后续编译路径。
 
-\section{Concurrency and Runtime Smoothness}
-Thread-channel latency 和 frame-time distribution 如图 \ref{fig:channel-latency} 与图 \ref{fig:frame-time} 所示。Channel experiment 通过 ping-pong round trip 估计 one-way latency；frame-time experiment 测量一个 non-interactive game-like workload。
+\section{并发与运行时平滑性（Concurrency and Runtime Smoothness）}
+线程通道延迟与帧时间分布如图 \ref{fig:channel-latency} 与图 \ref{fig:frame-time} 所示。通道实验通过乒乓往返估计单向延迟；帧时间实验测量一个非交互式类游戏的负载。
 
 \begin{figure}[H]
   \centering
@@ -109,10 +109,10 @@ Thread-channel latency 和 frame-time distribution 如图 \ref{fig:channel-laten
   \label{fig:frame-time}
 \end{figure}
 
-这些实验说明 FTCL 可以支持简单 concurrent scripts 和 interactive demos。相比平均值，P50、P95 和 P99 这类 tail-latency metrics 更能反映脚本系统的实际交互体验。
+这些实验说明 FTCL 可以支持简单的并发脚本与交互式演示。相比平均值，P50、P95 和 P99 等尾延迟指标更能反映脚本系统的实际交互体验。
 
-\section{CPU/GPU Equivalence}
-对 CUDA backend 而言，correctness 比 speed 更重要。Equivalence tests 会让同一 geometry workload 同时在 CPU 和 CUDA 上运行，比较返回的 UVec values，并允许较小 floating-point tolerance。图 \ref{fig:error-dist} 展示 numerical error distribution。
+\section{CPU/GPU 等价性验证（CPU/GPU Equivalence）}
+对 CUDA 后端而言，\textbf{正确性}比速度更重要。\textbf{等价性测试}（equivalence tests）让同一几何工作负载同时在 CPU 与 CUDA 上运行，比较返回的 UVec 值，并允许较小的浮点容差。图 \ref{fig:error-dist} 展示数值误差分布。
 
 \begin{figure}[H]
   \centering
@@ -121,30 +121,30 @@ Thread-channel latency 和 frame-time distribution 如图 \ref{fig:channel-laten
   \label{fig:error-dist}
 \end{figure}
 
-生成数据中的 observed errors 接近零。这支持了本文的基本正确性主张：在测试覆盖到的 workloads 上，CUDA implementation 保持了 CPU geometry semantics。
+生成数据中的观测误差接近零。这支持了本文的基本正确性主张：在测试覆盖到的工作负载上，CUDA 实现保持了 CPU 几何语义。
 
-\section{Geometry Performance Scaling}
-性能实验聚焦三个代表性算法：distance matrix、nearest point 和 circle range count。它们的共同点是存在大量 independent work items。表 \ref{tab:geom-speedup} 根据保存的 performance CSV 总结 end-to-end speedup。
+\section{几何性能扩展（Geometry Performance Scaling）}
+性能实验聚焦三个代表性算法：距离矩阵、最近点与圆形范围计数。它们的共同点是存在大量独立工作项。表 \ref{tab:geom-speedup} 根据保存的性能 CSV 总结端到端加速比。
 
-Single-GPU performance-scale experiment 使用一个 FTCL interpreter 和一个 CUDA device。每个 scale 下，benchmark 会在计时前构造 CPU 和 CUDA UVec inputs，执行可选 untimed warmup，并报告 median command time。这意味着 input point-list parsing cost 被排除在主计时之外，而 output allocation 和 backend synchronization 仍然包含在内。实验目标是测量 prebuilt UVec handles 在 realistic script pipeline 中的使用成本。
+\textbf{单 GPU 性能扩展实验}使用一个 FTCL 解释器和一个 CUDA 设备。每个规模下，基准会在计时前构造 CPU 与 CUDA UVec 输入，执行可选的非计时预热（warmup），并报告命令耗时的中位数。这意味着点列表解析成本被排除在主计时之外，而输出分配与后端同步仍包含在内。实验目标是测量预构建 UVec 句柄在 realistic 脚本流水线中的使用成本。
 
 \begin{table}[H]
 \centering
-\caption{代表性几何算法的 end-to-end CPU/CUDA speedup}
+\caption{代表性几何算法的端到端 CPU/CUDA 加速比}
 \label{tab:geom-speedup}
 \begin{tabular}{lrrr}
 \toprule
-Algorithm & N,Q & Work items & Speedup \\
+算法 & N,Q & 工作项 & 加速比 \\
 \midrule
-Distance matrix & 2048, 256 & 524288 & 6.77x \\
-Nearest point & 2048, 256 & 524288 & 2.05x \\
-Circle range count & 2048, 256 & 524288 & 1.41x \\
-Distance matrix & 8192, 1024 & 8388608 & 51.90x \\
-Nearest point & 8192, 1024 & 8388608 & 8.39x \\
-Circle range count & 8192, 1024 & 8388608 & 6.50x \\
-Distance matrix & 32768, 2048 & 67108864 & 224.00x \\
-Nearest point & 32768, 2048 & 67108864 & 16.55x \\
-Circle range count & 32768, 2048 & 67108864 & 13.13x \\
+距离矩阵 & 2048, 256 & 524288 & 6.77x \\
+最近点 & 2048, 256 & 524288 & 2.05x \\
+圆形范围计数 & 2048, 256 & 524288 & 1.41x \\
+距离矩阵 & 8192, 1024 & 8388608 & 51.90x \\
+最近点 & 8192, 1024 & 8388608 & 8.39x \\
+圆形范围计数 & 8192, 1024 & 8388608 & 6.50x \\
+距离矩阵 & 32768, 2048 & 67108864 & 224.00x \\
+最近点 & 32768, 2048 & 67108864 & 16.55x \\
+圆形范围计数 & 32768, 2048 & 67108864 & 13.13x \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -156,7 +156,7 @@ Circle range count & 32768, 2048 & 67108864 & 13.13x \\
   \label{fig:geom-speedup}
 \end{figure}
 
-图 \ref{fig:execution-bars} 和图 \ref{fig:throughput} 展示 execution time 和 throughput。Distance matrix 获得最高 speedup，因为它的 work items 简单且彼此独立。Nearest point 和 range count 同样受益于 CUDA，但每个 query 需要更多 memory reads，因此 scaling pattern 不完全相同。
+图 \ref{fig:execution-bars} 与图 \ref{fig:throughput} 展示执行时间与吞吐量。距离矩阵获得最高加速比，因为其工作项简单且彼此独立。最近点与范围计数同样受益于 CUDA，但每个查询需要更多内存读取，因此扩展模式不完全相同。
 
 \begin{figure}[H]
   \centering
@@ -172,12 +172,12 @@ Circle range count & 32768, 2048 & 67108864 & 13.13x \\
   \label{fig:throughput}
 \end{figure}
 
-直接结论：work items 足够多且输出紧凑时，CUDA backend 的优势更稳定；输出规模过大时，allocation 和 memory bandwidth 会成为瓶颈。
+直接结论：工作项足够多且输出紧凑时，CUDA 后端的优势更稳定；输出规模过大时，分配与内存带宽会成为瓶颈。
 
-\section{Multi-GPU Scaling}
-实验服务器包含 8 张 A800 GPUs，因此本文进一步测量 FTCL 是否真的能把多个 CUDA devices 暴露给 script-level geometry workloads。Multi-GPU benchmark 使用 weak scaling：每张 GPU 接收相同数量的 query points，而总 query count 随 GPU 数量增长。每个 worker 拥有独立 FTCL interpreter，在不同 CUDA device 上创建 UVec inputs，并分别在 \texttt{cuda:0}、\texttt{cuda:1}、\ldots、\texttt{cuda:7} 上启动相同 geometry command。报告的 speedup 是相对于 1 GPU 的 throughput speedup。
+\section{多 GPU 扩展（Multi-GPU Scaling）}
+实验服务器包含 8 张 A800 GPU，因此本文进一步测量 FTCL 是否能把多个 CUDA 设备暴露给脚本层几何工作负载。\textbf{多 GPU 基准}（multi-GPU benchmark）使用弱扩展（weak scaling）：每张 GPU 接收相同数量的查询点，总查询数随 GPU 数量增长。每个 worker 拥有独立 FTCL interpreter，在不同 CUDA device 上创建 UVec inputs，并分别在 \texttt{cuda:0}、\texttt{cuda:1}、\ldots、\texttt{cuda:7} 上启动相同 geometry command。报告的 speedup 是相对于 1 GPU 的 throughput speedup。
 
-Benchmark 运行时需要让所有 devices 可见，例如：
+\textbf{基准运行}时需要让所有设备可见，例如：
 
 \begin{lstlisting}[language=bash]
 CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 \
@@ -186,9 +186,9 @@ FTCL_MULTI_GPU_SCALING=weak \
 test/bench_geometry_multi_gpu
 \end{lstlisting}
 
-记录运行中，\(N=32768\)，每张 GPU 接收 \(Q=4096\) 个 query objects，每行报告三轮 median。因此 1、2、4、8 GPUs 对应的 total query count 分别是 \(4096\)、\(8192\)、\(16384\) 和 \(32768\)。Timer 测量从同时释放所有 worker threads 到所有 workers 获得 output UVec handles 的 wall-clock interval。Length checking 和 output destruction 在计时区间之后执行，因此计时聚焦 command dispatch、UVec handle lookup、output allocation、CUDA launch、backend synchronization 和 result-handle creation。
+记录运行中，\(N=32768\)，每张 GPU 接收 \(Q=4096\) 个查询对象，每行报告三轮中位数。因此 1、2、4、8 张 GPU 对应的总查询数分别为 \(4096\)、\(8192\)、\(16384\) 与 \(32768\)。计时器测量从同时释放所有 worker 线程到所有 worker 获得输出 UVec 句柄的 wall-clock 区间。长度检查与输出销毁在计时区间之后执行，因此计时聚焦命令分发、UVec 句柄查找、输出分配、CUDA 启动、后端同步与结果句柄创建。
 
-这个实验还暴露了一个重要 runtime bottleneck。原始 UVec command manager 使用一个 global mutex 保护整个 handle table，并在持锁状态下执行 geometry commands。这会导致彼此独立的 CUDA commands 在 script runtime layer 被串行化。实现后来改为：global mutex 只保护 handle-table lookup，每个 UVec handle 再拥有独立 entry mutex。这样，不同 GPU 上的独立 UVec handles 可以并发执行。
+该实验还暴露了一个重要的运行时瓶颈。原始 UVec 命令管理器使用全局 mutex 保护整个句柄表，并在持锁状态下执行几何命令，导致彼此独立的 CUDA 命令在脚本运行时层被串行化。实现后来改为：全局 mutex 只保护句柄表查找，每个 UVec 句柄再拥有独立条目 mutex，使不同 GPU 上的独立 UVec 句柄可以并发执行。
 
 \begin{table}[H]
 \centering
@@ -196,11 +196,11 @@ test/bench_geometry_multi_gpu
 \label{tab:multi-gpu-speedup}
 \begin{tabular}{lrrrr}
 \toprule
-Algorithm & 1 GPU & 2 GPUs & 4 GPUs & 8 GPUs \\
+算法 & 1 GPU & 2 GPU & 4 GPU & 8 GPU \\
 \midrule
-Distance matrix & 1.00x & 0.96x & 0.97x & 1.12x \\
-Nearest point & 1.00x & 2.00x & 3.99x & 3.74x \\
-Circle range count & 1.00x & 1.98x & 3.97x & 7.90x \\
+距离矩阵 & 1.00x & 0.96x & 0.97x & 1.12x \\
+最近点 & 1.00x & 2.00x & 3.99x & 3.74x \\
+圆形范围计数 & 1.00x & 1.98x & 3.97x & 7.90x \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -212,26 +212,26 @@ Circle range count & 1.00x & 1.98x & 3.97x & 7.90x \\
   \label{fig:multi-gpu-scaling}
 \end{figure}
 
-直接结论：circle range count 接近 linear multi-GPU throughput scaling，而 distance matrix 暴露出 output-dominant bottleneck。
+直接结论：圆形范围计数接近线性多 GPU 吞吐量扩展，而距离矩阵暴露出输出主导型瓶颈。
 
-结果说明 multi-GPU execution 有价值，但强烈依赖 algorithm shape。Circle range counting 几乎线性扩展到 8 GPUs，因为每个 query 只产生一个 compact result，并且 work pattern 规则。Nearest point 扩展到 4 GPUs 表现良好，但到 8 GPUs 后下降，说明 runtime overhead、allocation 和 synchronization 开始占据主导。Distance matrix 的 multi-GPU scaling 最弱，因为每个 query 会产生 large output row；output allocation 和 global memory traffic 主导了 command time。这是一个有价值的 negative result：系统已经可以使用 8 GPUs，但要让 large-output kernels 真正扩展，还需要 memory pools、persistent output buffers 和 CUDA streams。
+结果说明多 GPU 执行有价值，但强烈依赖算法形态。圆形范围计数几乎线性扩展到 8 张 GPU，因为每个查询只产生一个紧凑结果，且工作模式规则。最近点扩展到 4 张 GPU 表现良好，但到 8 张 GPU 后下降，说明运行时开销、分配与同步开始占据主导。距离矩阵的多 GPU 扩展最弱，因为每个查询会产生大规模输出行；输出分配与全局内存流量主导了命令时间。这是一个有价值的负面结果：系统已可使用 8 张 GPU，但要让大规模输出 kernel 真正扩展，还需要 memory pool、持久输出缓冲区与 CUDA stream。
 
-\section{Break-even Analysis}
-CUDA acceleration 存在 fixed overhead。小规模 workload 可能在 CUDA 上更慢，因为 kernel launch、synchronization、allocation 和 command dispatch 会压过真正的计算量。图 \ref{fig:break-even} 使用 work items \(N \times Q\) 作为横轴，speedup 作为纵轴。
+\section{盈亏平衡分析（Break-even Analysis）}
+CUDA 加速存在\textbf{固定开销}（fixed overhead）。小规模工作负载可能在 CUDA 上更慢，因为 kernel 启动、同步、分配与命令分发会压过真正的计算量。图 \ref{fig:break-even} 以工作项数 \(N \times Q\) 为横轴、加速比为纵轴。
 
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.82\textwidth]{geometry-break-even.png}
-  \caption{按 work items 统计的 CUDA break-even analysis}
+  \caption{按工作项统计的 CUDA 盈亏平衡分析}
   \label{fig:break-even}
 \end{figure}
 
-直接结论：只有 work-item count 足以摊销 launch、allocation、synchronization 和 UVec management costs 后，CUDA 才真正值得使用。
+直接结论：只有工作项数量足以摊销启动、分配、同步与 UVec 管理成本后，CUDA 才真正值得使用。
 
-保存的数据估计 distance matrix 的 break-even point 约为 8192 work items，nearest point 约为 47848，circle range count 约为 121209。这些值不是 universal constants。它们依赖 hardware、driver state、input size、output size 以及 measurement 是否包含 readback。
+保存的数据估计距离矩阵的盈亏平衡点约为 8192 个工作项，最近点约为 47848，圆形范围计数约为 121209。这些值并非普适常数，而依赖硬件、驱动状态、输入规模、输出规模，以及测量是否包含读回。
 
-\section{Ablation and Concurrent Geometry}
-Ablation experiment 将 inline literal parsing、prebuilt UVec handles 和 readback overhead 分离。实验显示，prebuilt handles 可以显著降低 command latency，尤其对 CUDA commands 更明显。同时，将 large outputs 转回 script list 可能支配总时间。因此，高性能 FTCL script 应尽量让数据在 UVec form 中跨多个 geometry commands 保持驻留，只在最后读取 summary results。
+\section{消融与并发几何（Ablation and Concurrent Geometry）}
+\textbf{消融实验}（ablation experiment）将内联字面量解析、预构建 UVec 句柄与读回开销分离。实验显示，预构建句柄可以显著降低命令延迟，尤其对 CUDA 命令更明显；将大规模输出转回脚本列表则可能支配总时间。因此，高性能 FTCL script 应尽量让数据在 UVec form 中跨多个 geometry commands 保持驻留，只在最后读取 summary results。
 
 \begin{table}[H]
 \centering
@@ -239,40 +239,40 @@ Ablation experiment 将 inline literal parsing、prebuilt UVec handles 和 readb
 \label{tab:ablation-interpretation}
 \begin{tabularx}{\textwidth}{lX}
 \toprule
-Experiment mode & Interpretation \\
+实验模式 & 解释 \\
 \midrule
-Inline literal input & 测量从 script text 解析 point lists、创建临时数据结构、分发 command 并执行 backend 的完整成本。该模式方便，但大输入时容易被 script parsing 主导。 \\
-Prebuilt UVec without readback & 测量 handle lookup、device synchronization、output allocation 和 backend execution，同时将数据保持在 UVec form 中。该模式最接近 high-throughput script pipeline。 \\
-Prebuilt UVec with readback & 额外加入将 output UVec 转为 script list 的成本。对于 distance matrices 这类 large outputs，readback 会主导总时间并掩盖 CUDA computation 的收益。 \\
+内联字面量输入 & 测量从脚本文本解析点列表、创建临时数据结构、分发命令并执行后端的完整成本。该模式方便，但大输入时容易被脚本解析主导。 \\
+预构建 UVec（无读回） & 测量句柄查找、设备同步、输出分配与后端执行，同时将数据保持在 UVec 形式中。该模式最接近高吞吐脚本流水线。 \\
+预构建 UVec（含读回） & 额外加入将输出 UVec 转为脚本列表的成本。对于距离矩阵这类大规模输出，读回会主导总时间并掩盖 CUDA 计算收益。 \\
 \bottomrule
 \end{tabularx}
 \end{table}
 
-消融实验给出了一条实践原则：FTCL scripts 应把 UVec handles 当作 long-lived data objects 使用，避免把 large intermediate results 转回 strings。这与 GPU programming 中的 data residency 原则一致。加速效果最强的情况是：数据只复制到 device 一次，随后由多个 commands 处理，最后再 read back。
+消融实验给出一条实践原则：FTCL 脚本应把 UVec 句柄当作长期存活的数据对象使用，避免将大规模中间结果转回字符串。这与 GPU 编程中的数据驻留（data residency）原则一致。加速效果最强的情况是：数据只复制到设备一次，随后由多个命令处理，最后再读回。
 
-这个解释也说明了为什么 CUDA 并不总是在小输入上更快。即使 kernel 本身很高效，整个 command path 仍然要支付 launch、synchronization、output allocation 和 possible readback 的 fixed costs。因此，break-even point 是 system-level property，而不仅是 algorithmic property。
+该解释也说明了为什么 CUDA 并不总是在小输入上更快。即使 kernel 本身很高效，整个命令路径仍须支付启动、同步、输出分配与可能读回的固定成本。因此，盈亏平衡点是系统级属性，而不仅是算法级属性。
 
-Concurrent geometry experiment 如图 \ref{fig:concurrency-throughput} 和图 \ref{fig:concurrency-latency} 所示。CPU throughput 随 worker 数量增加而提升，直到 contention 出现。CUDA throughput 更平缓，因为多个 script workers 会竞争同一个 GPU 和 synchronization point。
+\textbf{并发几何实验}如图 \ref{fig:concurrency-throughput} 与图 \ref{fig:concurrency-latency} 所示。CPU 吞吐量随 worker 数量增加而提升，直至出现竞争；CUDA 吞吐量更平缓，因为多个脚本 worker 会竞争同一张 GPU 与同步点。
 
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.78\textwidth]{geometry-concurrency-throughput.png}
-  \caption{并发几何 workload 的吞吐量（Throughput of concurrent geometry workloads）}
+  \caption{并发几何工作负载的吞吐量}
   \label{fig:concurrency-throughput}
 \end{figure}
 
-直接结论：增加 script workers 只能在 shared runtime 或 GPU resource 成为 bottleneck 之前提升 throughput。
+直接结论：增加脚本 worker 数量只能在共享运行时或 GPU 资源成为瓶颈之前提升吞吐量。
 
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.78\textwidth]{geometry-concurrency-latency.png}
-  \caption{并发几何 workload 的 P95 延迟（P95 latency）}
+  \caption{并发几何工作负载的 P95 延迟}
   \label{fig:concurrency-latency}
 \end{figure}
 
-直接结论：contention 会推高 P95 latency，因此后续需要 dedicated scheduling、memory pooling 和 stream-based CUDA execution。
+直接结论：竞争会推高 P95 延迟，因此后续需要专用调度、内存池与基于 stream 的 CUDA 执行。
 
 \section{小结}
-本章从 correctness、performance 和 scalability 三个维度评估 FTCL。Semantic regression 和 CPU/GPU equivalence tests 证明系统具有可验证的正确性基础；single-GPU 和 multi-GPU experiments 显示 CUDA backend 在大量 independent work items 上具有明显优势；ablation 和 concurrency experiments 则指出真正的瓶颈经常来自 allocation、readback、locking 和 scheduling。
+本章从正确性、性能与可扩展性三个维度评估 FTCL。语义回归与 CPU/GPU 等价性测试证明系统具有可验证的正确性基础；单 GPU 与多 GPU 实验显示 CUDA 后端在大量独立工作项上具有明显优势；消融与并发实验则指出真正的瓶颈经常来自分配、读回、加锁与调度。
 
-The evaluation is deliberately end-to-end. The main lesson is that data residency, output size, and runtime synchronization dominate script-level heterogeneous performance.
+评估有意采用端到端口径。主要结论是：数据驻留、输出规模与运行时同步，往往决定脚本层异构系统的实际性能。

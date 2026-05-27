@@ -1,20 +1,20 @@
 ﻿\chapter{引言}
 
 \section{研究背景}
-脚本语言常被用作底层系统能力与上层应用逻辑之间的胶水层。Tcl 是这种设计思想的代表之一：脚本由命令组成，命令由若干个词组成，变量替换、命令替换和表达式求值都发生在运行时 \cite{ousterhout1994tcl,tcldocs}。这种 command-centered model 的优势在于语法浅、嵌入方便、扩展自然，新的能力往往可以通过增加一个 native command 完成，而不必重新设计整门语言。
+脚本语言常被用作底层系统能力与上层应用逻辑之间的胶水层。Tcl 是这种设计思想的代表之一：脚本由命令组成，命令由若干个词组成，变量替换、命令替换和表达式求值都发生在运行时 \cite{ousterhout1994tcl,tcldocs}。这种\textbf{命令中心模型}（command-centered model）的优势在于语法浅、嵌入方便、扩展自然，新的能力往往可以通过增加一个 native command 完成，而不必重新设计整门语言。
 
-计算几何（computational geometry）则是算法实验中非常适合展示工程价值的方向。点、线段、多边形、包围盒、距离、相交、最近点和范围查询等问题，广泛出现于程序设计竞赛、图形学、机器人、游戏、地图分析和空间计算任务中 \cite{deberg2008computational,preparata1985computational}。其中大量工作负载具有天然并行性：距离矩阵的每个元素可以独立计算，范围查询的每个查询区域也可以独立处理。这使得计算几何非常适合作为 GPU acceleration 的实验载体 \cite{cuda-guide}。
+计算几何（computational geometry）则是算法实验中非常适合展示工程价值的方向。点、线段、多边形、包围盒、距离、相交、最近点和范围查询等问题，广泛出现于程序设计竞赛、图形学、机器人、游戏、地图分析和空间计算任务中 \cite{deberg2008computational,preparata1985computational}。其中大量工作负载具有天然并行性：距离矩阵的每个元素可以独立计算，范围查询的每个查询区域也可以独立处理。这使得计算几何非常适合作为 GPU 加速（GPU acceleration）的实验载体 \cite{cuda-guide}。
 
-本文将这两条线结合起来，并放入海洋空间计算的应用语境中。FTCL 使用 Tcl-style interpreter 作为 control layer，以 C++ 作为宿主实现语言，以 CUDA 作为部分批量几何算法的 acceleration backend。本文的目标不是简单实现一组 geometry functions，而是构建一个 scriptable system：使用者可以用脚本描述海洋牧场感知、智慧港口空间分析、无人机巡检或船舶碰撞检测，而无需直接面对 CUDA memory、raw device pointer 和 synchronization 这些底层细节。
+本文将这两条线结合起来，并放入海洋空间计算的应用语境中。FTCL 使用 Tcl 风格解释器作为控制层（control layer），以 C++ 作为宿主实现语言，以 CUDA 作为部分批量几何算法的加速后端（acceleration backend）。本文的目标不是简单实现一组几何函数，而是构建一个\textbf{可脚本化系统}（scriptable system）：使用者可以用脚本描述海洋牧场感知、智慧港口空间分析、无人机巡检或船舶碰撞检测，而无需直接面对 CUDA 内存、原始设备指针和同步这些底层细节。
 
 \section{研究动机}
 本项目的动机来自四个观察。
 
-第一，解释器项目天然具有系统工程深度。它涉及 parsing、value representation、scope、command dispatch、error handling、testing 和 performance evaluation。这些部分彼此牵连，任何一处设计都会影响语言可用性与后续扩展能力，因此它比单个算法实现更能体现完整工程能力。
+第一，解释器项目天然具有系统工程深度。它涉及解析、值表示、作用域、命令分发、错误处理、测试和性能评估。这些部分彼此牵连，任何一处设计都会影响语言可用性与后续扩展能力，因此它比单个算法实现更能体现完整工程能力。
 
-第二，几何算法既有算法竞赛的亲近感，又容易被可视化验证。orientation、segment intersection 这类基础操作足够小，可以说明算法正确性；distance matrix、nearest point、range query 这类批量任务又足够大，可以展示 CPU/CUDA 与 multi-GPU 的性能差异。
+第二，几何算法既有算法竞赛的亲近感，又容易被可视化验证。方向判定、线段相交这类基础操作足够小，可以说明算法正确性；距离矩阵、最近点、范围查询这类批量任务又足够大，可以展示 CPU/CUDA 与多 GPU 的性能差异。
 
-第三，异构计算最难的不只是 kernel，而是数据抽象。如果每一个几何命令都要手工调用 \texttt{cudaMalloc}、\texttt{cudaMemcpy} 和 \texttt{cudaFree}，脚本层会变得难用，也难以测试。UVec 的作用正在于此：它提供一个 vector-like object，同时维护 CPU 与 CUDA 物理副本，并按需完成同步。
+第三，异构计算最难的不只是 kernel，而是数据抽象。如果每一个几何命令都要手工调用 \texttt{cudaMalloc}、\texttt{cudaMemcpy} 和 \texttt{cudaFree}，脚本层会变得难用，也难以测试。UVec 的作用正在于此：它提供一个类向量对象（vector-like object），同时维护 CPU 与 CUDA 物理副本，并按需完成同步。
 
 第四，真实空间计算任务往往不是单设备任务。海洋监测或港口巡检可能同时包含大量传感器、检测目标、查询区域和独立任务。如果硬件平台提供多张 GPU，脚本系统就应当能够暴露这些设备，并把独立工作负载分发出去，而不是被解释器运行时的全局锁串行化。
 
@@ -22,35 +22,35 @@
 本文围绕以下研究问题展开。
 
 \begin{description}
-  \item[RQ1:] 一个 compact Tcl-style interpreter 能否为算法脚本、并发原语和扩展命令提供稳定的 semantic foundation？
-  \item[RQ2:] 一个 cross-device vector abstraction 能否隐藏 CPU/CUDA data movement，同时保持接近 \texttt{std::vector} 的编程直觉？
-  \item[RQ3:] 当度量对象是 end-to-end script command latency，而不是 pure kernel time 时，哪些计算几何工作负载真正能从 CUDA acceleration 中受益？
-  \item[RQ4:] 哪些 runtime overhead 会限制 script-driven heterogeneous geometry system 的加速效果，这些开销如何通过实验观察？
-  \item[RQ5:] 同一套 scripting model 与 UVec model 能否表达 multi-GPU spatial workloads，不同几何算法的 scaling bottleneck 又在哪里？
+  \item[RQ1:] 一个紧凑的 Tcl 风格解释器能否为算法脚本、并发原语和扩展命令提供稳定的语义基础（semantic foundation）？
+  \item[RQ2:] 一个跨设备向量抽象能否隐藏 CPU/CUDA 数据搬运，同时保持接近 \texttt{std::vector} 的编程直觉？
+  \item[RQ3:] 当度量对象是端到端脚本命令延迟（end-to-end script command latency），而不是纯 kernel 时间时，哪些计算几何工作负载真正能从 CUDA 加速中受益？
+  \item[RQ4:] 哪些运行时开销会限制脚本驱动异构几何系统的加速效果，这些开销如何通过实验观察？
+  \item[RQ5:] 同一套脚本模型与 UVec 模型能否表达多 GPU 空间工作负载，不同几何算法的扩展瓶颈又在哪里？
 \end{description}
 
-这些问题把全文拆成五个层次：language semantics、memory abstraction、algorithm acceleration、multi-GPU execution 和 experimental analysis。这样的分层很重要，因为脚本系统必须先正确、可用、可复现，性能数字才有意义。
+这些问题把全文拆成五个层次：语言语义、内存抽象、算法加速、多 GPU 执行与实验分析。这样的分层很重要，因为脚本系统必须先正确、可用、可复现，性能数字才有意义。
 
 \section{主要贡献}
 本文的主要贡献如下。
 
 \begin{enumerate}
-  \item \textbf{面向算法实验的脚本运行时。} FTCL 以 C++20 实现 Tcl-style command model，支持变量替换、表达式求值、过程、集合、源码加载、测试命令和 thread channel。
-  \item \textbf{跨设备向量抽象 UVec。} UVec 将一个 logical vector 映射到 CPU 与 CUDA physical buffers，跟踪 valid copies，按需同步，并提供统一的 read-only 与 mutable raw pointer interface。
-  \item \textbf{更细粒度的 UVec handle manager。} 系统避免在执行长时间几何命令时持有全局 UVec table lock。全局锁只保护 handle lookup，单个 UVec 对象由 per-handle entry lock 保护，从而允许不同 CUDA device 上的独立任务并发执行。
-  \item \textbf{脚本可调用的计算几何库。} \texttt{geom} command family 将 scalar geometry 与 batch geometry 暴露给 FTCL scripts，使大规模点集和查询集可以通过 UVec handle 传递，而不是反复序列化为脚本文本。
-  \item \textbf{批量几何算法的 CUDA acceleration。} 项目实现 distance matrix、nearest point、range counting、transform、orientation 和 AABB collision 等 independent-work-item 算法的 CUDA backend。
-  \item \textbf{Multi-GPU scaling experiment。} 评估部分在八卡 A800 server 上测量 1/2/4/8 GPU weak scaling，说明 compact-output 的 range counting 接近线性扩展，而 distance matrix 受 output bandwidth 限制。
-  \item \textbf{Ocean-oriented application framing。} 本文将 points、circles、boxes 和 distance matrices 映射到海洋牧场感知、智慧港口空间计算、无人机漂浮物巡检和船舶路径碰撞检测。
-  \item \textbf{可复现实验流水线。} 项目包含 semantic tests、CPU/GPU equivalence tests、random differential tests、edge-case tests、performance-scale tests、ablation studies、concurrency experiments、multi-GPU CSV outputs 和 thesis figures。
+  \item \textbf{面向算法实验的脚本运行时。} FTCL 以 C++20 实现 Tcl 风格命令模型，支持变量替换、表达式求值、过程、集合、源码加载、测试命令和线程通道。
+  \item \textbf{跨设备向量抽象 UVec。} UVec 将一个逻辑向量映射到 CPU 与 CUDA 物理缓冲区，跟踪有效副本，按需同步，并提供统一的只读与可变原始指针接口。
+  \item \textbf{更细粒度的 UVec 句柄管理。} 系统避免在执行长时间几何命令时持有全局 UVec 表锁。全局锁只保护句柄查找，单个 UVec 对象由按句柄条目锁保护，从而允许不同 CUDA 设备上的独立任务并发执行。
+  \item \textbf{脚本可调用的计算几何库。} \texttt{geom} 命令族将标量几何与批量几何暴露给 FTCL 脚本，使大规模点集和查询集可以通过 UVec 句柄传递，而不是反复序列化为脚本文本。
+  \item \textbf{批量几何算法的 CUDA 加速。} 项目实现距离矩阵、最近点、范围计数、变换、方向判定和 AABB 碰撞等独立工作项算法的 CUDA 后端。
+  \item \textbf{多 GPU 扩展实验。} 评估部分在八卡 A800 服务器上测量 1/2/4/8 GPU 弱扩展，说明紧凑输出的范围计数接近线性扩展，而距离矩阵受输出带宽限制。
+  \item \textbf{面向海洋的应用框架。} 本文将点、圆、包围盒和距离矩阵映射到海洋牧场感知、智慧港口空间计算、无人机漂浮物巡检和船舶路径碰撞检测。
+  \item \textbf{可复现实验流水线。} 项目包含语义测试、CPU/GPU 等价测试、随机差分测试、边界测试、性能扩展测试、消融研究、并发实验、多 GPU CSV 输出与论文图表。
 \end{enumerate}
 
-本文的创新性不在于某一个孤立组件，而在于这些组件的整合。FTCL 不是单纯的 interpreter，UVec 不是单纯的 container，geometry library 也不是单纯的算法集合。三者结合后，形成了一个 script-driven heterogeneous geometry experimentation platform。
+本文的创新性不在于某一个孤立组件，而在于这些组件的整合。FTCL 不是单纯的解释器，UVec 不是单纯的容器，几何库也不是单纯的算法集合。三者结合后，形成了一个\textbf{脚本驱动的异构几何实验平台}（script-driven heterogeneous geometry experimentation platform）。
 
 \section{论文组织}
-第 2 章介绍相关技术与研究背景。第 3 章给出系统总体设计。第 4 章描述 interpreter、UVec 与 geometry backend 的实现。第 5 章评估正确性与性能。第 6 章讨论应用场景、局限与改进方向。附录给出 build、test、benchmark 和 thesis compilation commands。
+第 2 章介绍相关技术与研究背景。第 3 章给出系统总体设计。第 4 章描述解释器、UVec 与几何后端的实现。第 5 章评估正确性与性能。第 6 章讨论应用场景、局限与改进方向。附录给出构建、测试、基准与论文编译命令。
 
 \section{小结}
-本章说明了本文为什么选择“脚本语言 + 计算几何 + 异构计算”这条路线。FTCL 的定位不是追求语法复杂度，而是用一个可控的 command model 承载算法实验、空间计算和 GPU backend。UVec 则把最容易劝退使用者的 device memory problem 收束为一个可解释、可测试、可扩展的数据抽象。
+本章说明了本文为什么选择“脚本语言 + 计算几何 + 异构计算”这条路线。FTCL 的定位不是追求语法复杂度，而是用一个可控的命令模型承载算法实验、空间计算和 GPU 后端。UVec 则把最容易劝退使用者的设备内存问题收束为一个可解释、可测试、可扩展的数据抽象。
 
-In short, FTCL separates algorithmic expression from device-level execution. The thesis builds its contribution around this separation: scripts express intent, UVec preserves data residency, and CPU/CUDA backends provide execution power.
+简言之，FTCL 将算法表达与设备级执行分离；本文的贡献正是围绕这一分离展开——脚本表达意图，UVec 保持数据驻留，CPU/CUDA 后端提供执行能力。
