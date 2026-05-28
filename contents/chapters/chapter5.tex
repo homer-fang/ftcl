@@ -212,6 +212,135 @@ test/bench_geometry_multi_gpu
   \label{fig:multi-gpu-scaling}
 \end{figure}
 
+\subsection{多 GPU 弱扩展模型（Weak-scaling Model）}
+为了解释表 \ref{tab:multi-gpu-speedup} 中三类算法差异较大的扩展结果，需要先明确本实验采用的是弱扩展（weak scaling），而不是强扩展（strong scaling）。强扩展固定总工作量，观察更多 GPU 是否能更快完成同一份任务；弱扩展则固定每张 GPU 的局部工作量，让总工作量随 GPU 数量增加。本文的 multi-GPU benchmark 属于后一种情形：每张 GPU 都处理规模相同的一份 geometry workload。
+
+设 \(g\) 为 GPU 数量，\(W\) 为单张 GPU 上的局部工作项数，\(T_1\) 为 1 张 GPU 处理 1 份任务的 wall-clock time，\(T_g\) 为 \(g\) 张 GPU 同时处理 \(g\) 份任务的 wall-clock time。则 1 GPU 与 \(g\) GPU 的吞吐量分别为
+\[
+  \mathrm{Throughput}(1)=\frac{W}{T_1},
+  \qquad
+  \mathrm{Throughput}(g)=\frac{gW}{T_g}.
+\]
+因此 weak-scaling throughput speedup 定义为
+\[
+  S_{\mathrm{weak}}(g)
+  =
+  \frac{\mathrm{Throughput}(g)}{\mathrm{Throughput}(1)}
+  =
+  g\frac{T_1}{T_g}.
+\]
+这个公式给出了一个直接判据：如果 \(T_g \approx T_1\)，则 \(S_{\mathrm{weak}}(g)\approx g\)，说明系统接近线性扩展；如果 \(T_g\approx 2T_1\)，则 8 GPU 时 \(S_{\mathrm{weak}}(8)\approx 4\)；如果 \(T_g\approx 8T_1\)，则 \(S_{\mathrm{weak}}(8)\approx 1\)，说明增加 GPU 主要增加了总工作量，却没有提高整体吞吐效率。
+
+更真实的多 GPU wall-clock time 不能只写成 CUDA kernel time，而应拆分为
+\[
+  T_g
+  =
+  \max_{1\le i\le g} T_{\mathrm{local},i}
+  +
+  T_{\mathrm{shared}}(g)
+  +
+  T_{\mathrm{serial}}(g).
+\]
+其中，\(T_{\mathrm{local},i}\) 表示第 \(i\) 张 GPU 的本地执行时间，包括 kernel computation、本地 output write 和 device-side allocation 等；\(T_{\mathrm{shared}}(g)\) 表示随 GPU 数量增加而出现的共享资源竞争，例如 CUDA runtime、host allocator、UVec manager、NUMA/PCIe/driver contention；\(T_{\mathrm{serial}}(g)\) 表示真正串行或近似串行的部分，例如全局锁、统一调度、结果句柄管理、join 和 handle-table 操作。理想情况下，
+\[
+  T_{\mathrm{shared}}(g)\approx 0,
+  \qquad
+  T_{\mathrm{serial}}(g)\approx 0,
+\]
+于是 \(T_g\approx T_1\)，从而 \(S_{\mathrm{weak}}(g)\approx g\)。反之，如果共享路径或串行路径被大输出放大，使得 \(T_g\approx gT_1\)，那么
+\[
+  S_{\mathrm{weak}}(g)
+  =
+  g\frac{T_1}{gT_1}
+  =
+  1.
+\]
+这正是距离矩阵在 8 GPU 下接近 1 倍 throughput speedup 的数学含义。
+
+三个算法的核心差异不仅是计算复杂度，更是输出复杂度。它们的主要计算量都可以写成 \(O(NQ)\)，但输出规模不同，如表 \ref{tab:multi-gpu-output-model} 所示。
+
+\begin{table}[H]
+\centering
+\caption{多 GPU 扩展中的计算复杂度与输出复杂度}
+\label{tab:multi-gpu-output-model}
+\begin{tabular}{lccc}
+\toprule
+算法 & 计算量 & 输出量 & 多 GPU 表现解释 \\
+\midrule
+圆形范围计数 & \(O(NQ)\) & \(O(Q)\) & 输出紧凑，共享瓶颈弱，接近线性扩展 \\
+最近点 & \(O(NQ)\) & \(O(Q)\) & 输出紧凑，但 8 GPU 时调度与同步开销上升 \\
+距离矩阵 & \(O(NQ)\) & \(O(NQ)\) & 完整物化大矩阵，输出路径成为主瓶颈 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+圆形范围计数中，每个 query 只输出一个 count，因此 \(O_{\mathrm{range}}=O(Q)\)。输出很小，UVec output allocation、global memory write 和 host-side result management 都相对轻量，所以在 8 GPU 时 \(T_8\approx T_1\)，实验结果达到 \(7.90\times\)，接近理想线性扩展。
+
+最近点查询同样每个 query 只输出一个最近点结果，输出规模为 \(O_{\mathrm{nearest}}=O(Q)\)。因此 1、2、4 GPU 时扩展较好；但到 8 GPU 时，worker scheduling、CUDA synchronization、output allocation 与 runtime contention 开始变得明显。由表 \ref{tab:multi-gpu-speedup} 的 \(S_{\mathrm{weak}}(8)=3.74\) 可反推
+\[
+  T_8
+  =
+  8\frac{T_1}{S_{\mathrm{weak}}(8)}
+  \approx
+  2.14T_1,
+\]
+因此吞吐加速约为 4 倍，而不是 8 倍。
+
+距离矩阵的情况不同。它不仅计算所有 point pairs，还要完整输出所有距离，因此输出规模为 \(O_{\mathrm{dist}}=O(NQ)\)。在本文 multi-GPU 实验设置中，每张 GPU 需要输出
+\[
+  32768\times 4096 = 134217728
+\]
+个距离值。如果每个距离使用 4 字节 float 表示，则单张 GPU 的输出约为
+\[
+  134217728\times 4 \approx 512\ \mathrm{MiB},
+\]
+8 张 GPU 的总输出约为 \(4\ \mathrm{GiB}\)。因此距离矩阵的问题不是缺少并行计算，而是当前实现会完整物化一个巨大输出矩阵，并放大 output UVec allocation、global memory write、CUDA runtime synchronization、handle management 和 result object lifetime management 等成本。由 \(S_{\mathrm{weak}}(8)=1.12\) 可反推
+\[
+  T_8
+  =
+  8\frac{T_1}{1.12}
+  \approx
+  7.14T_1,
+\]
+因此 throughput speedup 接近 1 倍。
+
+为了用一个更紧凑的量描述这种现象，可引入\textbf{有效瓶颈比例}（effective bottleneck ratio）\(\rho\)，并用简化模型
+\[
+  T_g = T_1\left((1-\rho)+\rho g\right)
+\]
+近似多 GPU wall-clock time。对应的 weak-scaling speedup 为
+\[
+  S_{\mathrm{weak}}(g)
+  =
+  \frac{g}{(1-\rho)+\rho g}
+  =
+  \frac{g}{1+\rho(g-1)}.
+\]
+这里的 \(\rho\) 不是严格意义上的 serial code fraction，而是在该实验设置下没有随 GPU 数量并行扩展、反而表现为共享或串行瓶颈的有效比例。由 \(g=8\) 的实测 speedup 反推
+\[
+  \rho
+  =
+  \frac{g/S_{\mathrm{weak}}(g)-1}{g-1},
+\]
+可得到表 \ref{tab:effective-bottleneck-ratio}。
+
+\begin{table}[H]
+\centering
+\caption{由 8 GPU weak-scaling 结果反推的有效瓶颈比例}
+\label{tab:effective-bottleneck-ratio}
+\begin{tabular}{lcc}
+\toprule
+算法 & \(S_{\mathrm{weak}}(8)\) & \(\rho\) \\
+\midrule
+圆形范围计数 & \(7.90\times\) & \(0.18\%\) \\
+最近点 & \(3.74\times\) & \(16.3\%\) \\
+距离矩阵 & \(1.12\times\) & \(87.8\%\) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+这个模型解释了表 \ref{tab:multi-gpu-speedup} 的主要现象：圆形范围计数几乎没有有效瓶颈，所以接近 8 倍；最近点存在中等运行时瓶颈，所以约 4 倍；距离矩阵大部分时间被输出路径与共享瓶颈主导，所以接近 1 倍。换言之，多 GPU 扩展不仅取决于计算复杂度，还取决于输出复杂度、数据驻留策略、运行时锁粒度与同步路径。
+
 直接结论：圆形范围计数接近线性多 GPU 吞吐量扩展，而距离矩阵暴露出输出主导型瓶颈。
 
 结果说明多 GPU 执行有价值，但强烈依赖算法形态。圆形范围计数几乎线性扩展到 8 张 GPU，因为每个查询只产生一个紧凑结果，且工作模式规则。最近点扩展到 4 张 GPU 表现良好，但到 8 张 GPU 后下降，说明运行时开销、分配与同步开始占据主导。距离矩阵的多 GPU 扩展最弱，因为每个查询会产生大规模输出行；输出分配与全局内存流量主导了命令时间。这是一个有价值的负面结果：系统已可使用 8 张 GPU，但要让大规模输出 kernel 真正扩展，还需要 memory pool、持久输出缓冲区与 CUDA stream。
