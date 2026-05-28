@@ -128,7 +128,7 @@
 \newcommand{\JOUCoverMainTitleRaise}{0.15ex}
 
 % “本科毕业设计（论文）”与“毕业设计（论文）中文题目”之间的距离。
-\newcommand{\JOUCoverSubtitleVskip}{3.45cm}
+\newcommand{\JOUCoverSubtitleVskip}{4.0cm}
 
 \newcommand{\JOUCoverIncludeHeaderImage}{%
   \includegraphics[
@@ -188,15 +188,11 @@
       本\quad 科\quad 毕\quad 业\quad 设\quad 计\quad （论\quad 文）%
     }\par}
     \vspace{\JOUCoverSubtitleVskip}
-    {\sffamily\bfseries\fontsize{18pt}{28pt}\selectfont 毕业设计（论文）中文题目\par}
-    \vspace{0.25cm}
     \begin{minipage}{0.88\textwidth}
       \centering
-      {\sffamily\bfseries\fontsize{16pt}{24pt}\selectfont \JOUThesisTitleCN\par}
+      {\sffamily\bfseries\fontsize{16pt}{26pt}\selectfont \JOUThesisTitleCN\par}
     \end{minipage}\par
-    \vspace{0.52cm}
-    {\JOUCoverEnglishFont\bfseries\fontsize{22pt}{28pt}\selectfont English Title\par}
-    \vspace{0.22cm}
+    \vspace{0.56cm}
     \begin{minipage}{0.88\textwidth}
       \centering
       {\JOUCoverEnglishFont\bfseries\fontsize{16pt}{22pt}\selectfont \JOUThesisTitleEN\par}
