@@ -3,7 +3,7 @@
 \section{实验目标（Evaluation Goals）}
 本章实验回答三个问题。第一，FTCL 的语言运行时是否保持了预期语义？第二，CPU 与 CUDA 几何后端是否能产生等价结果？第三，从 FTCL 脚本用户的角度看，CUDA 在什么规模下能够带来\textbf{端到端加速比}（end-to-end speedup）？
 
-项目的实验数据、CSV 文件和图表生成脚本都位于 \texttt{docs} 目录下。测量内容包括语义通过率、解析器后端计时、线程通道延迟、帧时间分布、CPU/CUDA 几何加速比、吞吐量、数值误差、盈亏平衡点、消融数据与并发几何性能。这些指标共同覆盖正确性、性能与可扩展性三个层面。
+项目的实验数据、CSV 文件和图表生成脚本都位于 \texttt{docs} 目录下。测量内容包括语义通过率、解析器后端计时、线程通道延迟、帧时间分布、CPU/CUDA 几何加速比、吞吐量、数值误差、盈亏平衡点与并发几何性能。这些指标共同覆盖正确性、性能与可扩展性三个层面。
 
 \section{实验方法（Experimental Methodology）}
 除非特别说明，本文所有性能结果都被视为\textbf{端到端系统测量}（end-to-end system measurements）。一次几何命令测量包含 FTCL 命令分发、参数解析、UVec 句柄查找、设备同步、输出 UVec 分配、后端执行，以及 CUDA kernel 启动后的同步。它不是纯 CUDA kernel time。本文有意采用这种测量方式，因为论文评价的是脚本用户实际看到的系统性能。
@@ -14,7 +14,7 @@
   \item \textbf{使用 Release 构建。} Debug 构建不进入性能讨论，因为解释器分发与 STL 容器对优化级别非常敏感。
   \item \textbf{区分预热与测量。} 解析器后端计时与几何计时脚本在可支持的情况下会先执行预热运行，再记录样本。
   \item \textbf{优先使用中位数或分位数。} 延迟分布使用 P50、P95 和 P99 描述；几何计时在有多个样本时使用具有代表性的命令延迟中位数。
-  \item \textbf{单独看待读回成本。} 部分实验将结果保留在 UVec 句柄中，消融实验则显式测量将大规模 UVec 输出转回脚本列表的成本。
+  \item \textbf{单独看待读回成本。} 部分实验将结果保留在 UVec 句柄中，避免把大规模输出转回脚本列表的成本混入主计时。
   \item \textbf{先比较正确性，再解释速度。} 只有 CPU/GPU 等价性测试在数值容忍范围内通过时，CUDA 加速比才有意义。
 \end{enumerate}
 
@@ -359,29 +359,8 @@ CUDA 加速存在\textbf{固定开销}（fixed overhead）。小规模工作负�
 
 保存的数据估计距离矩阵的盈亏平衡点约为 8192 个工作项，最近点约为 47848，圆形范围计数约为 121209。这些值并非普适常数，而依赖硬件、驱动状态、输入规模、输出规模，以及测量是否包含读回。
 
-\section{消融与并发几何（Ablation and Concurrent Geometry）}
-\textbf{消融实验}（ablation experiment）将内联字面量解析、预构建 UVec 句柄与读回开销分离。实验显示，预构建句柄可以显著降低命令延迟，尤其对 CUDA 命令更明显；将大规模输出转回脚本列表则可能支配总时间。因此，高性能 FTCL script 应尽量让数据在 UVec form 中跨多个 geometry commands 保持驻留，只在最后读取 summary results。
-
-\begin{table}[H]
-\centering
-\caption{几何消融实验解释（Interpretation of geometry ablation experiment）}
-\label{tab:ablation-interpretation}
-\begin{tabularx}{\textwidth}{lX}
-\toprule
-实验模式 & 解释 \\
-\midrule
-内联字面量输入 & 测量从脚本文本解析点列表、创建临时数据结构、分发命令并执行后端的完整成本。该模式方便，但大输入时容易被脚本解析主导。 \\
-预构建 UVec（无读回） & 测量句柄查找、设备同步、输出分配与后端执行，同时将数据保持在 UVec 形式中。该模式最接近高吞吐脚本流水线。 \\
-预构建 UVec（含读回） & 额外加入将输出 UVec 转为脚本列表的成本。对于距离矩阵这类大规模输出，读回会主导总时间并掩盖 CUDA 计算收益。 \\
-\bottomrule
-\end{tabularx}
-\end{table}
-
-消融实验给出一条实践原则：FTCL 脚本应把 UVec 句柄当作长期存活的数据对象使用，避免将大规模中间结果转回字符串。这与 GPU 编程中的数据驻留（data residency）原则一致。加速效果最强的情况是：数据只复制到设备一次，随后由多个命令处理，最后再读回。
-
-该解释也说明了为什么 CUDA 并不总是在小输入上更快。即使 kernel 本身很高效，整个命令路径仍须支付启动、同步、输出分配与可能读回的固定成本。因此，盈亏平衡点是系统级属性，而不仅是算法级属性。
-
-\textbf{并发几何实验}如图 \ref{fig:concurrency-throughput} 与图 \ref{fig:concurrency-latency} 所示。CPU 吞吐量随 worker 数量增加而提升，直至出现竞争；CUDA 吞吐量更平缓，因为多个脚本 worker 会竞争同一张 GPU 与同步点。
+\section{并发几何（Concurrent Geometry）}
+并发几何实验如图 \ref{fig:concurrency-throughput} 与图 \ref{fig:concurrency-latency} 所示。CPU 吞吐量随 worker 数量增加而提升，直至出现竞争；CUDA 吞吐量更平缓，因为多个脚本 worker 会竞争同一张 GPU 与同步点。
 
 \begin{figure}[H]
   \centering
@@ -402,6 +381,6 @@ CUDA 加速存在\textbf{固定开销}（fixed overhead）。小规模工作负�
 直接结论：竞争会推高 P95 延迟，因此后续需要专用调度、内存池与基于 stream 的 CUDA 执行。
 
 \section{小结}
-本章从正确性、性能与可扩展性三个维度评估 FTCL。语义回归与 CPU/GPU 等价性测试证明系统具有可验证的正确性基础；单 GPU 与多 GPU 实验显示 CUDA 后端在大量独立工作项上具有明显优势；消融与并发实验则指出真正的瓶颈经常来自分配、读回、加锁与调度。
+本章从正确性、性能与可扩展性三个维度评估 FTCL。语义回归与 CPU/GPU 等价性测试证明系统具有可验证的正确性基础；单 GPU 与多 GPU 实验显示 CUDA 后端在大量独立工作项上具有明显优势；并发实验则指出真正的瓶颈经常来自分配、读回、加锁与调度。
 
 评估有意采用端到端口径。主要结论是：数据驻留、输出规模与运行时同步，往往决定脚本层异构系统的实际性能。
