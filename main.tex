@@ -15,7 +15,7 @@
 
     本文从正确性、性能和应用三个层面评估 FTCL。语义回归、CPU/GPU 等价、随机差分和边界测试验证系统可靠性；单 GPU 与八卡 A800 多 GPU 实验显示，紧凑输出的范围计数可接近线性弱扩展，而距离矩阵受输出分配和内存带宽限制；并发实验揭示解释器调度、锁粒度和 GPU 资源竞争对吞吐量与尾延迟的影响。最后，本文将点、圆、包围盒和距离矩阵映射到海洋牧场感知、智慧港口安全、无人机水面巡检和船舶碰撞检测等场景。实验表明，FTCL 不只是几何函数集合，而是一个把脚本表达、跨设备内存、并发执行和可复现实验连接起来的异构空间计算原型。
 
-\cnkeywords{脚本解释器；Tcl；计算几何；UVec；CUDA；多 GPU；海洋空间计算}
+\cnkeywords{脚本解释器；Tcl；计算几何；UVec；CUDA；多 GPU}
 \end{cnabstract}
 
 \begin{enabstract}
@@ -25,7 +25,7 @@
 
     The system is evaluated from correctness, performance, and application perspectives. Semantic regression tests, CPU/GPU equivalence tests, random differential tests, and edge-case tests validate reliability. Single-GPU and eight-GPU A800 experiments show that compact-output workloads such as circle range counting can achieve near-linear weak scaling, while output-heavy workloads such as distance matrices are limited by allocation and memory bandwidth. Concurrency experiments further reveal how interpreter scheduling, lock granularity, and GPU contention affect throughput and tail latency. Finally, the thesis maps points, circles, bounding boxes, and distance matrices to ocean-oriented scenarios such as marine ranch sensing, smart port safety, UAV water-surface inspection, and ship collision checking. The result is not merely a geometry library, but a prototype heterogeneous spatial-computing system that connects scripting, cross-device memory, concurrent execution, and reproducible evaluation.
 
-\enkeywords{Scripting interpreter; Tcl; Computational geometry; UVec; CUDA; Multi-GPU; Marine spatial computing}
+\enkeywords{Scripting interpreter; Tcl; Computational geometry; UVec; CUDA; Multi-GPU}
 \end{enabstract}
 
 \tableofcontents

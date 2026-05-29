@@ -14,6 +14,7 @@
 \RequirePackage{fancyhdr}
 \RequirePackage{lastpage}
 \RequirePackage{titlesec}
+\RequirePackage{indentfirst}
 \RequirePackage{setspace}
 \RequirePackage{fontspec}
 \RequirePackage{xeCJK}
@@ -365,8 +366,9 @@
 
 \newcommand{\JOUBackmatterChapter}[1]{\chapter{#1}}
 \newcommand{\JOUAcknowledgementChapter}{%
-  \chapter*{致\quad 谢}
-  \addcontentsline{toc}{chapter}{致谢}
+  \chapter*{致\quad 谢}%
+  \addcontentsline{toc}{chapter}{致谢}%
+  \@afterindenttrue
 }
 \newcommand{\JOUPrintBibliography}{%
   \cleardoublepage
