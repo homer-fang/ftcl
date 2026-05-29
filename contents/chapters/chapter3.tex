@@ -316,11 +316,49 @@ UVec 可以被描述为定义在设备集合上的小型\textbf{一致性模型}
   \item[Write rule:] \texttt{as\_mut\_uptr(d)} 返回 device \(d\) 上的 mutable pointer。返回前必须保证 \(B_d\) 存在且包含 latest value；随后设置 \(V_d \leftarrow 1\)，并对所有 \(s \ne d\) 设置 \(V_s \leftarrow 0\)，因为通过 mutable pointer 的后续写入可能改变 logical vector。
 \end{description}
 
-由此得到两个有用的不变式：
+在上述规则下，可进一步形式化证明 UVec 维持有效副本的不变式。若 UVec 在初始化完成后满足
 \[
-  \exists d \in D,\; V_d = 1
+  \exists d \in D,\quad V_d = 1,
 \]
-在每次成功初始化后的 UVec operation 之后成立；并且 UVec 返回的每个 read pointer 在返回时都指向 logical vector 的 valid copy。这个模型刻意保持简单：它足以支撑同步式 CPU/CUDA command execution，同时也为未来的 multiple CUDA devices、asynchronous streams 和 copy-on-write policies 留出空间。
+且后续状态变化仅由 \(\mathrm{as\_uptr}(d)\) 与 \(\mathrm{as\_mut\_uptr}(d)\) 两类操作产生，则对任意有限操作序列，下列两个性质成立：
+\begin{align}
+  &\exists d \in D,\quad V_d = 1; \label{eq:uvec-invariant}\\
+  &\mathrm{as\_uptr}(d)\ \text{成功返回时必有}\ V_d = 1. \label{eq:uvec-read-valid}
+\end{align}
+
+\begin{proof}
+对操作序列长度 \(k\) 做数学归纳，先证明性质~\eqref{eq:uvec-invariant}，再说明性质~\eqref{eq:uvec-read-valid} 在每次读操作中同时成立。
+
+\medskip\noindent\textbf{归纳奠基。}当 \(k = 0\) 时，系统尚未执行任何后续操作。根据 UVec 的初始化条件，至少存在一个设备 \(d \in D\) 满足 \(V_d = 1\)，命题显然成立；这也是代码执行后必然产生的结果。
+
+\medskip\noindent\textbf{归纳假设。}当操作序列长度为 \(k\) 时命题成立，即执行前 \(k\) 次操作后，至少存在一个设备 \(s \in D\) 满足 \(V_s = 1\)。
+
+\medskip\noindent\textbf{归纳递推。}考虑第 \(k+1\) 次操作，该操作有两种可能。
+
+\smallskip\noindent\textit{第一种情况：}第 \(k+1\) 次操作为 \(\mathrm{as\_uptr}(d)\)。
+
+若操作前有 \(V_d = 1\)，则设备 \(d\) 上已有有效Copy，操作可直接返回只读指针，不变式~\eqref{eq:uvec-invariant} 显然成立，且读指针有效性~\eqref{eq:uvec-read-valid} 也成立。
+
+若操作前有 \(V_d = 0\)，根据归纳假设，存在某个设备 \(s \in D\) 满足 \(V_s = 1\)。根据 UVec 的读规则，系统会从有效源设备 \(s\) 将数据同步到目标设备 \(d\)，并设置 \(V_d \leftarrow 1\)。读操作不会使其他有效副本失效，因此操作后至少设备 \(d\) 是有效副本，从而仍有
+\[
+  \exists d \in D,\quad V_d = 1.
+\]
+同时，由于 \(\mathrm{as\_uptr}(d)\) 返回前已保证 \(V_d = 1\)，故返回的只读指针必然指向目标设备上的有效Copy。
+
+\smallskip\noindent\textit{第二种情况：}第 \(k+1\) 次操作为 \(\mathrm{as\_mut\_uptr}(d)\)。
+
+根据 UVec 的写规则，系统在返回可变指针前会保证 \(d\) 上存在当前逻辑向量的最新数据，随后将设备 \(d\) 标记为有效，并将其他设备上的旧Copy标记为无效，即
+\[
+  V_d \leftarrow 1,\qquad V_s \leftarrow 0 \quad (s \ne d).
+\]
+因此，即使其他设备Copy失效，设备 \(d\) 仍是有效Copy，操作后仍然满足
+\[
+  \exists d \in D,\quad V_d = 1.
+\]
+此情形下未调用读接口，故只需维护不变式~\eqref{eq:uvec-invariant}。
+
+\medskip\noindent综上所述，第 \(k\) 次操作后不变式成立，第 \(k+1\) 次操作后不变式仍然成立。根据数学归纳法可知，对任意有限操作序列，UVec 始终至少保留一份有效Copy；并且每次 \(\mathrm{as\_uptr}(d)\) 成功返回时，目标设备 \(d\) 的 Copy 一定有效。
+\end{proof}
 
 \section{几何命令流程（Geometry Command Flow）}
 \texttt{geom} 命令的执行流程如图 \ref{fig:geom-flow} 所示。以 \texttt{geom nearest\_point} 为例，解释器首先求值脚本参数；命令层解析 UVec 句柄与设备选项；若目标是 CPU，则将输入同步到 CPU 并调用 C++ 算法；若目标是 CUDA，则将输入同步到 CUDA，创建输出 UVec，启动 CUDA kernel，并返回输出句柄。
