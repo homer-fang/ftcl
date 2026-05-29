@@ -1,8 +1,8 @@
 \NeedsTeXFormat{LaTeX2e}
 \ProvidesClass{styles/jouthesis}[2026/05/26 Minimal English thesis class for FTCL]
-\LoadClass[12pt,a4paper,openany]{book}
+\LoadClass[12pt,a4paper,openany,oneside]{book}
 
-\RequirePackage[a4paper,left=3.0cm,right=2.6cm,top=2.8cm,bottom=2.8cm]{geometry}
+\RequirePackage[a4paper,left=3.0cm,right=2.6cm,top=2.8cm,bottom=2.8cm,headsep=0.55cm]{geometry}
 \RequirePackage{amsmath,amssymb,amsthm}
 \RequirePackage{booktabs,longtable,tabularx,array,multirow}
 \RequirePackage{graphicx,float}
@@ -12,6 +12,8 @@
 \RequirePackage{caption}
 \RequirePackage{enumitem}
 \RequirePackage{fancyhdr}
+\RequirePackage{lastpage}
+\RequirePackage{titlesec}
 \RequirePackage{setspace}
 \RequirePackage{fontspec}
 \RequirePackage{xeCJK}
@@ -29,10 +31,10 @@
   bookmarksopen=true
 }
 
-\setstretch{1.30}
-\setlength{\parindent}{1.5em}
-\setlength{\parskip}{0.20em}
-\setlength{\headheight}{14pt}
+\setstretch{1.45}
+\setlength{\parindent}{2em}
+\setlength{\parskip}{0pt}
+\setlength{\headheight}{18pt}
 \captionsetup{font=small,labelfont=bf}
 \setlist{nosep,leftmargin=2.0em}
 \setmainfont{Latin Modern Roman}
@@ -62,11 +64,72 @@
 \SetKwProg{Fn}{Function}{:}{end}
 \SetKwProg{Proc}{Procedure}{:}{end}
 
-\pagestyle{fancy}
-\fancyhf{}
-\fancyhead[C]{\small\leftmark}
-\fancyfoot[C]{\thepage}
-\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\contentsname}{目\quad 录}
+\renewcommand{\figurename}{图}
+\renewcommand{\tablename}{表}
+
+\titleformat{\chapter}[hang]
+  {\centering\bfseries\fontsize{16pt}{24pt}\selectfont}
+  {第\thechapter 章}
+  {1em}
+  {}
+\titlespacing*{\chapter}{0pt}{0.2cm}{1.0cm}
+\titleformat{\section}
+  {\bfseries\fontsize{14pt}{22pt}\selectfont}
+  {\thesection}
+  {0.8em}
+  {}
+\titleformat{\subsection}
+  {\bfseries\fontsize{12.5pt}{20pt}\selectfont}
+  {\thesubsection}
+  {0.8em}
+  {}
+
+\newcommand{\JOUMainHeader}{%
+  \small
+  江苏海洋大学二〇二六届本科毕业设计（论文）%
+  \hfill 理工农医类%
+  \hfill 第\quad\thepage\quad 页\quad 共\quad\pageref{LastPage}\quad 页%
+}
+
+\fancypagestyle{joufront}{%
+  \fancyhf{}%
+  \renewcommand{\headrulewidth}{0pt}%
+  \renewcommand{\footrulewidth}{0pt}%
+}
+\fancypagestyle{joumain}{%
+  \fancyhf{}%
+  \fancyhead[C]{\JOUMainHeader}%
+  \renewcommand{\headrulewidth}{0.4pt}%
+  \renewcommand{\footrulewidth}{0pt}%
+}
+\pagestyle{joufront}
+\fancypagestyle{plain}{%
+  \fancyhf{}%
+  \renewcommand{\headrulewidth}{0pt}%
+  \renewcommand{\footrulewidth}{0pt}%
+}
+\let\JOUOriginalFrontmatter\frontmatter
+\renewcommand{\frontmatter}{%
+  \JOUOriginalFrontmatter
+  \pagestyle{joufront}%
+  \fancypagestyle{plain}{%
+    \fancyhf{}%
+    \renewcommand{\headrulewidth}{0pt}%
+    \renewcommand{\footrulewidth}{0pt}%
+  }%
+}
+\let\JOUOriginalMainmatter\mainmatter
+\renewcommand{\mainmatter}{%
+  \JOUOriginalMainmatter
+  \pagestyle{joumain}%
+  \fancypagestyle{plain}{%
+    \fancyhf{}%
+    \fancyhead[C]{\JOUMainHeader}%
+    \renewcommand{\headrulewidth}{0.4pt}%
+    \renewcommand{\footrulewidth}{0pt}%
+  }%
+}
 
 \lstdefinestyle{ftclstyle}{
   basicstyle=\ttfamily\small,
@@ -110,40 +173,35 @@
 % Cover layout parameters
 % -----------------------------------------------------------------------------
 
-\newcommand{\JOUCoverHeaderImage}{jou-cover-header.png}
+\newcommand{\JOUCoverHeaderImage}{jou-cover-header-crop.png}
 
 % 整个封面内容距离页面顶部的距离。
 % 调整它会带动校徽、主标题、题目等整体上下移动。
-\newcommand{\JOUCoverHeaderTopVskip}{0.85cm}
+\newcommand{\JOUCoverHeaderTopVskip}{1.25cm}
 
 % 仅调整校徽图片的视觉位置。
 % 正值表示上移，负值表示下移；不会影响下方标题的位置。
-\newcommand{\JOUCoverHeaderVisualRaise}{15mm}
+\newcommand{\JOUCoverHeaderVisualRaise}{0pt}
 
 % 校徽图片与“本科毕业设计（论文）”之间的版面间距。
-\newcommand{\JOUCoverMainTitleVskip}{0.22cm}
+\newcommand{\JOUCoverMainTitleVskip}{0.55cm}
 
 % “本科毕业设计（论文）”这一行自身的微调。
 % 正值表示上移，负值表示下移。
 \newcommand{\JOUCoverMainTitleRaise}{0.15ex}
 
 % “本科毕业设计（论文）”与“毕业设计（论文）中文题目”之间的距离。
-\newcommand{\JOUCoverSubtitleVskip}{4.0cm}
+\newcommand{\JOUCoverSubtitleVskip}{3.35cm}
 
 \newcommand{\JOUCoverIncludeHeaderImage}{%
   \includegraphics[
-    width=12.0cm,
-    trim=35 300 35 175,
-    clip
+    width=12.2cm
   ]{\JOUCoverHeaderImage}%
 }
 
 % 放置校徽图片。
-% 关键点：[\height][\depth] 保留原盒子高度，只改变图片视觉位置。
 \newcommand{\JOUCoverPlaceHeaderImage}{%
-  \raisebox{\JOUCoverHeaderVisualRaise}[\height][\depth]{%
-    \JOUCoverIncludeHeaderImage
-  }%
+  \JOUCoverIncludeHeaderImage
 }
 
 \newcommand{\JOUCoverCJKBold}[1]{{\sffamily\bfseries #1}}
@@ -171,6 +229,44 @@
     \leaders\hrule height 0.42pt\hfill
     \llap{\makebox[3.0cm][c]{\JOUStudentID}}%
   }\par
+}
+
+\newcommand{\JOUDeclarationPage}{%
+  \clearpage
+  \thispagestyle{empty}
+  \newgeometry{left=2.8cm,right=2.8cm,top=2.1cm,bottom=2.2cm}
+  \begin{center}
+    {\sffamily\bfseries\fontsize{18pt}{28pt}\selectfont 江苏海洋大学\par}
+    \vspace{0.15cm}
+    {\sffamily\bfseries\fontsize{18pt}{28pt}\selectfont 毕业设计（论文）原创性声明\par}
+  \end{center}
+  \vspace{0.75cm}
+  {\fontsize{13pt}{23pt}\selectfont
+  本人声明所提交的毕业设计（论文）是在导师的指导下，独立完成的研究成果。
+  除文中已经注明引用的内容外，本论文不包含任何其他个人或者集体已经发表或者撰写过的成果。
+  本文的研究成果是经过本人的辛勤劳动取得的，对本研究做出重要贡献的个人和集体，均已在文中明确表示出来。
+  本人完全意识到本声明所涉及的法律后果由本人承担。\par}
+  \vspace{0.75cm}
+  {\fontsize{13pt}{23pt}\selectfont
+  作者签名：\hspace{4.7cm}日期：\hspace{1.1cm}年\hspace{1.0cm}月\hspace{1.0cm}日\par}
+  \vspace{1.45cm}
+  \begin{center}
+    {\sffamily\bfseries\fontsize{18pt}{28pt}\selectfont 江苏海洋大学\par}
+    \vspace{0.15cm}
+    {\sffamily\bfseries\fontsize{18pt}{28pt}\selectfont 毕业设计（论文）版权使用授权书\par}
+  \end{center}
+  \vspace{0.65cm}
+  {\fontsize{13pt}{23pt}\selectfont
+  本毕业设计（论文）作者同意学校保存并送交国家有关部门或机构有关毕业设计（论文）的复印件、电子版，允许论文被查阅和借阅。
+  本人同意江苏海洋大学可以将本毕业设计（论文）的全部或部分内容编入有关数据库进行检索，可以采用影印、缩印或者扫描等复制手段保存和汇编本毕业设计（论文）。\par}
+  \vspace{1.1cm}
+  {\fontsize{13pt}{23pt}\selectfont
+  作者签名：\hfill 指导教师签名：\hspace{1.5cm}\par
+  \vspace{0.45cm}
+  日期：\hspace{1.0cm}年\hspace{1.0cm}月\hspace{1.0cm}日\hfill
+  日期：\hspace{1.0cm}年\hspace{1.0cm}月\hspace{1.0cm}日\par}
+  \restoregeometry
+  \clearpage
 }
 
 \newcommand{\makecover}{%
@@ -212,33 +308,67 @@
     {\sffamily\bfseries\fontsize{16pt}{24pt}\selectfont 2026 年\qquad 5 月\par}
     \restoregeometry
   \end{titlepage}
-  \cleardoublepage
+  \JOUDeclarationPage
 }
 
+\newsavebox{\JOUAbstractSaveBox}
+\newlength{\JOUAbstractInnerWidth}
+\setlength{\JOUAbstractInnerWidth}{\dimexpr\textwidth-0.9cm-2\fboxrule\relax}
+
 \newenvironment{cnabstract}{%
-  \chapter*{摘要}
-  \addcontentsline{toc}{chapter}{摘要}
-}{\cleardoublepage}
+  \clearpage
+  \thispagestyle{empty}
+  \begin{center}
+    {\sffamily\bfseries\fontsize{18pt}{30pt}\selectfont 毕业设计（论文）中文摘要\par}
+  \end{center}
+  \vspace{0.35cm}
+  \setlength{\fboxrule}{0.8pt}
+  \setlength{\fboxsep}{0.45cm}
+  \setlength{\JOUAbstractInnerWidth}{\dimexpr\textwidth-0.9cm-2\fboxrule\relax}
+  \begin{lrbox}{\JOUAbstractSaveBox}%
+    \begin{minipage}[t][21.5cm][t]{\JOUAbstractInnerWidth}
+      \setlength{\parindent}{2em}%
+      \fontsize{10.5pt}{15.8pt}\selectfont%
+}{%
+    \end{minipage}%
+  \end{lrbox}%
+  \noindent\fbox{\usebox{\JOUAbstractSaveBox}}%
+  \clearpage
+}
 \newcommand{\cnkeywords}[1]{\par\vspace{1em}\noindent\textbf{关键字：}#1}
 
 \newenvironment{enabstract}{%
-  \chapter*{Abstract}
-  \addcontentsline{toc}{chapter}{Abstract}
-}{\cleardoublepage}
+  \clearpage
+  \thispagestyle{empty}
+  \begin{center}
+    {\sffamily\bfseries\fontsize{18pt}{30pt}\selectfont 毕业设计（论文）外文摘要\par}
+  \end{center}
+  \vspace{0.35cm}
+  \setlength{\fboxrule}{0.8pt}
+  \setlength{\fboxsep}{0.45cm}
+  \setlength{\JOUAbstractInnerWidth}{\dimexpr\textwidth-0.9cm-2\fboxrule\relax}
+  \begin{lrbox}{\JOUAbstractSaveBox}%
+    \begin{minipage}[t][21.5cm][t]{\JOUAbstractInnerWidth}
+      \setlength{\parindent}{2em}%
+      \fontsize{9.4pt}{12.8pt}\selectfont%
+}{%
+    \end{minipage}%
+  \end{lrbox}%
+  \noindent\fbox{\usebox{\JOUAbstractSaveBox}}%
+  \clearpage
+}
 \newcommand{\enkeywords}[1]{\par\vspace{1em}\noindent\textbf{Keywords: }#1}
 
 \newcommand{\JOUListOfTablesAndFigures}{%
-  \listoffigures
-  \listoftables
-  \cleardoublepage
+  \clearpage
 }
 
 \newcommand{\JOUBackmatterChapter}[1]{\chapter{#1}}
 \newcommand{\JOUAcknowledgementChapter}{%
-  \chapter*{Acknowledgements}
-  \addcontentsline{toc}{chapter}{Acknowledgements}
+  \chapter*{致\quad 谢}
+  \addcontentsline{toc}{chapter}{致谢}
 }
 \newcommand{\JOUPrintBibliography}{%
   \cleardoublepage
-  \printbibliography[heading=bibintoc,title={References}]
+  \printbibliography[heading=bibintoc,title={参考文献}]
 }
