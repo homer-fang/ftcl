@@ -1,8 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1100" height="680" viewBox="0 0 1100 680" role="img">
-<style>text{font-family:Arial,sans-serif;fill:#111827;}.title{font-size:24px;font-weight:700;}.subtitle{font-size:13px;fill:#4b5563;}.axis{font-size:12px;}.tick{font-size:11px;fill:#374151;}</style>
+<style>text{font-family:'AR PL UMing TW MBE','AR PL UMing CN','FandolHei','Microsoft YaHei','SimHei',Arial,sans-serif;fill:#111827;}.title{font-size:24px;font-weight:700;}.subtitle{font-size:13px;fill:#4b5563;}.axis{font-size:12px;}.tick{font-size:11px;fill:#374151;}</style>
 <rect x="0" y="0" width="1100" height="680" fill="#ffffff"/>
-<text class="title" x="100" y="44">Parser Backend Runtime Comparison</text>
-<text class="subtitle" x="100" y="66">Workload: test_ftcl_subset; rounds per backend: 24; lower is better</text>
+<text class="title" x="100" y="44">解析器后端运行时间对比（Parser Backend）</text>
+<text class="subtitle" x="100" y="66">负载：test_ftcl_subset；每个后端轮数：24；数值越低越好</text>
 <line x1="100" y1="570.00" x2="1060" y2="570.00" stroke="#e5e7eb" stroke-width="1"/>
 <text class="tick" x="88" y="574.00" text-anchor="end">0</text>
 <line x1="100" y1="510.00" x2="1060" y2="510.00" stroke="#e5e7eb" stroke-width="1"/>
@@ -23,7 +23,7 @@
 <text class="tick" x="88" y="94.00" text-anchor="end">184</text>
 <line x1="100" y1="90" x2="100" y2="570" stroke="#111827" stroke-width="1.4"/>
 <line x1="100" y1="570" x2="1060" y2="570" stroke="#111827" stroke-width="1.4"/>
-<text class="axis" x="26" y="330.00" transform="rotate(-90 26 330.00)">Elapsed time (ms)</text>
+<text class="axis" x="26" y="330.00" transform="rotate(-90 26 330.00)">耗时（ms）</text>
 <rect x="317.20" y="205.82" width="180.00" height="364.18" fill="#2563eb" opacity="0.86"/>
 <line x1="407.20" y1="210.35" x2="407.20" y2="201.30" stroke="#111827" stroke-width="2"/>
 <line x1="395.20" y1="210.35" x2="419.20" y2="210.35" stroke="#111827" stroke-width="2"/>
@@ -53,7 +53,7 @@
 <circle cx="441.33" cy="201.13" r="3.2" fill="#0f172a" opacity="0.45"/>
 <circle cx="357.88" cy="199.60" r="3.2" fill="#0f172a" opacity="0.45"/>
 <text class="axis" x="407.20" y="598.00" text-anchor="middle">legacy</text>
-<text class="tick" x="407.20" y="197.82" text-anchor="middle">mean=139.93 ms</text>
+<text class="tick" x="407.20" y="197.82" text-anchor="middle">均值=139.93 ms</text>
 <rect x="662.80" y="189.05" width="180.00" height="380.95" fill="#f59e0b" opacity="0.86"/>
 <line x1="752.80" y1="194.46" x2="752.80" y2="183.64" stroke="#111827" stroke-width="2"/>
 <line x1="740.80" y1="194.46" x2="764.80" y2="194.46" stroke="#111827" stroke-width="2"/>
@@ -83,11 +83,11 @@
 <circle cx="700.04" cy="190.90" r="3.2" fill="#0f172a" opacity="0.45"/>
 <circle cx="754.33" cy="178.92" r="3.2" fill="#0f172a" opacity="0.45"/>
 <text class="axis" x="752.80" y="598.00" text-anchor="middle">token_stream</text>
-<text class="tick" x="752.80" y="181.05" text-anchor="middle">mean=146.38 ms</text>
+<text class="tick" x="752.80" y="181.05" text-anchor="middle">均值=146.38 ms</text>
 <rect x="780" y="102" width="16" height="12" fill="#2563eb" opacity="0.86"/>
 <text class="tick" x="804" y="113">legacy</text>
 <rect x="780" y="122" width="16" height="12" fill="#f59e0b" opacity="0.86"/>
 <text class="tick" x="804" y="133">token_stream</text>
-<text class="tick" x="780" y="154">error bar: 95% CI</text>
-<text class="tick" x="780" y="171">dot: one trial</text>
+<text class="tick" x="780" y="154">误差线：95% 置信区间</text>
+<text class="tick" x="780" y="171">散点：单次试验</text>
 </svg>

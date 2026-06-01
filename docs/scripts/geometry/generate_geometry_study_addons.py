@@ -26,9 +26,9 @@ COLORS = {
 }
 
 ALGO_LABELS = {
-    'batch_distance_matrix': 'distance matrix',
-    'nearest_point': 'nearest point',
-    'range_count_circle': 'circle range count',
+    'batch_distance_matrix': '距离矩阵（distance matrix）',
+    'nearest_point': '最近点（nearest point）',
+    'range_count_circle': '圆形范围计数（circle range count）',
 }
 
 ALGO_COLORS = {
@@ -54,14 +54,14 @@ def esc(value: object) -> str:
 def svg_header(w: int, h: int) -> str:
     return f'''<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" viewBox="0 0 {w} {h}" role="img">
 <style>
-text{{font-family:Arial,Helvetica,sans-serif;fill:{COLORS['ink']};}}
+text{{font-family:'AR PL UMing TW MBE','AR PL UMing CN','FandolHei','Microsoft YaHei','SimHei',Arial,Helvetica,sans-serif;fill:{COLORS['ink']};}}
 .title{{font-size:28px;font-weight:700;}}
 .subtitle{{font-size:15px;fill:#475569;}}
 .axis{{font-size:15px;fill:#374151;}}
 .small{{font-size:14px;fill:#475569;}}
 .tiny{{font-size:13px;fill:#64748b;}}
 .label{{font-size:16px;font-weight:700;}}
-.code{{font-family:Consolas,Monaco,'Courier New',monospace;font-size:12px;fill:#e2e8f0;}}
+.code{{font-family:Consolas,Monaco,'Courier New',monospace;font-size:10px;fill:#e2e8f0;}}
 .box{{stroke:#1f2937;stroke-width:1.4;rx:14;ry:14;}}
 </style>
 <defs>
@@ -126,8 +126,8 @@ def line_chart(out: Path,
                series: List[Dict[str, object]],
                y_min: float = 0.0,
                y_ref: float = None) -> None:
-    w, h = 1280, 760
-    ml, mr, mt, mb = 120, 290, 100, 120
+    w, h = 1450, 760
+    ml, mr, mt, mb = 120, 380, 100, 120
     pw, ph = w - ml - mr, h - mt - mb
 
     xs = sorted({x for s in series for x, _ in s['values']})
@@ -160,7 +160,7 @@ def line_chart(out: Path,
     if y_ref is not None:
         y = y_of(y_ref)
         p.append(f'<line x1="{ml}" y1="{y:.2f}" x2="{ml + pw}" y2="{y:.2f}" stroke="#0f172a" stroke-width="1.5" stroke-dasharray="7 5"/>\n')
-        p.append(text(ml + pw + 8, y + 4, f'reference {format_axis(y_ref)}', 'tiny', 'start'))
+        p.append(text(ml + pw + 8, y + 4, f'参考线 {format_axis(y_ref)}', 'tiny', 'start'))
 
     for s in series:
         vals = sorted(s['values'])
@@ -228,7 +228,11 @@ def load_or_collect_perf(build_dir: Path,
         if rows:
             ensure_dir(data_dir)
             with csv_path.open('w', newline='', encoding='utf-8') as f:
-                writer = csv.DictWriter(f, fieldnames=['metric', 'device', 'n', 'q', 'time_us', 'throughput_items_per_s'])
+                writer = csv.DictWriter(
+                    f,
+                    fieldnames=['metric', 'device', 'n', 'q', 'time_us', 'throughput_items_per_s'],
+                    lineterminator='\n',
+                )
                 writer.writeheader()
                 writer.writerows(rows)
             return rows
@@ -293,7 +297,11 @@ def collect_study_data(build_dir: Path, data_dir: Path) -> Tuple[List[Dict[str, 
         ablation, concurrency = parse_study_output(proc.stdout)
         if ablation:
             with ablation_csv.open('w', newline='', encoding='utf-8') as f:
-                writer = csv.DictWriter(f, fieldnames=['ablation_case', 'metric', 'device', 'n', 'q', 'median_us'])
+                writer = csv.DictWriter(
+                    f,
+                    fieldnames=['ablation_case', 'metric', 'device', 'n', 'q', 'median_us'],
+                    lineterminator='\n',
+                )
                 writer.writeheader()
                 writer.writerows(ablation)
         if concurrency:
@@ -301,6 +309,7 @@ def collect_study_data(build_dir: Path, data_dir: Path) -> Tuple[List[Dict[str, 
                 writer = csv.DictWriter(
                     f,
                     fieldnames=['device', 'workers', 'requests', 'elapsed_us', 'throughput_req_per_s', 'p50_us', 'p95_us', 'p99_us'],
+                    lineterminator='\n',
                 )
                 writer.writeheader()
                 writer.writerows(concurrency)
@@ -375,6 +384,7 @@ def load_or_collect_multi_gpu(build_dir: Path, data_dir: Path, mode: str, scalin
                         'speedup_vs_1gpu',
                         'parallel_efficiency',
                     ],
+                    lineterminator='\n',
                 )
                 writer.writeheader()
                 writer.writerows(rows)
@@ -453,10 +463,10 @@ def draw_break_even(series: List[Dict[str, object]], out: Path) -> None:
 
     line_chart(
         out,
-        'CUDA break-even point',
-        'Dense sweep by work items = N x Q. Speedup above 1.0 means CUDA is faster than CPU.',
-        'Work items (N x Q)',
-        'Speedup (CPU time / CUDA time)',
+        'CUDA 盈亏平衡点（break-even point）',
+        '按工作项数量 N x Q 密集扫描；加速比超过 1.0 表示 CUDA 快于 CPU。',
+        '工作项数量（work items = N x Q）',
+        '加速比（CPU 时间 / CUDA 时间）',
         plot_series,
         0.0,
         1.0,
@@ -466,7 +476,7 @@ def draw_break_even(series: List[Dict[str, object]], out: Path) -> None:
 def write_break_even_csv(rows: List[Dict[str, object]], out: Path) -> None:
     ensure_dir(out.parent)
     with out.open('w', newline='', encoding='utf-8') as f:
-        writer = csv.writer(f)
+        writer = csv.writer(f, lineterminator='\n')
         writer.writerow([
             'metric',
             'label',
@@ -535,13 +545,13 @@ def draw_uvec_state_machine(out: Path) -> None:
     w, h = 1280, 760
     p = [svg_header(w, h)]
     p.append(f'<rect x="0" y="0" width="{w}" height="{h}" fill="{COLORS["paper"]}"/>\n')
-    p.append(text(70, 44, 'UVec state machine', 'title', 'start'))
-    p.append(text(70, 66, 'A read can create a shared readable state; a mutable write returns to a single latest writer.', 'subtitle', 'start'))
+    p.append(text(70, 44, 'UVec 状态机（state machine）', 'title', 'start'))
+    p.append(text(70, 66, '读取可进入共享可读状态；可变写入会回到单一最新写入者。', 'subtitle', 'start'))
 
     states = {
-        'cpu': (155, 230, 260, 96, ['CPU latest', 'CPU valid = 1', 'CUDA valid = 0'], '#dbeafe'),
-        'both': (510, 465, 260, 96, ['Shared readable', 'CPU valid = 1', 'CUDA valid = 1'], '#dcfce7'),
-        'cuda': (865, 230, 260, 96, ['CUDA latest', 'CUDA valid = 1', 'CPU valid = 0'], '#ede9fe'),
+        'cpu': (155, 230, 260, 96, ['CPU 最新', 'CPU valid = 1', 'CUDA valid = 0'], '#dbeafe'),
+        'both': (510, 465, 260, 96, ['共享可读', 'CPU valid = 1', 'CUDA valid = 1'], '#dcfce7'),
+        'cuda': (865, 230, 260, 96, ['CUDA 最新', 'CUDA valid = 1', 'CPU valid = 0'], '#ede9fe'),
     }
 
     for x, y, bw, bh, lines, fill in states.values():
@@ -569,32 +579,32 @@ def draw_uvec_state_machine(out: Path) -> None:
 
     p.append(f'<rect x="145" y="610" width="990" height="92" rx="18" fill="#f8fafc" stroke="#e2e8f0"/>\n')
     legend = [
-        (190, 642, COLORS['green'], '', 'Read on a stale device: copy data and enter the shared-readable state.'),
-        (190, 672, COLORS['red'], '', 'Mutable write from shared-readable: invalidate the other device copy.'),
-        (690, 642, COLORS['purple'], '7 5', 'Direct mutable CUDA write from CPU-latest: CUDA becomes the only latest writer.'),
-        (690, 672, COLORS['blue'], '7 5', 'Direct mutable CPU write from CUDA-latest: CPU becomes the only latest writer.'),
+        (190, 642, COLORS['green'], '', '在过期设备上读取：复制数据并进入共享可读状态。'),
+        (190, 672, COLORS['red'], '', '从共享可读状态可变写入：使另一个设备副本失效。'),
+        (690, 642, COLORS['purple'], '7 5', '从 CPU 最新状态直接 CUDA 写入：CUDA 成为唯一最新写入者。'),
+        (690, 672, COLORS['blue'], '7 5', '从 CUDA 最新状态直接 CPU 写入：CPU 成为唯一最新写入者。'),
     ]
     for x, y, color, dash, label in legend:
         dash_attr = f' stroke-dasharray="{dash}"' if dash else ''
         p.append(f'<line x1="{x}" y1="{y}" x2="{x + 42}" y2="{y}" stroke="{color}" stroke-width="3"{dash_attr}/>\n')
         p.append(text(x + 54, y + 5, label, 'tiny', 'start'))
-    p.append(text(190, 695, 'Invariant: at least one physical buffer is valid; reads may increase the valid set, writes shrink it to one latest writer.', 'tiny', 'start'))
+    p.append(text(190, 695, '不变量（Invariant）：至少一个物理缓冲区有效；读取可能扩大有效集合，写入会收缩为一个最新写入者。', 'tiny', 'start'))
     p.append(svg_footer())
     write_text(out, ''.join(p))
 
 
 def draw_real_demo(out: Path) -> None:
-    w, h = 1200, 780
+    w, h = 1300, 780
     p = [svg_header(w, h)]
     p.append(f'<rect x="0" y="0" width="{w}" height="{h}" fill="{COLORS["paper"]}"/>\n')
-    p.append(text(70, 44, 'FTCL ocean spatial computing demo', 'title', 'start'))
-    p.append(text(70, 66, 'Marine ranch sensing + smart port safety + UAV inspection in one script pipeline.', 'subtitle', 'start'))
+    p.append(text(70, 44, 'FTCL 海洋空间计算演示（ocean spatial computing demo）', 'title', 'start'))
+    p.append(text(70, 66, '海洋牧场感知 + 智慧港口安全 + 无人机巡检被组织到同一条脚本流水线中。', 'subtitle', 'start'))
 
     x0, y0, cw, ch = 90, 120, 620, 560
     p.append(f'<rect x="{x0}" y="{y0}" width="{cw}" height="{ch}" fill="#eff6ff" stroke="#94a3b8" stroke-width="2"/>\n')
     p.append(f'<path d="M{x0},{y0 + 92} C230,160 315,188 410,148 C510,112 590,132 {x0 + cw},{y0 + 95} L{x0 + cw},{y0} L{x0},{y0} Z" fill="#e2e8f0"/>\n')
     p.append(f'<path d="M{x0 + 430},{y0 + 70} L{x0 + cw},{y0 + 70} L{x0 + cw},{y0 + 185} L{x0 + 500},{y0 + 185} L{x0 + 500},{y0 + 130} L{x0 + 430},{y0 + 130} Z" fill="#cbd5e1"/>\n')
-    p.append(text(x0 + 540, y0 + 55, 'smart port', 'tiny'))
+    p.append(text(x0 + 540, y0 + 55, '智慧港口（smart port）', 'tiny'))
 
     for i in range(11):
         gx = x0 + i * cw / 10
@@ -602,7 +612,7 @@ def draw_real_demo(out: Path) -> None:
         p.append(f'<line x1="{gx:.1f}" y1="{y0}" x2="{gx:.1f}" y2="{y0 + ch}" stroke="#dbeafe"/>\n')
         p.append(f'<line x1="{x0}" y1="{gy:.1f}" x2="{x0 + cw}" y2="{gy:.1f}" stroke="#dbeafe"/>\n')
 
-    coverage = [(250, 420, 108, 'sonar A'), (530, 455, 128, 'sonar B'), (620, 220, 86, 'port radar')]
+    coverage = [(250, 420, 108, '声呐 A（sonar A）'), (530, 455, 128, '声呐 B（sonar B）'), (620, 220, 86, '港口雷达（radar）')]
     for cx, cy, r, label in coverage:
         p.append(f'<circle cx="{cx}" cy="{cy}" r="{r}" fill="#dcfce7"/>\n')
         p.append(f'<circle cx="{cx}" cy="{cy}" r="{r}" fill="none" stroke="#22c55e" stroke-width="2"/>\n')
@@ -611,36 +621,36 @@ def draw_real_demo(out: Path) -> None:
     cages = [(185, 330, 90, 60), (300, 330, 90, 60), (185, 415, 90, 60), (300, 415, 90, 60)]
     for x, y, bw, bh in cages:
         p.append(f'<rect x="{x}" y="{y}" width="{bw}" height="{bh}" fill="#bae6fd" stroke="#0284c7" stroke-width="2" rx="8"/>\n')
-    p.append(text(287, 315, 'marine ranch cages', 'tiny'))
+    p.append(text(287, 315, '海洋牧场网箱（cages）', 'tiny'))
 
     obstacles = [(505, 165, 74, 52), (600, 150, 58, 90), (450, 565, 88, 36)]
     for ox, oy, ow, oh in obstacles:
         p.append(f'<rect x="{ox}" y="{oy}" width="{ow}" height="{oh}" fill="#334155" opacity="0.86" rx="7"/>\n')
-    p.append(text(614, 145, 'berths / obstacles', 'tiny'))
+    p.append(text(614, 145, '泊位/障碍物（obstacles）', 'tiny'))
 
     ship_path = [(145, 615), (250, 570), (370, 530), (500, 500), (645, 475)]
     path_pts = ' '.join(f'{x},{y}' for x, y in ship_path)
     p.append(f'<polyline points="{path_pts}" fill="none" stroke="#f59e0b" stroke-width="4" stroke-dasharray="9 6"/>\n')
     p.append(f'<polygon points="640,463 665,475 640,487" fill="#f59e0b"/>\n')
-    p.append(text(378, 516, 'planned ship route', 'tiny'))
+    p.append(text(378, 516, '船舶规划路径（route）', 'tiny'))
 
     uav = (155, 235)
     p.append(f'<path d="M{uav[0]},{uav[1] - 13} L{uav[0] + 18},{uav[1] + 10} L{uav[0]},{uav[1] + 4} L{uav[0] - 18},{uav[1] + 10} Z" fill="#2563eb"/>\n')
-    p.append(text(uav[0] + 34, uav[1] + 6, 'UAV', 'tiny', 'start'))
+    p.append(text(uav[0] + 34, uav[1] + 6, '无人机（UAV）', 'tiny', 'start'))
 
     sensors = [(220, 250), (340, 235), (255, 520), (535, 325)]
     for sx, sy in sensors:
         p.append(f'<circle cx="{sx}" cy="{sy}" r="7" fill="#0ea5e9" stroke="#075985" stroke-width="1.5"/>\n')
-    p.append(text(300, 220, 'sensor buoys', 'tiny'))
+    p.append(text(300, 220, '传感浮标（sensor buoys）', 'tiny'))
 
     floats = [(440, 265), (575, 360), (615, 512), (350, 600), (465, 455), (690, 300)]
     for fx, fy in floats:
         p.append(f'<circle cx="{fx}" cy="{fy}" r="8" fill="#dc2626"/>\n')
     nearest = min(floats, key=lambda pt: (pt[0] - uav[0]) ** 2 + (pt[1] - uav[1]) ** 2)
     p.append(f'<line x1="{uav[0]}" y1="{uav[1]}" x2="{nearest[0]}" y2="{nearest[1]}" stroke="#ef4444" stroke-width="2.5" stroke-dasharray="5 5"/>\n')
-    p.append(text((uav[0] + nearest[0]) / 2 + 4, (uav[1] + nearest[1]) / 2 - 8, 'nearest anomaly', 'tiny', 'start'))
+    p.append(text((uav[0] + nearest[0]) / 2 + 4, (uav[1] + nearest[1]) / 2 - 8, '最近异常目标（nearest anomaly）', 'tiny', 'start'))
 
-    p.append(text(760, 150, 'FTCL script excerpt', 'label', 'start'))
+    p.append(text(760, 150, 'FTCL 脚本片段（script excerpt）', 'label', 'start'))
     script_lines = [
         'set sensors [geom uvec_points $buoys cuda:0]',
         'set targets [geom uvec_points $floating_objects cuda:0]',
@@ -650,16 +660,16 @@ def draw_real_demo(out: Path) -> None:
         'set risk [geom collision_aabb $ship_box $restricted cuda:0]',
         'set dist [geom batch_distance_matrix $sensors $targets cuda:0]',
     ]
-    p.append('<rect x="740" y="160" width="450" height="378" rx="14" fill="#0f172a"/>\n')
+    p.append('<rect x="740" y="160" width="540" height="378" rx="14" fill="#0f172a"/>\n')
     for i, line in enumerate(script_lines):
         p.append(f'<text class="code" x="762" y="{196 + i * 44}">{esc(line)}</text>\n')
 
-    p.append(multiline_text(965, 572, [
-        'Output semantics:',
-        'near -> abnormal target handle',
-        'cover -> per-sonar target counts',
-        'risk -> ship/obstacle collision flags',
-        'dist -> large sensor-target matrix',
+    p.append(multiline_text(1010, 572, [
+        '输出语义（Output semantics）：',
+        'near -> 异常目标句柄',
+        'cover -> 每个声呐的目标计数',
+        'risk -> 船舶/障碍物碰撞标记',
+        'dist -> 大规模传感器-目标距离矩阵',
     ], 'small', 'middle'))
 
     p.append(svg_footer())
@@ -675,14 +685,15 @@ def draw_concurrency_throughput(rows: List[Dict[str, str]], out: Path) -> None:
                 continue
             values.append((int(r['workers']), float(r['throughput_req_per_s'])))
         if values:
-            series.append({'name': device, 'values': values, 'color': color})
+            device_label = 'CPU' if device == 'cpu' else 'CUDA cuda:0'
+            series.append({'name': device_label, 'values': values, 'color': color})
 
     line_chart(
         out,
-        'Concurrent geometry throughput',
-        'Workload: thread-channel pipeline + geom nearest_point worker tasks.',
-        'Worker threads (count)',
-        'Throughput (requests/s)',
+        '并发几何吞吐量（concurrent throughput）',
+        '负载：thread-channel 流水线 + geom nearest_point 工作任务。',
+        '工作线程数（worker threads）',
+        '吞吐量（requests/s）',
         series,
         0.0,
         None,
@@ -698,14 +709,15 @@ def draw_concurrency_latency(rows: List[Dict[str, str]], out: Path) -> None:
                 continue
             values.append((int(r['workers']), float(r['p95_us'])))
         if values:
-            series.append({'name': f'{device} p95', 'values': values, 'color': color})
+            device_label = 'CPU' if device == 'cpu' else 'CUDA cuda:0'
+            series.append({'name': f'{device_label} P95', 'values': values, 'color': color})
 
     line_chart(
         out,
-        'Concurrent geometry latency tail',
-        'P95 one-request latency in the same worker/channel experiment; lower is better.',
-        'Worker threads (count)',
-        'Latency (microseconds)',
+        '并发几何尾延迟（latency tail）',
+        '同一 worker/channel 实验中的单请求 P95 延迟；数值越低越好。',
+        '工作线程数（worker threads）',
+        '延迟（微秒，us）',
         series,
         0.0,
         None,
@@ -721,7 +733,7 @@ def draw_multi_gpu_scaling(rows: List[Dict[str, str]], out: Path) -> None:
 
     if gpu_counts:
         series.append({
-            'name': 'ideal linear scaling',
+            'name': '理想线性扩展（ideal）',
             'values': [(count, float(count)) for count in gpu_counts],
             'color': COLORS['muted'],
         })
@@ -737,10 +749,10 @@ def draw_multi_gpu_scaling(rows: List[Dict[str, str]], out: Path) -> None:
 
     line_chart(
         out,
-        'Multi-GPU geometry scaling',
-        'Weak scaling with fixed per-GPU work; queries are partitioned across CUDA devices 0 to 7.',
-        'GPU count (devices)',
-        'Speedup vs 1 GPU (x)',
+        '多 GPU 几何扩展性（Multi-GPU scaling）',
+        '弱扩展实验：每张 GPU 保持固定工作量，查询被分配到 CUDA 0 到 7 号设备。',
+        'GPU 数量（devices）',
+        '相对 1 GPU 的加速比（x）',
         series,
         0.0,
         1.0,

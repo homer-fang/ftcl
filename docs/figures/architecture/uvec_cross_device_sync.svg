@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720" role="img">
 <style>
-text{font-family:Arial,Helvetica,sans-serif;fill:#111827;}
+text{font-family:'AR PL UMing TW MBE','AR PL UMing CN','FandolHei','Microsoft YaHei','SimHei',Arial,Helvetica,sans-serif;fill:#111827;}
 .title{font-size:24px;font-weight:700;}
 .subtitle{font-size:13px;fill:#475569;}
 .label{font-size:14px;font-weight:700;}
@@ -18,33 +18,33 @@ text{font-family:Arial,Helvetica,sans-serif;fill:#111827;}
 </filter>
 </defs>
 <rect x="0" y="0" width="1280" height="720" fill="#ffffff"/>
-<text class="title" x="70.00" y="44.00" text-anchor="start">UVec cross-device synchronization</text>
-<text class="subtitle" x="70.00" y="66.00" text-anchor="start">Reads make a target device valid; mutable writes make other copies stale.</text>
+<text class="title" x="70.00" y="44.00" text-anchor="start">UVec 跨设备同步（cross-device synchronization）</text>
+<text class="subtitle" x="70.00" y="66.00" text-anchor="start">读取会让目标设备副本变为有效；可写访问会让其他副本失效。</text>
 <rect x="80" y="115" width="1120" height="245" rx="22" fill="#f8fafc" stroke="#e2e8f0"/>
-<text class="label" x="104.00" y="145.00" text-anchor="start">Read path: make data available without destroying other valid copies</text>
+<text class="label" x="104.00" y="145.00" text-anchor="start">读取路径：在不破坏其他有效副本的情况下让目标设备可读</text>
 <rect x="80" y="405" width="1120" height="220" rx="22" fill="#f8fafc" stroke="#e2e8f0"/>
-<text class="label" x="104.00" y="435.00" text-anchor="start">Write path: grant one mutable pointer and invalidate stale copies</text>
+<text class="label" x="104.00" y="435.00" text-anchor="start">写入路径：授予一个可写指针，并使过期副本失效</text>
 <rect class="box" x="135.00" y="190.00" width="220.00" height="92.00" fill="#dbeafe" stroke="#1f2937" filter="url(#shadow)"/>
-<text class="small" x="245.00" y="224.00" text-anchor="middle"><tspan x="245.00" dy="0.00">Before</tspan><tspan x="245.00" dy="17.00">CPU valid</tspan><tspan x="245.00" dy="17.00">CUDA invalid</tspan></text>
+<text class="small" x="245.00" y="224.00" text-anchor="middle"><tspan x="245.00" dy="0.00">之前</tspan><tspan x="245.00" dy="17.00">CPU 有效</tspan><tspan x="245.00" dy="17.00">CUDA 无效</tspan></text>
 <rect class="box" x="510.00" y="185.00" width="260.00" height="102.00" fill="#fef3c7" stroke="#1f2937" filter="url(#shadow)"/>
-<text class="small" x="640.00" y="224.00" text-anchor="middle"><tspan x="640.00" dy="0.00">as_uptr(cuda:0)</tspan><tspan x="640.00" dy="17.00">copy CPU -&gt; CUDA</tspan><tspan x="640.00" dy="17.00">return const pointer</tspan></text>
+<text class="small" x="640.00" y="224.00" text-anchor="middle"><tspan x="640.00" dy="0.00">as_uptr(cuda:0)</tspan><tspan x="640.00" dy="17.00">复制 CPU -&gt; CUDA</tspan><tspan x="640.00" dy="17.00">返回只读指针</tspan></text>
 <rect class="box" x="925.00" y="190.00" width="220.00" height="92.00" fill="#dcfce7" stroke="#1f2937" filter="url(#shadow)"/>
-<text class="small" x="1035.00" y="215.50" text-anchor="middle"><tspan x="1035.00" dy="0.00">After</tspan><tspan x="1035.00" dy="17.00">CPU valid</tspan><tspan x="1035.00" dy="17.00">CUDA valid</tspan><tspan x="1035.00" dy="17.00">both readable</tspan></text>
+<text class="small" x="1035.00" y="215.50" text-anchor="middle"><tspan x="1035.00" dy="0.00">之后</tspan><tspan x="1035.00" dy="17.00">CPU 有效</tspan><tspan x="1035.00" dy="17.00">CUDA 有效</tspan><tspan x="1035.00" dy="17.00">均可读取</tspan></text>
 <line x1="355.00" y1="236.00" x2="510.00" y2="236.00" stroke="#334155" stroke-width="2.2" marker-end="url(#arrow)"/>
-<text class="tiny" x="432.50" y="226.00" text-anchor="middle">request CUDA read</text>
+<text class="tiny" x="432.50" y="226.00" text-anchor="middle">请求 CUDA 读取</text>
 <line x1="770.00" y1="236.00" x2="925.00" y2="236.00" stroke="#16a34a" stroke-width="2.2" marker-end="url(#arrow)"/>
-<text class="tiny" x="847.50" y="226.00" text-anchor="middle">synchronized read</text>
+<text class="tiny" x="847.50" y="226.00" text-anchor="middle">同步后读取</text>
 <line x1="340.00" y1="307.00" x2="955.00" y2="307.00" stroke="#0ea5e9" stroke-width="2.2" stroke-dasharray="8 6" marker-end="url(#arrow)"/>
-<text class="tiny" x="647.50" y="297.00" text-anchor="middle">physical copy happens only when target flag is invalid</text>
+<text class="tiny" x="647.50" y="297.00" text-anchor="middle">只有目标标记无效时才发生物理复制</text>
 <rect class="box" x="135.00" y="475.00" width="220.00" height="90.00" fill="#dcfce7" stroke="#1f2937" filter="url(#shadow)"/>
-<text class="small" x="245.00" y="508.00" text-anchor="middle"><tspan x="245.00" dy="0.00">Before</tspan><tspan x="245.00" dy="17.00">CPU valid</tspan><tspan x="245.00" dy="17.00">CUDA valid</tspan></text>
+<text class="small" x="245.00" y="508.00" text-anchor="middle"><tspan x="245.00" dy="0.00">之前</tspan><tspan x="245.00" dy="17.00">CPU 有效</tspan><tspan x="245.00" dy="17.00">CUDA 有效</tspan></text>
 <rect class="box" x="510.00" y="470.00" width="260.00" height="100.00" fill="#fef3c7" stroke="#1f2937" filter="url(#shadow)"/>
-<text class="small" x="640.00" y="508.00" text-anchor="middle"><tspan x="640.00" dy="0.00">as_mut_uptr(cuda:0)</tspan><tspan x="640.00" dy="17.00">prepare writable pointer</tspan><tspan x="640.00" dy="17.00">latest = cuda:0</tspan></text>
+<text class="small" x="640.00" y="508.00" text-anchor="middle"><tspan x="640.00" dy="0.00">as_mut_uptr(cuda:0)</tspan><tspan x="640.00" dy="17.00">准备可写指针</tspan><tspan x="640.00" dy="17.00">latest = cuda:0</tspan></text>
 <rect class="box" x="925.00" y="475.00" width="220.00" height="90.00" fill="#ede9fe" stroke="#1f2937" filter="url(#shadow)"/>
-<text class="small" x="1035.00" y="508.00" text-anchor="middle"><tspan x="1035.00" dy="0.00">After</tspan><tspan x="1035.00" dy="17.00">CUDA valid</tspan><tspan x="1035.00" dy="17.00">CPU invalid</tspan></text>
+<text class="small" x="1035.00" y="508.00" text-anchor="middle"><tspan x="1035.00" dy="0.00">之后</tspan><tspan x="1035.00" dy="17.00">CUDA 有效</tspan><tspan x="1035.00" dy="17.00">CPU 无效</tspan></text>
 <line x1="355.00" y1="520.00" x2="510.00" y2="520.00" stroke="#334155" stroke-width="2.2" marker-end="url(#arrow)"/>
-<text class="tiny" x="432.50" y="510.00" text-anchor="middle">request CUDA write</text>
+<text class="tiny" x="432.50" y="510.00" text-anchor="middle">请求 CUDA 写入</text>
 <line x1="770.00" y1="520.00" x2="925.00" y2="520.00" stroke="#dc2626" stroke-width="2.2" marker-end="url(#arrow)"/>
-<text class="tiny" x="847.50" y="510.00" text-anchor="middle">invalidate CPU copy</text>
-<text class="subtitle" x="600.00" y="665.00" text-anchor="middle">The same handle is stable at script level; UVec decides when copy or invalidation is required.</text>
+<text class="tiny" x="847.50" y="510.00" text-anchor="middle">使 CPU 副本失效</text>
+<text class="subtitle" x="600.00" y="665.00" text-anchor="middle">脚本层句柄保持稳定；UVec 决定何时复制、何时失效。</text>
 </svg>

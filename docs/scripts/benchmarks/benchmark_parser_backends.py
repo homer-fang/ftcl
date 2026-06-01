@@ -71,7 +71,7 @@ def ensure_parent(path: str) -> None:
 def write_raw_csv(path: str, rows: List[Dict[str, str]]) -> None:
     ensure_parent(path)
     with open(path, "w", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=["sample_id", "backend", "elapsed_ms"])
+        writer = csv.DictWriter(f, fieldnames=["sample_id", "backend", "elapsed_ms"], lineterminator="\n")
         writer.writeheader()
         writer.writerows(rows)
 
@@ -91,7 +91,7 @@ def write_summary_csv(path: str, rows: List[Dict[str, str]]) -> None:
         "ci95_high_ms",
     ]
     with open(path, "w", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        writer = csv.DictWriter(f, fieldnames=fieldnames, lineterminator="\n")
         writer.writeheader()
         writer.writerows(rows)
 
@@ -101,7 +101,7 @@ def svg_header(w: int, h: int) -> str:
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" '
         f'viewBox="0 0 {w} {h}" role="img">\n'
         "<style>"
-        "text{font-family:Arial,sans-serif;fill:#111827;}"
+        "text{font-family:'AR PL UMing TW MBE','AR PL UMing CN','FandolHei','Microsoft YaHei','SimHei',Arial,sans-serif;fill:#111827;}"
         ".title{font-size:24px;font-weight:700;}"
         ".subtitle{font-size:13px;fill:#4b5563;}"
         ".axis{font-size:12px;}"
@@ -146,9 +146,9 @@ def draw_figure(path: str, raw_rows: List[Dict[str, str]], summary: Dict[str, Di
 
     parts = [svg_header(w, h)]
     parts.append(f'<rect x="0" y="0" width="{w}" height="{h}" fill="#ffffff"/>\n')
-    parts.append('<text class="title" x="100" y="44">Parser Backend Runtime Comparison</text>\n')
+    parts.append('<text class="title" x="100" y="44">解析器后端运行时间对比（Parser Backend）</text>\n')
     parts.append(
-        f'<text class="subtitle" x="100" y="66">Workload: test_ftcl_subset; rounds per backend: {rounds}; lower is better</text>\n'
+        f'<text class="subtitle" x="100" y="66">负载：test_ftcl_subset；每个后端轮数：{rounds}；数值越低越好</text>\n'
     )
 
     # Grid and y-axis ticks.
@@ -164,7 +164,7 @@ def draw_figure(path: str, raw_rows: List[Dict[str, str]], summary: Dict[str, Di
         f'<line x1="{ml}" y1="{mt + ph}" x2="{w - mr}" y2="{mt + ph}" stroke="#111827" stroke-width="1.4"/>\n'
     )
     parts.append(
-        f'<text class="axis" x="26" y="{mt + ph/2:.2f}" transform="rotate(-90 26 {mt + ph/2:.2f})">Elapsed time (ms)</text>\n'
+        f'<text class="axis" x="26" y="{mt + ph/2:.2f}" transform="rotate(-90 26 {mt + ph/2:.2f})">耗时（ms）</text>\n'
     )
 
     rnd = random.Random(20260331)
@@ -205,7 +205,7 @@ def draw_figure(path: str, raw_rows: List[Dict[str, str]], summary: Dict[str, Di
             f'<text class="axis" x="{cx:.2f}" y="{mt + ph + 28:.2f}" text-anchor="middle">{backend}</text>\n'
         )
         parts.append(
-            f'<text class="tick" x="{cx:.2f}" y="{y_bar - 8:.2f}" text-anchor="middle">mean={mean:.2f} ms</text>\n'
+            f'<text class="tick" x="{cx:.2f}" y="{y_bar - 8:.2f}" text-anchor="middle">均值={mean:.2f} ms</text>\n'
         )
 
     # Legend
@@ -214,8 +214,8 @@ def draw_figure(path: str, raw_rows: List[Dict[str, str]], summary: Dict[str, Di
     parts.append(f'<text class="tick" x="{lx + 24}" y="{ly + 11}">legacy</text>\n')
     parts.append(f'<rect x="{lx}" y="{ly + 20}" width="16" height="12" fill="#f59e0b" opacity="0.86"/>\n')
     parts.append(f'<text class="tick" x="{lx + 24}" y="{ly + 31}">token_stream</text>\n')
-    parts.append(f'<text class="tick" x="{lx}" y="{ly + 52}">error bar: 95% CI</text>\n')
-    parts.append(f'<text class="tick" x="{lx}" y="{ly + 69}">dot: one trial</text>\n')
+    parts.append(f'<text class="tick" x="{lx}" y="{ly + 52}">误差线：95% 置信区间</text>\n')
+    parts.append(f'<text class="tick" x="{lx}" y="{ly + 69}">散点：单次试验</text>\n')
 
     parts.append("</svg>\n")
 
@@ -291,4 +291,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

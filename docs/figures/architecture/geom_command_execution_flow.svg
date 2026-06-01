@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="760" viewBox="0 0 1200 760" role="img">
 <style>
-text{font-family:Arial,Helvetica,sans-serif;fill:#111827;}
+text{font-family:'AR PL UMing TW MBE','AR PL UMing CN','FandolHei','Microsoft YaHei','SimHei',Arial,Helvetica,sans-serif;fill:#111827;}
 .title{font-size:24px;font-weight:700;}
 .subtitle{font-size:13px;fill:#475569;}
 .label{font-size:14px;font-weight:700;}
@@ -18,36 +18,36 @@ text{font-family:Arial,Helvetica,sans-serif;fill:#111827;}
 </filter>
 </defs>
 <rect x="0" y="0" width="1200" height="760" fill="#ffffff"/>
-<text class="title" x="70.00" y="44.00" text-anchor="start">geom command execution flow</text>
-<text class="subtitle" x="70.00" y="66.00" text-anchor="start">Example: geom nearest_point $dataset $queries cuda:0</text>
+<text class="title" x="70.00" y="44.00" text-anchor="start">geom 命令执行流程（command execution flow）</text>
+<text class="subtitle" x="70.00" y="66.00" text-anchor="start">示例：geom nearest_point $dataset $queries cuda:0</text>
 <rect class="box" x="90.00" y="125.00" width="250.00" height="76.00" fill="#dbeafe" stroke="#1f2937" filter="url(#shadow)"/>
-<text class="small" x="215.00" y="159.50" text-anchor="middle"><tspan x="215.00" dy="0.00">FTCL script</tspan><tspan x="215.00" dy="17.00">geom nearest_point ...</tspan></text>
+<text class="small" x="215.00" y="159.50" text-anchor="middle"><tspan x="215.00" dy="0.00">FTCL 脚本</tspan><tspan x="215.00" dy="17.00">geom nearest_point ...</tspan></text>
 <rect class="box" x="90.00" y="255.00" width="250.00" height="76.00" fill="#e0f2fe" stroke="#1f2937" filter="url(#shadow)"/>
-<text class="small" x="215.00" y="289.50" text-anchor="middle"><tspan x="215.00" dy="0.00">Interpreter</tspan><tspan x="215.00" dy="17.00">calls geom dispatcher</tspan></text>
+<text class="small" x="215.00" y="289.50" text-anchor="middle"><tspan x="215.00" dy="0.00">解释器（Interpreter）</tspan><tspan x="215.00" dy="17.00">调用 geom 分发器</tspan></text>
 <rect class="box" x="475.00" y="255.00" width="250.00" height="76.00" fill="#dcfce7" stroke="#1f2937" filter="url(#shadow)"/>
-<text class="small" x="600.00" y="289.50" text-anchor="middle"><tspan x="600.00" dy="0.00">Parse arguments</tspan><tspan x="600.00" dy="17.00">handles + device</tspan></text>
+<text class="small" x="600.00" y="289.50" text-anchor="middle"><tspan x="600.00" dy="0.00">解析参数</tspan><tspan x="600.00" dy="17.00">句柄 + 设备</tspan></text>
 <rect class="box" x="860.00" y="255.00" width="250.00" height="76.00" fill="#fef3c7" stroke="#1f2937" filter="url(#shadow)"/>
-<text class="small" x="985.00" y="289.50" text-anchor="middle"><tspan x="985.00" dy="0.00">Lookup UVec</tspan><tspan x="985.00" dy="17.00">typed storage check</tspan></text>
+<text class="small" x="985.00" y="289.50" text-anchor="middle"><tspan x="985.00" dy="0.00">查询 UVec</tspan><tspan x="985.00" dy="17.00">检查类型化存储</tspan></text>
 <rect class="box" x="300.00" y="460.00" width="240.00" height="82.00" fill="#f1f5f9" stroke="#1f2937" filter="url(#shadow)"/>
-<text class="small" x="420.00" y="489.00" text-anchor="middle"><tspan x="420.00" dy="0.00">CPU path</tspan><tspan x="420.00" dy="17.00">read CPU buffer</tspan><tspan x="420.00" dy="17.00">run scalar algorithm</tspan></text>
+<text class="small" x="420.00" y="489.00" text-anchor="middle"><tspan x="420.00" dy="0.00">CPU 路径</tspan><tspan x="420.00" dy="17.00">读取 CPU 缓冲区</tspan><tspan x="420.00" dy="17.00">运行标量算法</tspan></text>
 <rect class="box" x="660.00" y="460.00" width="240.00" height="82.00" fill="#ede9fe" stroke="#1f2937" filter="url(#shadow)"/>
-<text class="small" x="780.00" y="489.00" text-anchor="middle"><tspan x="780.00" dy="0.00">CUDA path</tspan><tspan x="780.00" dy="17.00">sync to device</tspan><tspan x="780.00" dy="17.00">launch kernel</tspan></text>
+<text class="small" x="780.00" y="489.00" text-anchor="middle"><tspan x="780.00" dy="0.00">CUDA 路径</tspan><tspan x="780.00" dy="17.00">同步到设备</tspan><tspan x="780.00" dy="17.00">启动 kernel</tspan></text>
 <rect class="box" x="475.00" y="620.00" width="250.00" height="76.00" fill="#fff7ed" stroke="#1f2937" filter="url(#shadow)"/>
-<text class="small" x="600.00" y="654.50" text-anchor="middle"><tspan x="600.00" dy="0.00">Create result UVec</tspan><tspan x="600.00" dy="17.00">return handle to script</tspan></text>
+<text class="small" x="600.00" y="654.50" text-anchor="middle"><tspan x="600.00" dy="0.00">创建结果 UVec</tspan><tspan x="600.00" dy="17.00">返回句柄给脚本</tspan></text>
 <line x1="215.00" y1="201.00" x2="215.00" y2="255.00" stroke="#334155" stroke-width="2.2" marker-end="url(#arrow)"/>
 <text class="tiny" x="215.00" y="218.00" text-anchor="middle">eval</text>
 <line x1="340.00" y1="293.00" x2="475.00" y2="293.00" stroke="#334155" stroke-width="2.2" marker-end="url(#arrow)"/>
 <text class="tiny" x="407.50" y="283.00" text-anchor="middle">argv</text>
 <line x1="725.00" y1="293.00" x2="860.00" y2="293.00" stroke="#334155" stroke-width="2.2" marker-end="url(#arrow)"/>
-<text class="tiny" x="792.50" y="283.00" text-anchor="middle">handles</text>
+<text class="tiny" x="792.50" y="283.00" text-anchor="middle">句柄</text>
 <line x1="985.00" y1="331.00" x2="420.00" y2="460.00" stroke="#334155" stroke-width="2.2" marker-end="url(#arrow)"/>
-<text class="tiny" x="702.50" y="385.50" text-anchor="middle">device=cpu</text>
+<text class="tiny" x="702.50" y="385.50" text-anchor="middle">设备=cpu</text>
 <line x1="985.00" y1="331.00" x2="780.00" y2="460.00" stroke="#334155" stroke-width="2.2" marker-end="url(#arrow)"/>
-<text class="tiny" x="882.50" y="385.50" text-anchor="middle">device=cuda:0</text>
+<text class="tiny" x="882.50" y="385.50" text-anchor="middle">设备=cuda:0</text>
 <line x1="420.00" y1="542.00" x2="535.00" y2="620.00" stroke="#334155" stroke-width="2.2" marker-end="url(#arrow)"/>
-<text class="tiny" x="477.50" y="571.00" text-anchor="middle">values</text>
+<text class="tiny" x="477.50" y="571.00" text-anchor="middle">数值</text>
 <line x1="780.00" y1="542.00" x2="665.00" y2="620.00" stroke="#334155" stroke-width="2.2" marker-end="url(#arrow)"/>
-<text class="tiny" x="722.50" y="571.00" text-anchor="middle">device result</text>
+<text class="tiny" x="722.50" y="571.00" text-anchor="middle">设备端结果</text>
 <line x1="475.00" y1="658.00" x2="340.00" y2="293.00" stroke="#334155" stroke-width="2.2" marker-end="url(#arrow)"/>
-<text class="tiny" x="407.50" y="465.50" text-anchor="middle">FTCL value</text>
+<text class="tiny" x="407.50" y="465.50" text-anchor="middle">FTCL 值</text>
 </svg>

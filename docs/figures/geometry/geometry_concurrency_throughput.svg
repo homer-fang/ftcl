@@ -1,13 +1,13 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="760" viewBox="0 0 1280 760" role="img">
+<svg xmlns="http://www.w3.org/2000/svg" width="1450" height="760" viewBox="0 0 1450 760" role="img">
 <style>
-text{font-family:Arial,Helvetica,sans-serif;fill:#111827;}
+text{font-family:'AR PL UMing TW MBE','AR PL UMing CN','FandolHei','Microsoft YaHei','SimHei',Arial,Helvetica,sans-serif;fill:#111827;}
 .title{font-size:28px;font-weight:700;}
 .subtitle{font-size:15px;fill:#475569;}
 .axis{font-size:15px;fill:#374151;}
 .small{font-size:14px;fill:#475569;}
 .tiny{font-size:13px;fill:#64748b;}
 .label{font-size:16px;font-weight:700;}
-.code{font-family:Consolas,Monaco,'Courier New',monospace;font-size:12px;fill:#e2e8f0;}
+.code{font-family:Consolas,Monaco,'Courier New',monospace;font-size:10px;fill:#e2e8f0;}
 .box{stroke:#1f2937;stroke-width:1.4;rx:14;ry:14;}
 </style>
 <defs>
@@ -15,45 +15,45 @@ text{font-family:Arial,Helvetica,sans-serif;fill:#111827;}
 <path d="M0,0 L0,6 L9,3 z" fill="#334155" />
 </marker>
 </defs>
-<rect x="0" y="0" width="1280" height="760" fill="#ffffff"/>
-<text class="title" x="70.00" y="44.00" text-anchor="start">Concurrent geometry throughput</text>
-<text class="subtitle" x="70.00" y="66.00" text-anchor="start">Workload: thread-channel pipeline + geom nearest_point worker tasks.</text>
-<line x1="120" y1="640.00" x2="990" y2="640.00" stroke="#e5e7eb"/>
+<rect x="0" y="0" width="1450" height="760" fill="#ffffff"/>
+<text class="title" x="70.00" y="44.00" text-anchor="start">并发几何吞吐量（concurrent throughput）</text>
+<text class="subtitle" x="70.00" y="66.00" text-anchor="start">负载：thread-channel 流水线 + geom nearest_point 工作任务。</text>
+<line x1="120" y1="640.00" x2="1070" y2="640.00" stroke="#e5e7eb"/>
 <text class="axis" x="108.00" y="644.00" text-anchor="end">0.00</text>
-<line x1="120" y1="505.63" x2="990" y2="505.63" stroke="#e5e7eb"/>
+<line x1="120" y1="505.63" x2="1070" y2="505.63" stroke="#e5e7eb"/>
 <text class="axis" x="108.00" y="509.63" text-anchor="end">2.0k</text>
-<line x1="120" y1="371.26" x2="990" y2="371.26" stroke="#e5e7eb"/>
+<line x1="120" y1="371.26" x2="1070" y2="371.26" stroke="#e5e7eb"/>
 <text class="axis" x="108.00" y="375.26" text-anchor="end">4.0k</text>
-<line x1="120" y1="236.90" x2="990" y2="236.90" stroke="#e5e7eb"/>
+<line x1="120" y1="236.90" x2="1070" y2="236.90" stroke="#e5e7eb"/>
 <text class="axis" x="108.00" y="240.90" text-anchor="end">6.0k</text>
-<line x1="120" y1="102.53" x2="990" y2="102.53" stroke="#e5e7eb"/>
+<line x1="120" y1="102.53" x2="1070" y2="102.53" stroke="#e5e7eb"/>
 <text class="axis" x="108.00" y="106.53" text-anchor="end">8.0k</text>
 <line x1="120" y1="100" x2="120" y2="640" stroke="#111827" stroke-width="1.4"/>
-<line x1="120" y1="640" x2="990" y2="640" stroke="#111827" stroke-width="1.4"/>
-<polyline points="120.00,553.60 410.00,406.81 700.00,238.36 990.00,182.37" fill="none" stroke="#2563eb" stroke-width="3"/>
+<line x1="120" y1="640" x2="1070" y2="640" stroke="#111827" stroke-width="1.4"/>
+<polyline points="120.00,553.60 436.67,406.81 753.33,238.36 1070.00,182.37" fill="none" stroke="#2563eb" stroke-width="3"/>
 <circle cx="120.00" cy="553.60" r="4.5" fill="#2563eb"/>
-<circle cx="410.00" cy="406.81" r="4.5" fill="#2563eb"/>
-<circle cx="700.00" cy="238.36" r="4.5" fill="#2563eb"/>
-<circle cx="990.00" cy="182.37" r="4.5" fill="#2563eb"/>
-<polyline points="120.00,553.35 410.00,551.69 700.00,553.27 990.00,550.80" fill="none" stroke="#7c3aed" stroke-width="3"/>
+<circle cx="436.67" cy="406.81" r="4.5" fill="#2563eb"/>
+<circle cx="753.33" cy="238.36" r="4.5" fill="#2563eb"/>
+<circle cx="1070.00" cy="182.37" r="4.5" fill="#2563eb"/>
+<polyline points="120.00,553.35 436.67,551.69 753.33,553.27 1070.00,550.80" fill="none" stroke="#7c3aed" stroke-width="3"/>
 <circle cx="120.00" cy="553.35" r="4.5" fill="#7c3aed"/>
-<circle cx="410.00" cy="551.69" r="4.5" fill="#7c3aed"/>
-<circle cx="700.00" cy="553.27" r="4.5" fill="#7c3aed"/>
-<circle cx="990.00" cy="550.80" r="4.5" fill="#7c3aed"/>
+<circle cx="436.67" cy="551.69" r="4.5" fill="#7c3aed"/>
+<circle cx="753.33" cy="553.27" r="4.5" fill="#7c3aed"/>
+<circle cx="1070.00" cy="550.80" r="4.5" fill="#7c3aed"/>
 <line x1="120.00" y1="640" x2="120.00" y2="646" stroke="#111827"/>
 <text class="axis" x="120.00" y="665.00" text-anchor="middle">1</text>
-<line x1="410.00" y1="640" x2="410.00" y2="646" stroke="#111827"/>
-<text class="axis" x="410.00" y="665.00" text-anchor="middle">2</text>
-<line x1="700.00" y1="640" x2="700.00" y2="646" stroke="#111827"/>
-<text class="axis" x="700.00" y="665.00" text-anchor="middle">4</text>
-<line x1="990.00" y1="640" x2="990.00" y2="646" stroke="#111827"/>
-<text class="axis" x="990.00" y="665.00" text-anchor="middle">8</text>
-<text class="axis" x="555.00" y="726.00" text-anchor="middle">Worker threads (count)</text>
-<text class="axis" x="120.00" y="84.00" text-anchor="start">Throughput (requests/s)</text>
-<line x1="1024" y1="112" x2="1060" y2="112" stroke="#2563eb" stroke-width="4"/>
-<circle cx="1042" cy="112" r="5.5" fill="#2563eb"/>
-<text class="tiny" x="1074.00" y="117.00" text-anchor="start">cpu</text>
-<line x1="1024" y1="142" x2="1060" y2="142" stroke="#7c3aed" stroke-width="4"/>
-<circle cx="1042" cy="142" r="5.5" fill="#7c3aed"/>
-<text class="tiny" x="1074.00" y="147.00" text-anchor="start">cuda:0</text>
+<line x1="436.67" y1="640" x2="436.67" y2="646" stroke="#111827"/>
+<text class="axis" x="436.67" y="665.00" text-anchor="middle">2</text>
+<line x1="753.33" y1="640" x2="753.33" y2="646" stroke="#111827"/>
+<text class="axis" x="753.33" y="665.00" text-anchor="middle">4</text>
+<line x1="1070.00" y1="640" x2="1070.00" y2="646" stroke="#111827"/>
+<text class="axis" x="1070.00" y="665.00" text-anchor="middle">8</text>
+<text class="axis" x="595.00" y="726.00" text-anchor="middle">工作线程数（worker threads）</text>
+<text class="axis" x="120.00" y="84.00" text-anchor="start">吞吐量（requests/s）</text>
+<line x1="1104" y1="112" x2="1140" y2="112" stroke="#2563eb" stroke-width="4"/>
+<circle cx="1122" cy="112" r="5.5" fill="#2563eb"/>
+<text class="tiny" x="1154.00" y="117.00" text-anchor="start">CPU</text>
+<line x1="1104" y1="142" x2="1140" y2="142" stroke="#7c3aed" stroke-width="4"/>
+<circle cx="1122" cy="142" r="5.5" fill="#7c3aed"/>
+<text class="tiny" x="1154.00" y="147.00" text-anchor="start">CUDA cuda:0</text>
 </svg>

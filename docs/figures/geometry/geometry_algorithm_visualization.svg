@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="820" viewBox="0 0 1200 820" role="img">
 <style>
-text{font-family:Arial,Helvetica,sans-serif;fill:#111827;}
+text{font-family:'AR PL UMing TW MBE','AR PL UMing CN','FandolHei','Microsoft YaHei','SimHei',Arial,Helvetica,sans-serif;fill:#111827;}
 .title{font-size:24px;font-weight:700;}
 .subtitle{font-size:13px;fill:#475569;}
 .label{font-size:14px;font-weight:700;}
@@ -18,23 +18,23 @@ text{font-family:Arial,Helvetica,sans-serif;fill:#111827;}
 </filter>
 </defs>
 <rect x="0" y="0" width="1200" height="820" fill="#ffffff"/>
-<text class="title" x="70.00" y="44.00" text-anchor="start">Geometry algorithm visualization</text>
-<text class="subtitle" x="70.00" y="66.00" text-anchor="start">Four representative geom commands used by the FTCL script interface.</text>
+<text class="title" x="70.00" y="44.00" text-anchor="start">几何算法可视化（algorithm visualization）</text>
+<text class="subtitle" x="70.00" y="66.00" text-anchor="start">展示 FTCL 脚本接口中四类代表性 geom 命令。</text>
 <rect x="70" y="110" width="500" height="300" rx="18" fill="#f8fafc" stroke="#cbd5e1"/>
-<text class="label" x="88.00" y="138.00" text-anchor="start">point in polygon</text>
+<text class="label" x="88.00" y="138.00" text-anchor="start">点在多边形内（point in polygon）</text>
 <rect x="630" y="110" width="500" height="300" rx="18" fill="#f8fafc" stroke="#cbd5e1"/>
-<text class="label" x="648.00" y="138.00" text-anchor="start">nearest point</text>
+<text class="label" x="648.00" y="138.00" text-anchor="start">最近点（nearest point）</text>
 <rect x="70" y="460" width="500" height="300" rx="18" fill="#f8fafc" stroke="#cbd5e1"/>
-<text class="label" x="88.00" y="488.00" text-anchor="start">range count circle</text>
+<text class="label" x="88.00" y="488.00" text-anchor="start">圆形范围计数（range count circle）</text>
 <rect x="630" y="460" width="500" height="300" rx="18" fill="#f8fafc" stroke="#cbd5e1"/>
-<text class="label" x="648.00" y="488.00" text-anchor="start">AABB collision</text>
+<text class="label" x="648.00" y="488.00" text-anchor="start">AABB 碰撞（collision）</text>
 <polygon points="152.0,341.7 488.0,341.7 488.0,220.8 336.8,183.6 152.0,225.5" fill="#dbeafe" stroke="#2563eb" stroke-width="3"/>
 <circle cx="236.0" cy="295.2" r="7" fill="#16a34a"/>
-<text class="tiny" x="246.00" y="287.23" text-anchor="start">inside</text>
+<text class="tiny" x="246.00" y="287.23" text-anchor="start">内部</text>
 <circle cx="488.0" cy="295.2" r="7" fill="#f59e0b"/>
-<text class="tiny" x="498.00" y="287.23" text-anchor="start">boundary</text>
+<text class="tiny" x="498.00" y="287.23" text-anchor="start">边界</text>
 <circle cx="521.6" cy="192.9" r="7" fill="#dc2626"/>
-<text class="tiny" x="531.60" y="184.91" text-anchor="start">outside</text>
+<text class="tiny" x="531.60" y="184.91" text-anchor="start">外部</text>
 <line x1="1013.0" y1="293.9" x2="1055.0" y2="298.3" stroke="#f59e0b" stroke-width="3" stroke-dasharray="6 5"/>
 <circle cx="705.0" cy="342.8" r="6" fill="#2563eb"/>
 <circle cx="775.0" cy="209.4" r="6" fill="#2563eb"/>
@@ -42,7 +42,7 @@ text{font-family:Arial,Helvetica,sans-serif;fill:#111827;}
 <circle cx="1055.0" cy="298.3" r="6" fill="#2563eb"/>
 <circle cx="985.0" cy="187.2" r="6" fill="#2563eb"/>
 <path d="M1013.0,283.9 L1016.0,290.9 L1023.0,290.9 L1018.0,295.9 L1020.0,302.9 L1013.0,298.9 L1006.0,302.9 L1008.0,295.9 L1003.0,290.9 L1010.0,290.9 Z" fill="#dc2626"/>
-<text class="tiny" x="1013.00" y="317.89" text-anchor="middle">query</text>
+<text class="tiny" x="1013.00" y="317.89" text-anchor="middle">查询点（query）</text>
 <circle cx="320.0" cy="625.0" r="113.4" fill="#dcfce7" stroke="#16a34a" stroke-width="3"/>
 <circle cx="194.0" cy="665.0" r="6" fill="#64748b"/>
 <circle cx="278.0" cy="615.0" r="6" fill="#16a34a"/>
@@ -51,11 +51,11 @@ text{font-family:Arial,Helvetica,sans-serif;fill:#111827;}
 <circle cx="345.2" cy="670.0" r="6" fill="#16a34a"/>
 <circle cx="177.2" cy="545.0" r="6" fill="#64748b"/>
 <circle cx="404.0" cy="650.0" r="6" fill="#16a34a"/>
-<text class="label" x="320.00" y="501.60" text-anchor="middle">count = 4</text>
+<text class="label" x="320.00" y="501.60" text-anchor="middle">计数 = 4</text>
 <rect x="710" y="545" width="170" height="120" fill="#dbeafe" stroke="#2563eb" stroke-width="3"/>
 <rect x="825" y="595" width="190" height="105" fill="#fee2e2" stroke="#dc2626" stroke-width="3" opacity="0.8"/>
 <rect x="710" y="708" width="110" height="30" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>
-<text class="tiny" x="795.00" y="535.00" text-anchor="middle">box A</text>
-<text class="tiny" x="920.00" y="587.00" text-anchor="middle">box B</text>
-<text class="label" x="876.00" y="675.00" text-anchor="middle">overlap</text>
+<text class="tiny" x="795.00" y="535.00" text-anchor="middle">? A</text>
+<text class="tiny" x="920.00" y="587.00" text-anchor="middle">? B</text>
+<text class="label" x="876.00" y="675.00" text-anchor="middle">重叠</text>
 </svg>

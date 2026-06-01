@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="700" viewBox="0 0 1200 700" role="img">
 <style>
-text{font-family:Arial,Helvetica,sans-serif;fill:#111827;}
+text{font-family:'AR PL UMing TW MBE','AR PL UMing CN','FandolHei','Microsoft YaHei','SimHei',Arial,Helvetica,sans-serif;fill:#111827;}
 .title{font-size:24px;font-weight:700;}
 .subtitle{font-size:13px;fill:#475569;}
 .label{font-size:14px;font-weight:700;}
@@ -18,40 +18,38 @@ text{font-family:Arial,Helvetica,sans-serif;fill:#111827;}
 </filter>
 </defs>
 <rect x="0" y="0" width="1200" height="700" fill="#ffffff"/>
-<text class="title" x="70.00" y="44.00" text-anchor="start">Execution time comparison</text>
-<text class="subtitle" x="70.00" y="66.00" text-anchor="start">Largest paper-mode scale in this run: N=32768; lower is better.</text>
+<text class="title" x="70.00" y="44.00" text-anchor="start">执行时间对比（execution time）</text>
+<text class="subtitle" x="70.00" y="66.00" text-anchor="start">本次论文模式最大规模：N=32768；数值越低越好。</text>
 <line x1="95" y1="570.00" x2="1140" y2="570.00" stroke="#e5e7eb"/>
 <text class="axis" x="83.00" y="574.00" text-anchor="end">0.00</text>
-<line x1="95" y1="492.27" x2="1140" y2="492.27" stroke="#e5e7eb"/>
-<text class="axis" x="83.00" y="496.27" text-anchor="end">100.0k</text>
-<line x1="95" y1="414.54" x2="1140" y2="414.54" stroke="#e5e7eb"/>
-<text class="axis" x="83.00" y="418.54" text-anchor="end">200.0k</text>
-<line x1="95" y1="336.81" x2="1140" y2="336.81" stroke="#e5e7eb"/>
-<text class="axis" x="83.00" y="340.81" text-anchor="end">300.0k</text>
-<line x1="95" y1="259.09" x2="1140" y2="259.09" stroke="#e5e7eb"/>
-<text class="axis" x="83.00" y="263.09" text-anchor="end">400.0k</text>
-<line x1="95" y1="181.36" x2="1140" y2="181.36" stroke="#e5e7eb"/>
-<text class="axis" x="83.00" y="185.36" text-anchor="end">500.0k</text>
-<line x1="95" y1="103.63" x2="1140" y2="103.63" stroke="#e5e7eb"/>
-<text class="axis" x="83.00" y="107.63" text-anchor="end">600.0k</text>
+<line x1="95" y1="484.49" x2="1140" y2="484.49" stroke="#e5e7eb"/>
+<text class="axis" x="83.00" y="488.49" text-anchor="end">100.0k</text>
+<line x1="95" y1="398.98" x2="1140" y2="398.98" stroke="#e5e7eb"/>
+<text class="axis" x="83.00" y="402.98" text-anchor="end">200.0k</text>
+<line x1="95" y1="313.47" x2="1140" y2="313.47" stroke="#e5e7eb"/>
+<text class="axis" x="83.00" y="317.47" text-anchor="end">300.0k</text>
+<line x1="95" y1="227.96" x2="1140" y2="227.96" stroke="#e5e7eb"/>
+<text class="axis" x="83.00" y="231.96" text-anchor="end">400.0k</text>
+<line x1="95" y1="142.45" x2="1140" y2="142.45" stroke="#e5e7eb"/>
+<text class="axis" x="83.00" y="146.45" text-anchor="end">500.0k</text>
 <line x1="95" y1="90" x2="95" y2="570" stroke="#111827" stroke-width="1.4"/>
 <line x1="95" y1="570" x2="1140" y2="570" stroke="#111827" stroke-width="1.4"/>
 <rect x="188.53" y="176.56" width="72" height="393.44" fill="#94a3b8" rx="5"/>
-<text class="tiny" x="224.53" y="169.56" text-anchor="middle">506.2k</text>
-<rect x="277.81" y="568.37" width="72" height="1.63" fill="#2563eb" rx="5"/>
-<text class="tiny" x="313.81" y="561.37" text-anchor="middle">2.1k</text>
-<text class="axis" x="269.17" y="598.00" text-anchor="middle"><tspan x="269.17" dy="0.00">distance matrix</tspan></text>
-<rect x="536.86" y="474.12" width="72" height="95.88" fill="#94a3b8" rx="5"/>
-<text class="tiny" x="572.86" y="467.12" text-anchor="middle">123.4k</text>
-<rect x="626.14" y="564.21" width="72" height="5.79" fill="#16a34a" rx="5"/>
-<text class="tiny" x="662.14" y="557.21" text-anchor="middle">7.5k</text>
-<text class="axis" x="617.50" y="598.00" text-anchor="middle"><tspan x="617.50" dy="0.00">nearest point</tspan></text>
-<rect x="885.19" y="542.00" width="72" height="28.00" fill="#94a3b8" rx="5"/>
-<text class="tiny" x="921.19" y="535.00" text-anchor="middle">36.0k</text>
-<rect x="974.47" y="567.85" width="72" height="2.15" fill="#f59e0b" rx="5"/>
-<text class="tiny" x="1010.47" y="560.85" text-anchor="middle">2.8k</text>
-<text class="axis" x="965.83" y="598.00" text-anchor="middle"><tspan x="965.83" dy="0.00">circle range count</tspan></text>
-<text class="axis" x="28" y="330.00" transform="rotate(-90 28 330.00)">Time (microseconds)</text>
+<text class="tiny" x="224.53" y="169.56" text-anchor="middle">460.1k</text>
+<rect x="277.81" y="568.24" width="72" height="1.76" fill="#2563eb" rx="5"/>
+<text class="tiny" x="313.81" y="561.24" text-anchor="middle">2.1k</text>
+<text class="axis" x="269.17" y="598.00" text-anchor="middle"><tspan x="269.17" dy="0.00">距离矩阵（distance matrix）</tspan></text>
+<rect x="536.86" y="464.60" width="72" height="105.40" fill="#94a3b8" rx="5"/>
+<text class="tiny" x="572.86" y="457.60" text-anchor="middle">123.3k</text>
+<rect x="626.14" y="563.63" width="72" height="6.37" fill="#16a34a" rx="5"/>
+<text class="tiny" x="662.14" y="556.63" text-anchor="middle">7.4k</text>
+<text class="axis" x="617.50" y="598.00" text-anchor="middle"><tspan x="617.50" dy="0.00">最近点（nearest point）</tspan></text>
+<rect x="885.19" y="538.81" width="72" height="31.19" fill="#94a3b8" rx="5"/>
+<text class="tiny" x="921.19" y="531.81" text-anchor="middle">36.5k</text>
+<rect x="974.47" y="567.62" width="72" height="2.38" fill="#f59e0b" rx="5"/>
+<text class="tiny" x="1010.47" y="560.62" text-anchor="middle">2.8k</text>
+<text class="axis" x="965.83" y="598.00" text-anchor="middle"><tspan x="965.83" dy="0.00">圆形范围计数（circle range count）</tspan></text>
+<text class="axis" x="28" y="330.00" transform="rotate(-90 28 330.00)">时间（微秒，us）</text>
 <rect x="930" y="98" width="18" height="12" fill="#94a3b8"/><text class="tiny" x="956" y="109">CPU</text>
-<rect x="930" y="122" width="18" height="12" fill="#2563eb"/><text class="tiny" x="956" y="133">CUDA color by algorithm</text>
+<rect x="930" y="122" width="18" height="12" fill="#2563eb"/><text class="tiny" x="956" y="133">CUDA（颜色按算法区分）</text>
 </svg>

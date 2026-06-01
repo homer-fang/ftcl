@@ -1,13 +1,13 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="760" viewBox="0 0 1280 760" role="img">
+<svg xmlns="http://www.w3.org/2000/svg" width="1450" height="760" viewBox="0 0 1450 760" role="img">
 <style>
-text{font-family:Arial,Helvetica,sans-serif;fill:#111827;}
+text{font-family:'AR PL UMing TW MBE','AR PL UMing CN','FandolHei','Microsoft YaHei','SimHei',Arial,Helvetica,sans-serif;fill:#111827;}
 .title{font-size:28px;font-weight:700;}
 .subtitle{font-size:15px;fill:#475569;}
 .axis{font-size:15px;fill:#374151;}
 .small{font-size:14px;fill:#475569;}
 .tiny{font-size:13px;fill:#64748b;}
 .label{font-size:16px;font-weight:700;}
-.code{font-family:Consolas,Monaco,'Courier New',monospace;font-size:12px;fill:#e2e8f0;}
+.code{font-family:Consolas,Monaco,'Courier New',monospace;font-size:10px;fill:#e2e8f0;}
 .box{stroke:#1f2937;stroke-width:1.4;rx:14;ry:14;}
 </style>
 <defs>
@@ -15,90 +15,90 @@ text{font-family:Arial,Helvetica,sans-serif;fill:#111827;}
 <path d="M0,0 L0,6 L9,3 z" fill="#334155" />
 </marker>
 </defs>
-<rect x="0" y="0" width="1280" height="760" fill="#ffffff"/>
-<text class="title" x="70.00" y="44.00" text-anchor="start">CUDA break-even point</text>
-<text class="subtitle" x="70.00" y="66.00" text-anchor="start">Dense sweep by work items = N x Q. Speedup above 1.0 means CUDA is faster than CPU.</text>
-<line x1="120" y1="640.00" x2="990" y2="640.00" stroke="#e5e7eb"/>
+<rect x="0" y="0" width="1450" height="760" fill="#ffffff"/>
+<text class="title" x="70.00" y="44.00" text-anchor="start">CUDA 盈亏平衡点（break-even point）</text>
+<text class="subtitle" x="70.00" y="66.00" text-anchor="start">按工作项数量 N x Q 密集扫描；加速比超过 1.0 表示 CUDA 快于 CPU。</text>
+<line x1="120" y1="640.00" x2="1070" y2="640.00" stroke="#e5e7eb"/>
 <text class="axis" x="108.00" y="644.00" text-anchor="end">0.00</text>
-<line x1="120" y1="526.12" x2="990" y2="526.12" stroke="#e5e7eb"/>
+<line x1="120" y1="526.12" x2="1070" y2="526.12" stroke="#e5e7eb"/>
 <text class="axis" x="108.00" y="530.12" text-anchor="end">5.0</text>
-<line x1="120" y1="412.24" x2="990" y2="412.24" stroke="#e5e7eb"/>
+<line x1="120" y1="412.24" x2="1070" y2="412.24" stroke="#e5e7eb"/>
 <text class="axis" x="108.00" y="416.24" text-anchor="end">10</text>
-<line x1="120" y1="298.36" x2="990" y2="298.36" stroke="#e5e7eb"/>
+<line x1="120" y1="298.36" x2="1070" y2="298.36" stroke="#e5e7eb"/>
 <text class="axis" x="108.00" y="302.36" text-anchor="end">15</text>
-<line x1="120" y1="184.48" x2="990" y2="184.48" stroke="#e5e7eb"/>
+<line x1="120" y1="184.48" x2="1070" y2="184.48" stroke="#e5e7eb"/>
 <text class="axis" x="108.00" y="188.48" text-anchor="end">20</text>
 <line x1="120" y1="100" x2="120" y2="640" stroke="#111827" stroke-width="1.4"/>
-<line x1="120" y1="640" x2="990" y2="640" stroke="#111827" stroke-width="1.4"/>
-<line x1="120" y1="617.22" x2="990" y2="617.22" stroke="#0f172a" stroke-width="1.5" stroke-dasharray="7 5"/>
-<text class="tiny" x="998.00" y="621.22" text-anchor="start">reference 1.0</text>
-<polyline points="120.00,612.81 207.00,604.87 294.00,581.99 381.00,542.88 468.00,498.49 555.00,368.96 642.00,562.92 729.00,524.26 816.00,616.63 903.00,270.49 990.00,182.37" fill="none" stroke="#2563eb" stroke-width="3"/>
+<line x1="120" y1="640" x2="1070" y2="640" stroke="#111827" stroke-width="1.4"/>
+<line x1="120" y1="617.22" x2="1070" y2="617.22" stroke="#0f172a" stroke-width="1.5" stroke-dasharray="7 5"/>
+<text class="tiny" x="1078.00" y="621.22" text-anchor="start">参考线 1.0</text>
+<polyline points="120.00,612.81 215.00,604.87 310.00,581.99 405.00,542.88 500.00,498.49 595.00,368.96 690.00,562.92 785.00,524.26 880.00,616.63 975.00,270.49 1070.00,182.37" fill="none" stroke="#2563eb" stroke-width="3"/>
 <circle cx="120.00" cy="612.81" r="4.5" fill="#2563eb"/>
-<circle cx="207.00" cy="604.87" r="4.5" fill="#2563eb"/>
-<circle cx="294.00" cy="581.99" r="4.5" fill="#2563eb"/>
-<circle cx="381.00" cy="542.88" r="4.5" fill="#2563eb"/>
-<circle cx="468.00" cy="498.49" r="4.5" fill="#2563eb"/>
-<circle cx="555.00" cy="368.96" r="4.5" fill="#2563eb"/>
-<circle cx="642.00" cy="562.92" r="4.5" fill="#2563eb"/>
-<circle cx="729.00" cy="524.26" r="4.5" fill="#2563eb"/>
-<circle cx="816.00" cy="616.63" r="4.5" fill="#2563eb"/>
-<circle cx="903.00" cy="270.49" r="4.5" fill="#2563eb"/>
-<circle cx="990.00" cy="182.37" r="4.5" fill="#2563eb"/>
-<polyline points="120.00,626.27 207.00,626.30 294.00,622.04 381.00,616.95 468.00,599.63 555.00,604.83 642.00,595.03 729.00,594.17 816.00,593.37 903.00,518.83 990.00,476.37" fill="none" stroke="#16a34a" stroke-width="3"/>
+<circle cx="215.00" cy="604.87" r="4.5" fill="#2563eb"/>
+<circle cx="310.00" cy="581.99" r="4.5" fill="#2563eb"/>
+<circle cx="405.00" cy="542.88" r="4.5" fill="#2563eb"/>
+<circle cx="500.00" cy="498.49" r="4.5" fill="#2563eb"/>
+<circle cx="595.00" cy="368.96" r="4.5" fill="#2563eb"/>
+<circle cx="690.00" cy="562.92" r="4.5" fill="#2563eb"/>
+<circle cx="785.00" cy="524.26" r="4.5" fill="#2563eb"/>
+<circle cx="880.00" cy="616.63" r="4.5" fill="#2563eb"/>
+<circle cx="975.00" cy="270.49" r="4.5" fill="#2563eb"/>
+<circle cx="1070.00" cy="182.37" r="4.5" fill="#2563eb"/>
+<polyline points="120.00,626.27 215.00,626.30 310.00,622.04 405.00,616.95 500.00,599.63 595.00,604.83 690.00,595.03 785.00,594.17 880.00,593.37 975.00,518.83 1070.00,476.37" fill="none" stroke="#16a34a" stroke-width="3"/>
 <circle cx="120.00" cy="626.27" r="4.5" fill="#16a34a"/>
-<circle cx="207.00" cy="626.30" r="4.5" fill="#16a34a"/>
-<circle cx="294.00" cy="622.04" r="4.5" fill="#16a34a"/>
-<circle cx="381.00" cy="616.95" r="4.5" fill="#16a34a"/>
-<circle cx="468.00" cy="599.63" r="4.5" fill="#16a34a"/>
-<circle cx="555.00" cy="604.83" r="4.5" fill="#16a34a"/>
-<circle cx="642.00" cy="595.03" r="4.5" fill="#16a34a"/>
-<circle cx="729.00" cy="594.17" r="4.5" fill="#16a34a"/>
-<circle cx="816.00" cy="593.37" r="4.5" fill="#16a34a"/>
-<circle cx="903.00" cy="518.83" r="4.5" fill="#16a34a"/>
-<circle cx="990.00" cy="476.37" r="4.5" fill="#16a34a"/>
-<polyline points="120.00,627.07 207.00,627.07 294.00,625.63 381.00,623.91 468.00,620.45 555.00,615.07 642.00,610.65 729.00,609.01 816.00,607.75 903.00,553.06 990.00,520.93" fill="none" stroke="#f59e0b" stroke-width="3"/>
+<circle cx="215.00" cy="626.30" r="4.5" fill="#16a34a"/>
+<circle cx="310.00" cy="622.04" r="4.5" fill="#16a34a"/>
+<circle cx="405.00" cy="616.95" r="4.5" fill="#16a34a"/>
+<circle cx="500.00" cy="599.63" r="4.5" fill="#16a34a"/>
+<circle cx="595.00" cy="604.83" r="4.5" fill="#16a34a"/>
+<circle cx="690.00" cy="595.03" r="4.5" fill="#16a34a"/>
+<circle cx="785.00" cy="594.17" r="4.5" fill="#16a34a"/>
+<circle cx="880.00" cy="593.37" r="4.5" fill="#16a34a"/>
+<circle cx="975.00" cy="518.83" r="4.5" fill="#16a34a"/>
+<circle cx="1070.00" cy="476.37" r="4.5" fill="#16a34a"/>
+<polyline points="120.00,627.07 215.00,627.07 310.00,625.63 405.00,623.91 500.00,620.45 595.00,615.07 690.00,610.65 785.00,609.01 880.00,607.75 975.00,553.06 1070.00,520.93" fill="none" stroke="#f59e0b" stroke-width="3"/>
 <circle cx="120.00" cy="627.07" r="4.5" fill="#f59e0b"/>
-<circle cx="207.00" cy="627.07" r="4.5" fill="#f59e0b"/>
-<circle cx="294.00" cy="625.63" r="4.5" fill="#f59e0b"/>
-<circle cx="381.00" cy="623.91" r="4.5" fill="#f59e0b"/>
-<circle cx="468.00" cy="620.45" r="4.5" fill="#f59e0b"/>
-<circle cx="555.00" cy="615.07" r="4.5" fill="#f59e0b"/>
-<circle cx="642.00" cy="610.65" r="4.5" fill="#f59e0b"/>
-<circle cx="729.00" cy="609.01" r="4.5" fill="#f59e0b"/>
-<circle cx="816.00" cy="607.75" r="4.5" fill="#f59e0b"/>
-<circle cx="903.00" cy="553.06" r="4.5" fill="#f59e0b"/>
-<circle cx="990.00" cy="520.93" r="4.5" fill="#f59e0b"/>
+<circle cx="215.00" cy="627.07" r="4.5" fill="#f59e0b"/>
+<circle cx="310.00" cy="625.63" r="4.5" fill="#f59e0b"/>
+<circle cx="405.00" cy="623.91" r="4.5" fill="#f59e0b"/>
+<circle cx="500.00" cy="620.45" r="4.5" fill="#f59e0b"/>
+<circle cx="595.00" cy="615.07" r="4.5" fill="#f59e0b"/>
+<circle cx="690.00" cy="610.65" r="4.5" fill="#f59e0b"/>
+<circle cx="785.00" cy="609.01" r="4.5" fill="#f59e0b"/>
+<circle cx="880.00" cy="607.75" r="4.5" fill="#f59e0b"/>
+<circle cx="975.00" cy="553.06" r="4.5" fill="#f59e0b"/>
+<circle cx="1070.00" cy="520.93" r="4.5" fill="#f59e0b"/>
 <line x1="120.00" y1="640" x2="120.00" y2="646" stroke="#111827"/>
 <text class="axis" x="120.00" y="665.00" text-anchor="middle">8192</text>
-<line x1="207.00" y1="640" x2="207.00" y2="646" stroke="#111827"/>
-<text class="axis" x="207.00" y="665.00" text-anchor="middle">12288</text>
-<line x1="294.00" y1="640" x2="294.00" y2="646" stroke="#111827"/>
-<text class="axis" x="294.00" y="665.00" text-anchor="middle">24576</text>
-<line x1="381.00" y1="640" x2="381.00" y2="646" stroke="#111827"/>
-<text class="axis" x="381.00" y="665.00" text-anchor="middle">49152</text>
-<line x1="468.00" y1="640" x2="468.00" y2="646" stroke="#111827"/>
-<text class="axis" x="468.00" y="665.00" text-anchor="middle">81920</text>
-<line x1="555.00" y1="640" x2="555.00" y2="646" stroke="#111827"/>
-<text class="axis" x="555.00" y="665.00" text-anchor="middle">147456</text>
-<line x1="642.00" y1="640" x2="642.00" y2="646" stroke="#111827"/>
-<text class="axis" x="642.00" y="665.00" text-anchor="middle">262144</text>
-<line x1="729.00" y1="640" x2="729.00" y2="646" stroke="#111827"/>
-<text class="axis" x="729.00" y="665.00" text-anchor="middle">393216</text>
-<line x1="816.00" y1="640" x2="816.00" y2="646" stroke="#111827"/>
-<text class="axis" x="816.00" y="665.00" text-anchor="middle">524288</text>
-<line x1="903.00" y1="640" x2="903.00" y2="646" stroke="#111827"/>
-<text class="axis" x="903.00" y="665.00" text-anchor="middle">1179648</text>
-<line x1="990.00" y1="640" x2="990.00" y2="646" stroke="#111827"/>
-<text class="axis" x="990.00" y="665.00" text-anchor="middle">2097152</text>
-<text class="axis" x="555.00" y="726.00" text-anchor="middle">Work items (N x Q)</text>
-<text class="axis" x="120.00" y="84.00" text-anchor="start">Speedup (CPU time / CUDA time)</text>
-<line x1="1024" y1="112" x2="1060" y2="112" stroke="#2563eb" stroke-width="4"/>
-<circle cx="1042" cy="112" r="5.5" fill="#2563eb"/>
-<text class="tiny" x="1074.00" y="117.00" text-anchor="start">distance matrix</text>
-<line x1="1024" y1="142" x2="1060" y2="142" stroke="#16a34a" stroke-width="4"/>
-<circle cx="1042" cy="142" r="5.5" fill="#16a34a"/>
-<text class="tiny" x="1074.00" y="147.00" text-anchor="start">nearest point</text>
-<line x1="1024" y1="172" x2="1060" y2="172" stroke="#f59e0b" stroke-width="4"/>
-<circle cx="1042" cy="172" r="5.5" fill="#f59e0b"/>
-<text class="tiny" x="1074.00" y="177.00" text-anchor="start">circle range count</text>
+<line x1="215.00" y1="640" x2="215.00" y2="646" stroke="#111827"/>
+<text class="axis" x="215.00" y="665.00" text-anchor="middle">12288</text>
+<line x1="310.00" y1="640" x2="310.00" y2="646" stroke="#111827"/>
+<text class="axis" x="310.00" y="665.00" text-anchor="middle">24576</text>
+<line x1="405.00" y1="640" x2="405.00" y2="646" stroke="#111827"/>
+<text class="axis" x="405.00" y="665.00" text-anchor="middle">49152</text>
+<line x1="500.00" y1="640" x2="500.00" y2="646" stroke="#111827"/>
+<text class="axis" x="500.00" y="665.00" text-anchor="middle">81920</text>
+<line x1="595.00" y1="640" x2="595.00" y2="646" stroke="#111827"/>
+<text class="axis" x="595.00" y="665.00" text-anchor="middle">147456</text>
+<line x1="690.00" y1="640" x2="690.00" y2="646" stroke="#111827"/>
+<text class="axis" x="690.00" y="665.00" text-anchor="middle">262144</text>
+<line x1="785.00" y1="640" x2="785.00" y2="646" stroke="#111827"/>
+<text class="axis" x="785.00" y="665.00" text-anchor="middle">393216</text>
+<line x1="880.00" y1="640" x2="880.00" y2="646" stroke="#111827"/>
+<text class="axis" x="880.00" y="665.00" text-anchor="middle">524288</text>
+<line x1="975.00" y1="640" x2="975.00" y2="646" stroke="#111827"/>
+<text class="axis" x="975.00" y="665.00" text-anchor="middle">1179648</text>
+<line x1="1070.00" y1="640" x2="1070.00" y2="646" stroke="#111827"/>
+<text class="axis" x="1070.00" y="665.00" text-anchor="middle">2097152</text>
+<text class="axis" x="595.00" y="726.00" text-anchor="middle">工作项数量（work items = N x Q）</text>
+<text class="axis" x="120.00" y="84.00" text-anchor="start">加速比（CPU 时间 / CUDA 时间）</text>
+<line x1="1104" y1="112" x2="1140" y2="112" stroke="#2563eb" stroke-width="4"/>
+<circle cx="1122" cy="112" r="5.5" fill="#2563eb"/>
+<text class="tiny" x="1154.00" y="117.00" text-anchor="start">距离矩阵（distance matrix）</text>
+<line x1="1104" y1="142" x2="1140" y2="142" stroke="#16a34a" stroke-width="4"/>
+<circle cx="1122" cy="142" r="5.5" fill="#16a34a"/>
+<text class="tiny" x="1154.00" y="147.00" text-anchor="start">最近点（nearest point）</text>
+<line x1="1104" y1="172" x2="1140" y2="172" stroke="#f59e0b" stroke-width="4"/>
+<circle cx="1122" cy="172" r="5.5" fill="#f59e0b"/>
+<text class="tiny" x="1154.00" y="177.00" text-anchor="start">圆形范围计数（circle range count）</text>
 </svg>

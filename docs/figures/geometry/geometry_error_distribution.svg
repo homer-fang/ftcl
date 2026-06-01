@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1100" height="620" viewBox="0 0 1100 620" role="img">
 <style>
-text{font-family:Arial,Helvetica,sans-serif;fill:#111827;}
+text{font-family:'AR PL UMing TW MBE','AR PL UMing CN','FandolHei','Microsoft YaHei','SimHei',Arial,Helvetica,sans-serif;fill:#111827;}
 .title{font-size:24px;font-weight:700;}
 .subtitle{font-size:13px;fill:#475569;}
 .label{font-size:14px;font-weight:700;}
@@ -18,8 +18,8 @@ text{font-family:Arial,Helvetica,sans-serif;fill:#111827;}
 </filter>
 </defs>
 <rect x="0" y="0" width="1100" height="620" fill="#ffffff"/>
-<text class="title" x="70.00" y="44.00" text-anchor="start">CPU/CUDA numerical error distribution</text>
-<text class="subtitle" x="70.00" y="66.00" text-anchor="start">Histogram of max absolute error per equivalence check; lower is better.</text>
+<text class="title" x="70.00" y="44.00" text-anchor="start">CPU/CUDA 数值误差分布（error distribution）</text>
+<text class="subtitle" x="70.00" y="66.00" text-anchor="start">每次等价性检查的最大绝对误差直方图；数值越低越好。</text>
 <line x1="95" y1="520.00" x2="1050" y2="520.00" stroke="#e5e7eb"/>
 <text class="axis" x="83.00" y="524.00" text-anchor="end">0</text>
 <line x1="95" y1="466.25" x2="1050" y2="466.25" stroke="#e5e7eb"/>
@@ -44,9 +44,9 @@ text{font-family:Arial,Helvetica,sans-serif;fill:#111827;}
 <text class="small" x="572.50" y="80.00" text-anchor="middle">8</text>
 <text class="axis" x="572.50" y="545.00" text-anchor="middle">0.00</text>
 <rect x="780" y="112" width="250" height="62" rx="12" fill="#ecfdf5" stroke="#16a34a" stroke-width="1.2"/>
-<text class="label" x="905.00" y="138.00" text-anchor="middle">all checks exact match</text>
-<text class="tiny" x="905.00" y="160.00" text-anchor="middle">max_abs_error = 0 for every sample</text>
-<text class="axis" x="572.50" y="586.00" text-anchor="middle">Max absolute error</text>
-<text class="axis" x="28" y="305.00" transform="rotate(-90 28 305.00)">Check count</text>
-<text class="small" x="1042.00" y="110.00" text-anchor="end">samples=8, max=0</text>
+<text class="label" x="905.00" y="138.00" text-anchor="middle">全部检查精确一致</text>
+<text class="tiny" x="905.00" y="160.00" text-anchor="middle">每个样本 max_abs_error = 0</text>
+<text class="axis" x="572.50" y="586.00" text-anchor="middle">最大绝对误差（max absolute error）</text>
+<text class="axis" x="28" y="305.00" transform="rotate(-90 28 305.00)">检查次数</text>
+<text class="small" x="1042.00" y="110.00" text-anchor="end">样本数=8, 最大值=0</text>
 </svg>

@@ -28,9 +28,9 @@ COLORS = {
 }
 
 ALGO_LABELS = {
-    "batch_distance_matrix": "distance matrix",
-    "nearest_point": "nearest point",
-    "range_count_circle": "circle range count",
+    "batch_distance_matrix": "距离矩阵（distance matrix）",
+    "nearest_point": "最近点（nearest point）",
+    "range_count_circle": "圆形范围计数（circle range count）",
 }
 
 ALGO_COLORS = {
@@ -56,7 +56,7 @@ def write_text(path: Path, text: str) -> None:
 def svg_header(w: int, h: int) -> str:
     return f'''<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" viewBox="0 0 {w} {h}" role="img">
 <style>
-text{{font-family:Arial,Helvetica,sans-serif;fill:#111827;}}
+text{{font-family:'AR PL UMing TW MBE','AR PL UMing CN','FandolHei','Microsoft YaHei','SimHei',Arial,Helvetica,sans-serif;fill:#111827;}}
 .title{{font-size:24px;font-weight:700;}}
 .subtitle{{font-size:13px;fill:#475569;}}
 .label{{font-size:14px;font-weight:700;}}
@@ -120,45 +120,45 @@ def draw_system_architecture(out: Path) -> None:
     w, h = 1280, 720
     p = [svg_header(w, h)]
     p.append(f'<rect x="0" y="0" width="{w}" height="{h}" fill="#ffffff"/>\n')
-    p.append(text(70, 44, "FTCL geometry system architecture", "title", "start"))
-    p.append(text(70, 66, "A script control plane drives a UVec data plane, which selects CPU or CUDA execution backends.", "subtitle", "start"))
+    p.append(text(70, 44, "FTCL 几何系统架构（geometry system architecture）", "title", "start"))
+    p.append(text(70, 66, "脚本控制平面驱动 UVec 数据平面，并选择 CPU 或 CUDA 执行后端。", "subtitle", "start"))
 
     lanes = [
-        (80, 120, 1120, 150, "1  Script control plane", "#eff6ff"),
-        (80, 305, 1120, 160, "2  UVec data abstraction plane", "#fffbeb"),
-        (80, 500, 1120, 135, "3  Execution backend plane", "#f8fafc"),
+        (80, 120, 1120, 150, "1  脚本控制平面（control plane）", "#eff6ff"),
+        (80, 305, 1120, 160, "2  UVec 数据抽象平面（data plane）", "#fffbeb"),
+        (80, 500, 1120, 135, "3  执行后端平面（backend plane）", "#f8fafc"),
     ]
     for x, y, bw, bh, name, fill in lanes:
         p.append(f'<rect x="{x}" y="{y}" width="{bw}" height="{bh}" rx="22" fill="{fill}" stroke="#e2e8f0"/>\n')
         p.append(text(x + 22, y + 28, name, "label", "start"))
 
-    p.append(box(125, 165, 170, 72, ["FTCL script", "geom ...", "thread channel"], "#dbeafe"))
-    p.append(box(355, 165, 180, 72, ["Lexer / Parser", "command + words"], "#e0f2fe"))
-    p.append(box(595, 165, 205, 72, ["Interpreter", "substitution", "command dispatch"], "#e0f2fe"))
-    p.append(box(875, 165, 190, 72, ["geom command", "decode args", "select device"], "#dcfce7"))
+    p.append(box(125, 165, 170, 72, ["FTCL 脚本", "geom ...", "thread channel"], "#dbeafe"))
+    p.append(box(355, 165, 180, 72, ["词法/语法分析", "（Lexer / Parser）", "命令与词（words）"], "#e0f2fe"))
+    p.append(box(595, 165, 205, 72, ["解释器（Interpreter）", "替换（substitution）", "命令分发"], "#e0f2fe"))
+    p.append(box(875, 165, 190, 72, ["geom 命令", "解析参数", "选择设备"], "#dcfce7"))
 
-    p.append(arrow(295, 201, 355, 201, "parse"))
-    p.append(arrow(535, 201, 595, 201, "evaluate"))
-    p.append(arrow(800, 201, 875, 201, "dispatch"))
+    p.append(arrow(295, 201, 355, 201, "解析"))
+    p.append(arrow(535, 201, 595, 201, "求值"))
+    p.append(arrow(800, 201, 875, 201, "分发"))
 
-    p.append(box(180, 350, 220, 76, ["Result value", "usually a UVec handle"], "#fff7ed"))
-    p.append(box(480, 330, 360, 116, ["UVec handle manager", "id -> typed vector", "per-handle lock"], "#fef3c7"))
-    p.append(box(920, 330, 220, 116, ["UVec object", "CPU/CUDA buffers", "valid flags"], "#fef3c7"))
+    p.append(box(180, 350, 220, 76, ["结果值", "通常是 UVec 句柄"], "#fff7ed"))
+    p.append(box(480, 330, 360, 116, ["UVec 句柄管理器", "id -> 类型化向量", "按句柄加锁"], "#fef3c7"))
+    p.append(box(920, 330, 220, 116, ["UVec 对象", "CPU/CUDA 缓冲区", "有效标记（valid flags）"], "#fef3c7"))
 
-    p.append(arrow(970, 237, 1030, 330, "lookup handle"))
-    p.append(arrow(840, 388, 920, 388, "typed access"))
-    p.append(arrow(480, 388, 400, 388, "return handle", COLORS["orange"]))
+    p.append(arrow(970, 237, 1030, 330, "查询句柄"))
+    p.append(arrow(840, 388, 920, 388, "类型化访问"))
+    p.append(arrow(480, 388, 400, 388, "返回句柄", COLORS["orange"]))
 
-    p.append(box(190, 545, 220, 72, ["CPU backend", "std::vector view", "scalar loops"], "#f1f5f9"))
-    p.append(box(530, 545, 230, 72, ["CUDA backend", "device pointer", "kernel launch"], "#ede9fe"))
-    p.append(box(875, 545, 230, 72, ["Multi-GPU workers", "cuda:0 ... cuda:7", "independent handles"], "#ede9fe"))
+    p.append(box(190, 545, 220, 72, ["CPU 后端（backend）", "std::vector 视图", "标量循环"], "#f1f5f9"))
+    p.append(box(530, 545, 230, 72, ["CUDA 后端（backend）", "设备指针", "kernel 启动"], "#ede9fe"))
+    p.append(box(875, 545, 230, 72, ["多 GPU 工作器", "cuda:0 ... cuda:7", "独立句柄"], "#ede9fe"))
 
     p.append(arrow(985, 446, 300, 545, "as_uptr(cpu)", COLORS["slate"]))
     p.append(arrow(1030, 446, 645, 545, "as_uptr(cuda:0)", COLORS["purple"]))
-    p.append(arrow(1070, 446, 990, 545, "partitioned handles", COLORS["purple"], "7 5"))
+    p.append(arrow(1070, 446, 990, 545, "分片句柄", COLORS["purple"], "7 5"))
 
-    p.append(text(140, 680, "Key idea:", "label", "start"))
-    p.append(text(225, 680, "scripts move small handles; UVec keeps large geometry arrays resident until a final readback is needed.", "subtitle", "start"))
+    p.append(text(140, 680, "核心思想：", "label", "start"))
+    p.append(text(225, 680, "脚本只传递小句柄；UVec 让大型几何数组驻留在设备端，直到最终读回。", "subtitle", "start"))
     p.append(svg_footer())
     write_text(out, "".join(p))
 
@@ -167,30 +167,30 @@ def draw_uvec_sync(out: Path) -> None:
     w, h = 1280, 720
     p = [svg_header(w, h)]
     p.append(f'<rect x="0" y="0" width="{w}" height="{h}" fill="#ffffff"/>\n')
-    p.append(text(70, 44, "UVec cross-device synchronization", "title", "start"))
-    p.append(text(70, 66, "Reads make a target device valid; mutable writes make other copies stale.", "subtitle", "start"))
+    p.append(text(70, 44, "UVec 跨设备同步（cross-device synchronization）", "title", "start"))
+    p.append(text(70, 66, "读取会让目标设备副本变为有效；可写访问会让其他副本失效。", "subtitle", "start"))
 
     panels = [
-        (80, 115, 1120, 245, "Read path: make data available without destroying other valid copies"),
-        (80, 405, 1120, 220, "Write path: grant one mutable pointer and invalidate stale copies"),
+        (80, 115, 1120, 245, "读取路径：在不破坏其他有效副本的情况下让目标设备可读"),
+        (80, 405, 1120, 220, "写入路径：授予一个可写指针，并使过期副本失效"),
     ]
     for x, y, bw, bh, title in panels:
         p.append(f'<rect x="{x}" y="{y}" width="{bw}" height="{bh}" rx="22" fill="#f8fafc" stroke="#e2e8f0"/>\n')
         p.append(text(x + 24, y + 30, title, "label", "start"))
 
-    p.append(box(135, 190, 220, 92, ["Before", "CPU valid", "CUDA invalid"], "#dbeafe"))
-    p.append(box(510, 185, 260, 102, ["as_uptr(cuda:0)", "copy CPU -> CUDA", "return const pointer"], "#fef3c7"))
-    p.append(box(925, 190, 220, 92, ["After", "CPU valid", "CUDA valid", "both readable"], "#dcfce7"))
-    p.append(arrow(355, 236, 510, 236, "request CUDA read", COLORS["slate"]))
-    p.append(arrow(770, 236, 925, 236, "synchronized read", COLORS["green"]))
-    p.append(arrow(340, 307, 955, 307, "physical copy happens only when target flag is invalid", COLORS["sky"], "8 6"))
+    p.append(box(135, 190, 220, 92, ["之前", "CPU 有效", "CUDA 无效"], "#dbeafe"))
+    p.append(box(510, 185, 260, 102, ["as_uptr(cuda:0)", "复制 CPU -> CUDA", "返回只读指针"], "#fef3c7"))
+    p.append(box(925, 190, 220, 92, ["之后", "CPU 有效", "CUDA 有效", "均可读取"], "#dcfce7"))
+    p.append(arrow(355, 236, 510, 236, "请求 CUDA 读取", COLORS["slate"]))
+    p.append(arrow(770, 236, 925, 236, "同步后读取", COLORS["green"]))
+    p.append(arrow(340, 307, 955, 307, "只有目标标记无效时才发生物理复制", COLORS["sky"], "8 6"))
 
-    p.append(box(135, 475, 220, 90, ["Before", "CPU valid", "CUDA valid"], "#dcfce7"))
-    p.append(box(510, 470, 260, 100, ["as_mut_uptr(cuda:0)", "prepare writable pointer", "latest = cuda:0"], "#fef3c7"))
-    p.append(box(925, 475, 220, 90, ["After", "CUDA valid", "CPU invalid"], "#ede9fe"))
-    p.append(arrow(355, 520, 510, 520, "request CUDA write", COLORS["slate"]))
-    p.append(arrow(770, 520, 925, 520, "invalidate CPU copy", COLORS["red"]))
-    p.append(text(600, 665, "The same handle is stable at script level; UVec decides when copy or invalidation is required.", "subtitle"))
+    p.append(box(135, 475, 220, 90, ["之前", "CPU 有效", "CUDA 有效"], "#dcfce7"))
+    p.append(box(510, 470, 260, 100, ["as_mut_uptr(cuda:0)", "准备可写指针", "latest = cuda:0"], "#fef3c7"))
+    p.append(box(925, 475, 220, 90, ["之后", "CUDA 有效", "CPU 无效"], "#ede9fe"))
+    p.append(arrow(355, 520, 510, 520, "请求 CUDA 写入", COLORS["slate"]))
+    p.append(arrow(770, 520, 925, 520, "使 CPU 副本失效", COLORS["red"]))
+    p.append(text(600, 665, "脚本层句柄保持稳定；UVec 决定何时复制、何时失效。", "subtitle"))
     p.append(svg_footer())
     write_text(out, "".join(p))
 
@@ -199,28 +199,28 @@ def draw_geom_flow(out: Path) -> None:
     w, h = 1200, 760
     p = [svg_header(w, h)]
     p.append(f'<rect x="0" y="0" width="{w}" height="{h}" fill="#ffffff"/>\n')
-    p.append(text(70, 44, "geom command execution flow", "title", "start"))
-    p.append(text(70, 66, "Example: geom nearest_point $dataset $queries cuda:0", "subtitle", "start"))
+    p.append(text(70, 44, "geom 命令执行流程（command execution flow）", "title", "start"))
+    p.append(text(70, 66, "示例：geom nearest_point $dataset $queries cuda:0", "subtitle", "start"))
 
     nodes = [
-        (90, 125, 250, 76, ["FTCL script", "geom nearest_point ..."], "#dbeafe"),
-        (90, 255, 250, 76, ["Interpreter", "calls geom dispatcher"], "#e0f2fe"),
-        (475, 255, 250, 76, ["Parse arguments", "handles + device"], "#dcfce7"),
-        (860, 255, 250, 76, ["Lookup UVec", "typed storage check"], "#fef3c7"),
-        (300, 460, 240, 82, ["CPU path", "read CPU buffer", "run scalar algorithm"], "#f1f5f9"),
-        (660, 460, 240, 82, ["CUDA path", "sync to device", "launch kernel"], "#ede9fe"),
-        (475, 620, 250, 76, ["Create result UVec", "return handle to script"], "#fff7ed"),
+        (90, 125, 250, 76, ["FTCL 脚本", "geom nearest_point ..."], "#dbeafe"),
+        (90, 255, 250, 76, ["解释器（Interpreter）", "调用 geom 分发器"], "#e0f2fe"),
+        (475, 255, 250, 76, ["解析参数", "句柄 + 设备"], "#dcfce7"),
+        (860, 255, 250, 76, ["查询 UVec", "检查类型化存储"], "#fef3c7"),
+        (300, 460, 240, 82, ["CPU 路径", "读取 CPU 缓冲区", "运行标量算法"], "#f1f5f9"),
+        (660, 460, 240, 82, ["CUDA 路径", "同步到设备", "启动 kernel"], "#ede9fe"),
+        (475, 620, 250, 76, ["创建结果 UVec", "返回句柄给脚本"], "#fff7ed"),
     ]
     for x, y, bw, bh, lines, fill in nodes:
         p.append(box(x, y, bw, bh, lines, fill))
     p.append(arrow(215, 201, 215, 255, "eval"))
     p.append(arrow(340, 293, 475, 293, "argv"))
-    p.append(arrow(725, 293, 860, 293, "handles"))
-    p.append(arrow(985, 331, 420, 460, "device=cpu"))
-    p.append(arrow(985, 331, 780, 460, "device=cuda:0"))
-    p.append(arrow(420, 542, 535, 620, "values"))
-    p.append(arrow(780, 542, 665, 620, "device result"))
-    p.append(arrow(475, 658, 340, 293, "FTCL value"))
+    p.append(arrow(725, 293, 860, 293, "句柄"))
+    p.append(arrow(985, 331, 420, 460, "设备=cpu"))
+    p.append(arrow(985, 331, 780, 460, "设备=cuda:0"))
+    p.append(arrow(420, 542, 535, 620, "数值"))
+    p.append(arrow(780, 542, 665, 620, "设备端结果"))
+    p.append(arrow(475, 658, 340, 293, "FTCL 值"))
     p.append(svg_footer())
     write_text(out, "".join(p))
 
@@ -255,7 +255,11 @@ def collect_perf_data(build_dir: Path, data_dir: Path, perf_mode: str) -> List[D
         if rows:
             ensure_dir(data_dir)
             with csv_path.open("w", newline="", encoding="utf-8") as f:
-                writer = csv.DictWriter(f, fieldnames=["metric", "device", "n", "q", "time_us", "throughput_items_per_s"])
+                writer = csv.DictWriter(
+                    f,
+                    fieldnames=["metric", "device", "n", "q", "time_us", "throughput_items_per_s"],
+                    lineterminator="\n",
+                )
                 writer.writeheader()
                 writer.writerows(rows)
             return rows
@@ -279,7 +283,7 @@ def collect_error_data(build_dir: Path, data_dir: Path) -> List[Dict[str, str]]:
         if rows:
             ensure_dir(data_dir)
             with csv_path.open("w", newline="", encoding="utf-8") as f:
-                writer = csv.DictWriter(f, fieldnames=["check", "max_abs_error"])
+                writer = csv.DictWriter(f, fieldnames=["check", "max_abs_error"], lineterminator="\n")
                 writer.writeheader()
                 writer.writerows(rows)
             return rows
@@ -288,7 +292,7 @@ def collect_error_data(build_dir: Path, data_dir: Path) -> List[Dict[str, str]]:
             return list(csv.DictReader(f))
     rows = [{"check": name, "max_abs_error": "0"} for name in ALGO_LABELS]
     with csv_path.open("w", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=["check", "max_abs_error"])
+        writer = csv.DictWriter(f, fieldnames=["check", "max_abs_error"], lineterminator="\n")
         writer.writeheader()
         writer.writerows(rows)
     return rows
@@ -331,8 +335,8 @@ def group_perf(rows: List[Dict[str, str]]) -> Dict[Tuple[str, str, int], Dict[st
 
 
 def draw_line_chart(out: Path, title: str, subtitle: str, ylabel: str, series: List[Dict[str, object]], y_min: float = 0.0, ref_line: float = None) -> None:
-    w, h = 1200, 700
-    ml, mr, mt, mb = 95, 230, 90, 105
+    w, h = 1450, 700
+    ml, mr, mt, mb = 95, 380, 90, 105
     pw, ph = w - ml - mr, h - mt - mb
     xs = sorted({x for s in series for x, _ in s["values"]})
     y_values = [y for s in series for _, y in s["values"]]
@@ -364,7 +368,7 @@ def draw_line_chart(out: Path, title: str, subtitle: str, ylabel: str, series: L
     if ref_line is not None:
         y = y_of(ref_line)
         p.append(f'<line x1="{ml}" y1="{y:.2f}" x2="{ml + pw}" y2="{y:.2f}" stroke="#0f172a" stroke-width="1.5" stroke-dasharray="7 5"/>\n')
-        p.append(text(ml + pw + 8, y + 4, f"reference {format_axis(ref_line)}", "tiny", "start"))
+        p.append(text(ml + pw + 8, y + 4, f"参考线 {format_axis(ref_line)}", "tiny", "start"))
 
     for s in series:
         vals = sorted(s["values"])
@@ -379,7 +383,7 @@ def draw_line_chart(out: Path, title: str, subtitle: str, ylabel: str, series: L
         xp = x_pos[x]
         p.append(f'<line x1="{xp:.2f}" y1="{mt + ph}" x2="{xp:.2f}" y2="{mt + ph + 6}" stroke="#111827"/>\n')
         p.append(text(xp, mt + ph + 25, str(x), "axis"))
-    p.append(text(ml + pw / 2, h - 34, "Point count N", "axis"))
+    p.append(text(ml + pw / 2, h - 34, "点数量 N（point count）", "axis"))
     p.append(f'<text class="axis" x="28" y="{mt + ph/2:.2f}" transform="rotate(-90 28 {mt + ph/2:.2f})">{esc(ylabel)}</text>\n')
 
     lx, ly = ml + pw + 34, mt + 10
@@ -408,7 +412,7 @@ def draw_speedup(rows: List[Dict[str, str]], out: Path) -> None:
                 vals.append((n, cpu["time_us"] / cuda["time_us"]))
         if vals:
             series.append({"name": ALGO_LABELS[metric], "values": vals, "color": ALGO_COLORS[metric]})
-    draw_line_chart(out, "CPU vs CUDA speedup", "Prebuilt inputs, median end-to-end FTCL geom command time; higher is better.", "Speedup (CPU time / CUDA time)", series, 0.0, 1.0)
+    draw_line_chart(out, "CPU/CUDA 加速比（speedup）", "预构造输入，统计 FTCL geom 命令端到端中位时间；数值越高越好。", "加速比（CPU 时间 / CUDA 时间）", series, 0.0, 1.0)
 
 
 def draw_throughput(rows: List[Dict[str, str]], out: Path) -> None:
@@ -421,8 +425,9 @@ def draw_throughput(rows: List[Dict[str, str]], out: Path) -> None:
             for n in ns:
                 vals.append((n, perf[(metric, device, n)]["throughput"]))
             if vals:
-                series.append({"name": f"{ALGO_LABELS[metric]} {device}", "values": vals, "color": ALGO_COLORS[metric], "dash": dash})
-    draw_line_chart(out, "Geometry throughput curve", "Dashed lines are CPU; solid lines are CUDA. Units are pair/query operations per second.", "Throughput (items/s)", series)
+                device_label = "CPU" if device == "cpu" else "CUDA cuda:0"
+                series.append({"name": f"{ALGO_LABELS[metric]} {device_label}", "values": vals, "color": ALGO_COLORS[metric], "dash": dash})
+    draw_line_chart(out, "几何吞吐量曲线（throughput）", "虚线表示 CPU，实线表示 CUDA；单位为每秒点对/查询操作数。", "吞吐量（items/s）", series)
 
 
 def draw_time_bars(rows: List[Dict[str, str]], out: Path) -> None:
@@ -445,8 +450,8 @@ def draw_time_bars(rows: List[Dict[str, str]], out: Path) -> None:
 
     p = [svg_header(w, h)]
     p.append(f'<rect x="0" y="0" width="{w}" height="{h}" fill="#ffffff"/>\n')
-    p.append(text(70, 44, "Execution time comparison", "title", "start"))
-    p.append(text(70, 66, f"Largest paper-mode scale in this run: N={selected_n}; lower is better.", "subtitle", "start"))
+    p.append(text(70, 44, "执行时间对比（execution time）", "title", "start"))
+    p.append(text(70, 66, f"本次论文模式最大规模：N={selected_n}；数值越低越好。", "subtitle", "start"))
 
     step = nice_step(y_max, 7)
     tick = 0.0
@@ -472,9 +477,9 @@ def draw_time_bars(rows: List[Dict[str, str]], out: Path) -> None:
             p.append(f'<rect x="{x:.2f}" y="{y:.2f}" width="{bar_w}" height="{mt + ph - y:.2f}" fill="{color}" rx="5"/>\n')
             p.append(text(x + bar_w / 2, y - 7, format_axis(v), "tiny"))
         p.append(multiline_text(cx, mt + ph + 28, [ALGO_LABELS[a]], "axis"))
-    p.append(f'<text class="axis" x="28" y="{mt + ph/2:.2f}" transform="rotate(-90 28 {mt + ph/2:.2f})">Time (microseconds)</text>\n')
+    p.append(f'<text class="axis" x="28" y="{mt + ph/2:.2f}" transform="rotate(-90 28 {mt + ph/2:.2f})">时间（微秒，us）</text>\n')
     p.append(f'<rect x="930" y="98" width="18" height="12" fill="#94a3b8"/><text class="tiny" x="956" y="109">CPU</text>\n')
-    p.append(f'<rect x="930" y="122" width="18" height="12" fill="{COLORS["blue"]}"/><text class="tiny" x="956" y="133">CUDA color by algorithm</text>\n')
+    p.append(f'<rect x="930" y="122" width="18" height="12" fill="{COLORS["blue"]}"/><text class="tiny" x="956" y="133">CUDA（颜色按算法区分）</text>\n')
     p.append(svg_footer())
     write_text(out, "".join(p))
 
@@ -508,8 +513,8 @@ def draw_error_hist(rows: List[Dict[str, str]], out: Path) -> None:
 
     p = [svg_header(w, h)]
     p.append(f'<rect x="0" y="0" width="{w}" height="{h}" fill="#ffffff"/>\n')
-    p.append(text(70, 44, "CPU/CUDA numerical error distribution", "title", "start"))
-    p.append(text(70, 66, "Histogram of max absolute error per equivalence check; lower is better.", "subtitle", "start"))
+    p.append(text(70, 44, "CPU/CUDA 数值误差分布（error distribution）", "title", "start"))
+    p.append(text(70, 66, "每次等价性检查的最大绝对误差直方图；数值越低越好。", "subtitle", "start"))
     for i in range(max_count + 1):
         y = y_of(i)
         p.append(f'<line x1="{ml}" y1="{y:.2f}" x2="{ml + pw}" y2="{y:.2f}" stroke="{COLORS["grid"]}"/>\n')
@@ -527,17 +532,17 @@ def draw_error_hist(rows: List[Dict[str, str]], out: Path) -> None:
         p.append(
             f'<rect x="{ml + pw - 270}" y="{mt + 22}" width="250" height="62" rx="12" fill="#ecfdf5" stroke="#16a34a" stroke-width="1.2"/>\n'
         )
-        p.append(text(ml + pw - 145, mt + 48, "all checks exact match", "label"))
-        p.append(text(ml + pw - 145, mt + 70, "max_abs_error = 0 for every sample", "tiny"))
+        p.append(text(ml + pw - 145, mt + 48, "全部检查精确一致", "label"))
+        p.append(text(ml + pw - 145, mt + 70, "每个样本 max_abs_error = 0", "tiny"))
     else:
         for i, c in enumerate(counts):
             x0, x1 = x_of(edges[i]), x_of(edges[i + 1])
             y = y_of(c)
             p.append(f'<rect x="{x0:.2f}" y="{y:.2f}" width="{max(2, x1 - x0 - 2):.2f}" height="{mt + ph - y:.2f}" fill="#16a34a" opacity="0.78"/>\n')
 
-    p.append(text(ml + pw / 2, h - 34, "Max absolute error", "axis"))
-    p.append(f'<text class="axis" x="28" y="{mt + ph/2:.2f}" transform="rotate(-90 28 {mt + ph/2:.2f})">Check count</text>\n')
-    p.append(text(ml + pw - 8, mt + 20, f"samples={len(values)}, max={max(values):.3g}", "small", "end"))
+    p.append(text(ml + pw / 2, h - 34, "最大绝对误差（max absolute error）", "axis"))
+    p.append(f'<text class="axis" x="28" y="{mt + ph/2:.2f}" transform="rotate(-90 28 {mt + ph/2:.2f})">检查次数</text>\n')
+    p.append(text(ml + pw - 8, mt + 20, f"样本数={len(values)}, 最大值={max(values):.3g}", "small", "end"))
     p.append(svg_footer())
     write_text(out, "".join(p))
 
@@ -551,10 +556,10 @@ def draw_geometry_visualization(out: Path) -> None:
     w, h = 1200, 820
     p = [svg_header(w, h)]
     p.append(f'<rect x="0" y="0" width="{w}" height="{h}" fill="#ffffff"/>\n')
-    p.append(text(70, 44, "Geometry algorithm visualization", "title", "start"))
-    p.append(text(70, 66, "Four representative geom commands used by the FTCL script interface.", "subtitle", "start"))
+    p.append(text(70, 44, "几何算法可视化（algorithm visualization）", "title", "start"))
+    p.append(text(70, 66, "展示 FTCL 脚本接口中四类代表性 geom 命令。", "subtitle", "start"))
 
-    panels = [(70, 110, 500, 300, "point in polygon"), (630, 110, 500, 300, "nearest point"), (70, 460, 500, 300, "range count circle"), (630, 460, 500, 300, "AABB collision")]
+    panels = [(70, 110, 500, 300, "点在多边形内（point in polygon）"), (630, 110, 500, 300, "最近点（nearest point）"), (70, 460, 500, 300, "圆形范围计数（range count circle）"), (630, 460, 500, 300, "AABB 碰撞（collision）")]
     for args in panels:
         panel(p, *args)
 
@@ -566,7 +571,7 @@ def draw_geometry_visualization(out: Path) -> None:
     poly = [(0, 0), (4, 0), (4, 2.6), (2.2, 3.4), (0, 2.5)]
     pts = " ".join(f"{map_pt(x,y,ox,oy,sw,sh,-0.5,4.5,-0.5,3.8)[0]:.1f},{map_pt(x,y,ox,oy,sw,sh,-0.5,4.5,-0.5,3.8)[1]:.1f}" for x, y in poly)
     p.append(f'<polygon points="{pts}" fill="#dbeafe" stroke="#2563eb" stroke-width="3"/>\n')
-    for x, y, c, label in [(1, 1, "#16a34a", "inside"), (4, 1, "#f59e0b", "boundary"), (4.4, 3.2, "#dc2626", "outside")]:
+    for x, y, c, label in [(1, 1, "#16a34a", "内部"), (4, 1, "#f59e0b", "边界"), (4.4, 3.2, "#dc2626", "外部")]:
         sx, sy = map_pt(x, y, ox, oy, sw, sh, -0.5, 4.5, -0.5, 3.8)
         p.append(f'<circle cx="{sx:.1f}" cy="{sy:.1f}" r="7" fill="{c}"/>\n')
         p.append(text(sx + 10, sy - 8, label, "tiny", "start"))
@@ -583,7 +588,7 @@ def draw_geometry_visualization(out: Path) -> None:
         sx, sy = map_pt(x, y, ox, oy, sw, sh, -0.5, 5.5, -0.5, 4.0)
         p.append(f'<circle cx="{sx:.1f}" cy="{sy:.1f}" r="6" fill="#2563eb"/>\n')
     p.append(f'<path d="M{qx:.1f},{qy-10:.1f} L{qx+3:.1f},{qy-3:.1f} L{qx+10:.1f},{qy-3:.1f} L{qx+5:.1f},{qy+2:.1f} L{qx+7:.1f},{qy+9:.1f} L{qx:.1f},{qy+5:.1f} L{qx-7:.1f},{qy+9:.1f} L{qx-5:.1f},{qy+2:.1f} L{qx-10:.1f},{qy-3:.1f} L{qx-3:.1f},{qy-3:.1f} Z" fill="#dc2626"/>\n')
-    p.append(text(qx, qy + 24, "query", "tiny"))
+    p.append(text(qx, qy + 24, "查询点（query）", "tiny"))
 
     # Range count circle.
     ox, oy, sw, sh = 110, 515, 420, 200
@@ -596,15 +601,15 @@ def draw_geometry_visualization(out: Path) -> None:
         sx, sy = map_pt(x, y, ox, oy, sw, sh, 0, 5, 0, 4)
         inside = (x - center[0]) ** 2 + (y - center[1]) ** 2 <= 1.35 ** 2
         p.append(f'<circle cx="{sx:.1f}" cy="{sy:.1f}" r="6" fill="{COLORS["green"] if inside else COLORS["muted"]}"/>\n')
-    p.append(text(cx, cy - r - 10, "count = 4", "label"))
+    p.append(text(cx, cy - r - 10, "计数 = 4", "label"))
 
     # AABB collision.
     p.append(f'<rect x="710" y="545" width="170" height="120" fill="#dbeafe" stroke="#2563eb" stroke-width="3"/>\n')
     p.append(f'<rect x="825" y="595" width="190" height="105" fill="#fee2e2" stroke="#dc2626" stroke-width="3" opacity="0.8"/>\n')
     p.append(f'<rect x="710" y="708" width="110" height="30" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>\n')
-    p.append(text(795, 535, "box A", "tiny"))
-    p.append(text(920, 587, "box B", "tiny"))
-    p.append(text(876, 675, "overlap", "label"))
+    p.append(text(795, 535, "? A", "tiny"))
+    p.append(text(920, 587, "? B", "tiny"))
+    p.append(text(876, 675, "重叠", "label"))
 
     p.append(svg_footer())
     write_text(out, "".join(p))

@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720" role="img">
 <style>
-text{font-family:Arial,Helvetica,sans-serif;fill:#111827;}
+text{font-family:'AR PL UMing TW MBE','AR PL UMing CN','FandolHei','Microsoft YaHei','SimHei',Arial,Helvetica,sans-serif;fill:#111827;}
 .title{font-size:24px;font-weight:700;}
 .subtitle{font-size:13px;fill:#475569;}
 .label{font-size:14px;font-weight:700;}
@@ -18,52 +18,52 @@ text{font-family:Arial,Helvetica,sans-serif;fill:#111827;}
 </filter>
 </defs>
 <rect x="0" y="0" width="1280" height="720" fill="#ffffff"/>
-<text class="title" x="70.00" y="44.00" text-anchor="start">FTCL geometry system architecture</text>
-<text class="subtitle" x="70.00" y="66.00" text-anchor="start">A script control plane drives a UVec data plane, which selects CPU or CUDA execution backends.</text>
+<text class="title" x="70.00" y="44.00" text-anchor="start">FTCL 几何系统架构（geometry system architecture）</text>
+<text class="subtitle" x="70.00" y="66.00" text-anchor="start">脚本控制平面驱动 UVec 数据平面，并选择 CPU 或 CUDA 执行后端。</text>
 <rect x="80" y="120" width="1120" height="150" rx="22" fill="#eff6ff" stroke="#e2e8f0"/>
-<text class="label" x="102.00" y="148.00" text-anchor="start">1  Script control plane</text>
+<text class="label" x="102.00" y="148.00" text-anchor="start">1  脚本控制平面（control plane）</text>
 <rect x="80" y="305" width="1120" height="160" rx="22" fill="#fffbeb" stroke="#e2e8f0"/>
-<text class="label" x="102.00" y="333.00" text-anchor="start">2  UVec data abstraction plane</text>
+<text class="label" x="102.00" y="333.00" text-anchor="start">2  UVec 数据抽象平面（data plane）</text>
 <rect x="80" y="500" width="1120" height="135" rx="22" fill="#f8fafc" stroke="#e2e8f0"/>
-<text class="label" x="102.00" y="528.00" text-anchor="start">3  Execution backend plane</text>
+<text class="label" x="102.00" y="528.00" text-anchor="start">3  执行后端平面（backend plane）</text>
 <rect class="box" x="125.00" y="165.00" width="170.00" height="72.00" fill="#dbeafe" stroke="#1f2937" filter="url(#shadow)"/>
-<text class="small" x="210.00" y="189.00" text-anchor="middle"><tspan x="210.00" dy="0.00">FTCL script</tspan><tspan x="210.00" dy="17.00">geom ...</tspan><tspan x="210.00" dy="17.00">thread channel</tspan></text>
+<text class="small" x="210.00" y="189.00" text-anchor="middle"><tspan x="210.00" dy="0.00">FTCL 脚本</tspan><tspan x="210.00" dy="17.00">geom ...</tspan><tspan x="210.00" dy="17.00">thread channel</tspan></text>
 <rect class="box" x="355.00" y="165.00" width="180.00" height="72.00" fill="#e0f2fe" stroke="#1f2937" filter="url(#shadow)"/>
-<text class="small" x="445.00" y="197.50" text-anchor="middle"><tspan x="445.00" dy="0.00">Lexer / Parser</tspan><tspan x="445.00" dy="17.00">command + words</tspan></text>
+<text class="small" x="445.00" y="189.00" text-anchor="middle"><tspan x="445.00" dy="0.00">词法/语法分析</tspan><tspan x="445.00" dy="17.00">（Lexer / Parser）</tspan><tspan x="445.00" dy="17.00">命令与词（words）</tspan></text>
 <rect class="box" x="595.00" y="165.00" width="205.00" height="72.00" fill="#e0f2fe" stroke="#1f2937" filter="url(#shadow)"/>
-<text class="small" x="697.50" y="189.00" text-anchor="middle"><tspan x="697.50" dy="0.00">Interpreter</tspan><tspan x="697.50" dy="17.00">substitution</tspan><tspan x="697.50" dy="17.00">command dispatch</tspan></text>
+<text class="small" x="697.50" y="189.00" text-anchor="middle"><tspan x="697.50" dy="0.00">解释器（Interpreter）</tspan><tspan x="697.50" dy="17.00">替换（substitution）</tspan><tspan x="697.50" dy="17.00">命令分发</tspan></text>
 <rect class="box" x="875.00" y="165.00" width="190.00" height="72.00" fill="#dcfce7" stroke="#1f2937" filter="url(#shadow)"/>
-<text class="small" x="970.00" y="189.00" text-anchor="middle"><tspan x="970.00" dy="0.00">geom command</tspan><tspan x="970.00" dy="17.00">decode args</tspan><tspan x="970.00" dy="17.00">select device</tspan></text>
+<text class="small" x="970.00" y="189.00" text-anchor="middle"><tspan x="970.00" dy="0.00">geom 命令</tspan><tspan x="970.00" dy="17.00">解析参数</tspan><tspan x="970.00" dy="17.00">选择设备</tspan></text>
 <line x1="295.00" y1="201.00" x2="355.00" y2="201.00" stroke="#334155" stroke-width="2.2" marker-end="url(#arrow)"/>
-<text class="tiny" x="325.00" y="191.00" text-anchor="middle">parse</text>
+<text class="tiny" x="325.00" y="191.00" text-anchor="middle">解析</text>
 <line x1="535.00" y1="201.00" x2="595.00" y2="201.00" stroke="#334155" stroke-width="2.2" marker-end="url(#arrow)"/>
-<text class="tiny" x="565.00" y="191.00" text-anchor="middle">evaluate</text>
+<text class="tiny" x="565.00" y="191.00" text-anchor="middle">求值</text>
 <line x1="800.00" y1="201.00" x2="875.00" y2="201.00" stroke="#334155" stroke-width="2.2" marker-end="url(#arrow)"/>
-<text class="tiny" x="837.50" y="191.00" text-anchor="middle">dispatch</text>
+<text class="tiny" x="837.50" y="191.00" text-anchor="middle">分发</text>
 <rect class="box" x="180.00" y="350.00" width="220.00" height="76.00" fill="#fff7ed" stroke="#1f2937" filter="url(#shadow)"/>
-<text class="small" x="290.00" y="384.50" text-anchor="middle"><tspan x="290.00" dy="0.00">Result value</tspan><tspan x="290.00" dy="17.00">usually a UVec handle</tspan></text>
+<text class="small" x="290.00" y="384.50" text-anchor="middle"><tspan x="290.00" dy="0.00">结果值</tspan><tspan x="290.00" dy="17.00">通常是 UVec 句柄</tspan></text>
 <rect class="box" x="480.00" y="330.00" width="360.00" height="116.00" fill="#fef3c7" stroke="#1f2937" filter="url(#shadow)"/>
-<text class="small" x="660.00" y="376.00" text-anchor="middle"><tspan x="660.00" dy="0.00">UVec handle manager</tspan><tspan x="660.00" dy="17.00">id -&gt; typed vector</tspan><tspan x="660.00" dy="17.00">per-handle lock</tspan></text>
+<text class="small" x="660.00" y="376.00" text-anchor="middle"><tspan x="660.00" dy="0.00">UVec 句柄管理器</tspan><tspan x="660.00" dy="17.00">id -&gt; 类型化向量</tspan><tspan x="660.00" dy="17.00">按句柄加锁</tspan></text>
 <rect class="box" x="920.00" y="330.00" width="220.00" height="116.00" fill="#fef3c7" stroke="#1f2937" filter="url(#shadow)"/>
-<text class="small" x="1030.00" y="376.00" text-anchor="middle"><tspan x="1030.00" dy="0.00">UVec object</tspan><tspan x="1030.00" dy="17.00">CPU/CUDA buffers</tspan><tspan x="1030.00" dy="17.00">valid flags</tspan></text>
+<text class="small" x="1030.00" y="376.00" text-anchor="middle"><tspan x="1030.00" dy="0.00">UVec 对象</tspan><tspan x="1030.00" dy="17.00">CPU/CUDA 缓冲区</tspan><tspan x="1030.00" dy="17.00">有效标记（valid flags）</tspan></text>
 <line x1="970.00" y1="237.00" x2="1030.00" y2="330.00" stroke="#334155" stroke-width="2.2" marker-end="url(#arrow)"/>
-<text class="tiny" x="1000.00" y="273.50" text-anchor="middle">lookup handle</text>
+<text class="tiny" x="1000.00" y="273.50" text-anchor="middle">查询句柄</text>
 <line x1="840.00" y1="388.00" x2="920.00" y2="388.00" stroke="#334155" stroke-width="2.2" marker-end="url(#arrow)"/>
-<text class="tiny" x="880.00" y="378.00" text-anchor="middle">typed access</text>
+<text class="tiny" x="880.00" y="378.00" text-anchor="middle">类型化访问</text>
 <line x1="480.00" y1="388.00" x2="400.00" y2="388.00" stroke="#f59e0b" stroke-width="2.2" marker-end="url(#arrow)"/>
-<text class="tiny" x="440.00" y="378.00" text-anchor="middle">return handle</text>
+<text class="tiny" x="440.00" y="378.00" text-anchor="middle">返回句柄</text>
 <rect class="box" x="190.00" y="545.00" width="220.00" height="72.00" fill="#f1f5f9" stroke="#1f2937" filter="url(#shadow)"/>
-<text class="small" x="300.00" y="569.00" text-anchor="middle"><tspan x="300.00" dy="0.00">CPU backend</tspan><tspan x="300.00" dy="17.00">std::vector view</tspan><tspan x="300.00" dy="17.00">scalar loops</tspan></text>
+<text class="small" x="300.00" y="569.00" text-anchor="middle"><tspan x="300.00" dy="0.00">CPU 后端（backend）</tspan><tspan x="300.00" dy="17.00">std::vector 视图</tspan><tspan x="300.00" dy="17.00">标量循环</tspan></text>
 <rect class="box" x="530.00" y="545.00" width="230.00" height="72.00" fill="#ede9fe" stroke="#1f2937" filter="url(#shadow)"/>
-<text class="small" x="645.00" y="569.00" text-anchor="middle"><tspan x="645.00" dy="0.00">CUDA backend</tspan><tspan x="645.00" dy="17.00">device pointer</tspan><tspan x="645.00" dy="17.00">kernel launch</tspan></text>
+<text class="small" x="645.00" y="569.00" text-anchor="middle"><tspan x="645.00" dy="0.00">CUDA 后端（backend）</tspan><tspan x="645.00" dy="17.00">设备指针</tspan><tspan x="645.00" dy="17.00">kernel 启动</tspan></text>
 <rect class="box" x="875.00" y="545.00" width="230.00" height="72.00" fill="#ede9fe" stroke="#1f2937" filter="url(#shadow)"/>
-<text class="small" x="990.00" y="569.00" text-anchor="middle"><tspan x="990.00" dy="0.00">Multi-GPU workers</tspan><tspan x="990.00" dy="17.00">cuda:0 ... cuda:7</tspan><tspan x="990.00" dy="17.00">independent handles</tspan></text>
+<text class="small" x="990.00" y="569.00" text-anchor="middle"><tspan x="990.00" dy="0.00">多 GPU 工作器</tspan><tspan x="990.00" dy="17.00">cuda:0 ... cuda:7</tspan><tspan x="990.00" dy="17.00">独立句柄</tspan></text>
 <line x1="985.00" y1="446.00" x2="300.00" y2="545.00" stroke="#334155" stroke-width="2.2" marker-end="url(#arrow)"/>
 <text class="tiny" x="642.50" y="485.50" text-anchor="middle">as_uptr(cpu)</text>
 <line x1="1030.00" y1="446.00" x2="645.00" y2="545.00" stroke="#7c3aed" stroke-width="2.2" marker-end="url(#arrow)"/>
 <text class="tiny" x="837.50" y="485.50" text-anchor="middle">as_uptr(cuda:0)</text>
 <line x1="1070.00" y1="446.00" x2="990.00" y2="545.00" stroke="#7c3aed" stroke-width="2.2" stroke-dasharray="7 5" marker-end="url(#arrow)"/>
-<text class="tiny" x="1030.00" y="485.50" text-anchor="middle">partitioned handles</text>
-<text class="label" x="140.00" y="680.00" text-anchor="start">Key idea:</text>
-<text class="subtitle" x="225.00" y="680.00" text-anchor="start">scripts move small handles; UVec keeps large geometry arrays resident until a final readback is needed.</text>
+<text class="tiny" x="1030.00" y="485.50" text-anchor="middle">分片句柄</text>
+<text class="label" x="140.00" y="680.00" text-anchor="start">核心思想：</text>
+<text class="subtitle" x="225.00" y="680.00" text-anchor="start">脚本只传递小句柄；UVec 让大型几何数组驻留在设备端，直到最终读回。</text>
 </svg>

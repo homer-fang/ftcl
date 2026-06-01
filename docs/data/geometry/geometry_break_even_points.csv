@@ -1,4 +1,4 @@
 metric,label,break_even_work_items,min_n,min_q,max_n,max_q,speedup_at_min_work_items,speedup_at_max_work_items
-batch_distance_matrix,distance matrix,8192.00,128,64,8192,1024,1.193733,53.078917
-nearest_point,nearest point,47847.83,128,64,8192,1024,0.602692,14.578227
-range_count_circle,circle range count,121208.82,128,64,8192,1024,0.567842,10.882732
+batch_distance_matrix,距离矩阵（distance matrix）,8192.00,128,64,8192,1024,1.193733,53.078917
+nearest_point,最近点（nearest point）,47847.83,128,64,8192,1024,0.602692,14.578227
+range_count_circle,圆形范围计数（circle range count）,121208.82,128,64,8192,1024,0.567842,10.882732

@@ -1,13 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1280" height="760" viewBox="0 0 1280 760" role="img">
 <style>
-text{font-family:Arial,Helvetica,sans-serif;fill:#111827;}
+text{font-family:'AR PL UMing TW MBE','AR PL UMing CN','FandolHei','Microsoft YaHei','SimHei',Arial,Helvetica,sans-serif;fill:#111827;}
 .title{font-size:28px;font-weight:700;}
 .subtitle{font-size:15px;fill:#475569;}
 .axis{font-size:15px;fill:#374151;}
 .small{font-size:14px;fill:#475569;}
 .tiny{font-size:13px;fill:#64748b;}
 .label{font-size:16px;font-weight:700;}
-.code{font-family:Consolas,Monaco,'Courier New',monospace;font-size:12px;fill:#e2e8f0;}
+.code{font-family:Consolas,Monaco,'Courier New',monospace;font-size:10px;fill:#e2e8f0;}
 .box{stroke:#1f2937;stroke-width:1.4;rx:14;ry:14;}
 </style>
 <defs>
@@ -16,14 +16,14 @@ text{font-family:Arial,Helvetica,sans-serif;fill:#111827;}
 </marker>
 </defs>
 <rect x="0" y="0" width="1280" height="760" fill="#ffffff"/>
-<text class="title" x="70.00" y="44.00" text-anchor="start">UVec state machine</text>
-<text class="subtitle" x="70.00" y="66.00" text-anchor="start">A read can create a shared readable state; a mutable write returns to a single latest writer.</text>
+<text class="title" x="70.00" y="44.00" text-anchor="start">UVec 状态机（state machine）</text>
+<text class="subtitle" x="70.00" y="66.00" text-anchor="start">读取可进入共享可读状态；可变写入会回到单一最新写入者。</text>
 <rect class="box" x="155" y="230" width="260" height="96" fill="#dbeafe" filter="url(#shadow)"/>
-<text class="small" x="285.00" y="260.00" text-anchor="middle"><tspan x="285.00" dy="0.00">CPU latest</tspan><tspan x="285.00" dy="18.00">CPU valid = 1</tspan><tspan x="285.00" dy="18.00">CUDA valid = 0</tspan></text>
+<text class="small" x="285.00" y="260.00" text-anchor="middle"><tspan x="285.00" dy="0.00">CPU 最新</tspan><tspan x="285.00" dy="18.00">CPU valid = 1</tspan><tspan x="285.00" dy="18.00">CUDA valid = 0</tspan></text>
 <rect class="box" x="510" y="465" width="260" height="96" fill="#dcfce7" filter="url(#shadow)"/>
-<text class="small" x="640.00" y="495.00" text-anchor="middle"><tspan x="640.00" dy="0.00">Shared readable</tspan><tspan x="640.00" dy="18.00">CPU valid = 1</tspan><tspan x="640.00" dy="18.00">CUDA valid = 1</tspan></text>
+<text class="small" x="640.00" y="495.00" text-anchor="middle"><tspan x="640.00" dy="0.00">共享可读</tspan><tspan x="640.00" dy="18.00">CPU valid = 1</tspan><tspan x="640.00" dy="18.00">CUDA valid = 1</tspan></text>
 <rect class="box" x="865" y="230" width="260" height="96" fill="#ede9fe" filter="url(#shadow)"/>
-<text class="small" x="995.00" y="260.00" text-anchor="middle"><tspan x="995.00" dy="0.00">CUDA latest</tspan><tspan x="995.00" dy="18.00">CUDA valid = 1</tspan><tspan x="995.00" dy="18.00">CPU valid = 0</tspan></text>
+<text class="small" x="995.00" y="260.00" text-anchor="middle"><tspan x="995.00" dy="0.00">CUDA 最新</tspan><tspan x="995.00" dy="18.00">CUDA valid = 1</tspan><tspan x="995.00" dy="18.00">CPU valid = 0</tspan></text>
 <line x1="310" y1="326" x2="545" y2="465" stroke="#16a34a" stroke-width="2.4" marker-end="url(#arrow)"/>
 <line x1="610" y1="465" x2="375" y2="326" stroke="#dc2626" stroke-width="2.4" marker-end="url(#arrow)"/>
 <line x1="970" y1="326" x2="735" y2="465" stroke="#16a34a" stroke-width="2.4" marker-end="url(#arrow)"/>
@@ -32,12 +32,12 @@ text{font-family:Arial,Helvetica,sans-serif;fill:#111827;}
 <line x1="865" y1="296" x2="415" y2="296" stroke="#2563eb" stroke-width="2.4" stroke-dasharray="7 5" marker-end="url(#arrow)"/>
 <rect x="145" y="610" width="990" height="92" rx="18" fill="#f8fafc" stroke="#e2e8f0"/>
 <line x1="190" y1="642" x2="232" y2="642" stroke="#16a34a" stroke-width="3"/>
-<text class="tiny" x="244.00" y="647.00" text-anchor="start">Read on a stale device: copy data and enter the shared-readable state.</text>
+<text class="tiny" x="244.00" y="647.00" text-anchor="start">在过期设备上读取：复制数据并进入共享可读状态。</text>
 <line x1="190" y1="672" x2="232" y2="672" stroke="#dc2626" stroke-width="3"/>
-<text class="tiny" x="244.00" y="677.00" text-anchor="start">Mutable write from shared-readable: invalidate the other device copy.</text>
+<text class="tiny" x="244.00" y="677.00" text-anchor="start">从共享可读状态可变写入：使另一个设备副本失效。</text>
 <line x1="690" y1="642" x2="732" y2="642" stroke="#7c3aed" stroke-width="3" stroke-dasharray="7 5"/>
-<text class="tiny" x="744.00" y="647.00" text-anchor="start">Direct mutable CUDA write from CPU-latest: CUDA becomes the only latest writer.</text>
+<text class="tiny" x="744.00" y="647.00" text-anchor="start">从 CPU 最新状态直接 CUDA 写入：CUDA 成为唯一最新写入者。</text>
 <line x1="690" y1="672" x2="732" y2="672" stroke="#2563eb" stroke-width="3" stroke-dasharray="7 5"/>
-<text class="tiny" x="744.00" y="677.00" text-anchor="start">Direct mutable CPU write from CUDA-latest: CPU becomes the only latest writer.</text>
-<text class="tiny" x="190.00" y="695.00" text-anchor="start">Invariant: at least one physical buffer is valid; reads may increase the valid set, writes shrink it to one latest writer.</text>
+<text class="tiny" x="744.00" y="677.00" text-anchor="start">从 CUDA 最新状态直接 CPU 写入：CPU 成为唯一最新写入者。</text>
+<text class="tiny" x="190.00" y="695.00" text-anchor="start">不变量（Invariant）：至少一个物理缓冲区有效；读取可能扩大有效集合，写入会收缩为一个最新写入者。</text>
 </svg>

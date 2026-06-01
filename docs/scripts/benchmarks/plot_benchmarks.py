@@ -33,7 +33,7 @@ def svg_header(w: int, h: int) -> str:
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" '
         f'viewBox="0 0 {w} {h}" role="img">\n'
         '<style>'
-        'text{font-family:Arial,sans-serif;fill:#1f2937;}'
+        "text{font-family:'AR PL UMing TW MBE','AR PL UMing CN','FandolHei','Microsoft YaHei','SimHei',Arial,sans-serif;fill:#1f2937;}"
         '.title{font-size:22px;font-weight:700;}'
         '.axis{font-size:12px;}'
         '.small{font-size:11px;}'
@@ -63,8 +63,8 @@ def draw_semantic_pass_rate(csv_path: str, out_path: str) -> None:
 
     s = [svg_header(w, h)]
     s.append(f'<rect x="0" y="0" width="{w}" height="{h}" fill="#ffffff"/>\n')
-    s.append(f'<text class="title" x="{ml}" y="42">Semantic Pass Rate by Suite (%)</text>\n')
-    s.append(f'<text class="small" x="{ml}" y="62">Source: semantic_pass_rate.csv</text>\n')
+    s.append(f'<text class="title" x="{ml}" y="42">语义通过率（semantic pass rate）</text>\n')
+    s.append(f'<text class="small" x="{ml}" y="62">数据来源：semantic_pass_rate.csv</text>\n')
 
     # grid + y ticks
     for i in range(int(y_max / y_step) + 1):
@@ -177,9 +177,9 @@ def draw_distribution(
     s = [svg_header(w, h)]
     s.append(f'<rect x="0" y="0" width="{w}" height="{h}" fill="#ffffff"/>\n')
     s.append(f'<text class="title" x="{ml}" y="42">{title}</text>\n')
-    subtitle = "Histogram with percentile markers (P50/P95/P99)"
+    subtitle = "直方图包含分位数标记（P50/P95/P99）"
     if clipped:
-        subtitle += f"; x-axis focuses on main mass, tail clipped: {clipped} samples"
+        subtitle += f"；横轴聚焦主体分布，尾部截断样本数：{clipped}"
     s.append(f'<text class="small" x="{ml}" y="62">{subtitle}</text>\n')
 
     # grid y
@@ -233,11 +233,11 @@ def draw_distribution(
 
     if clipped:
         s.append(
-            f'<text class="small" x="{w - mr}" y="{mt + 34}" text-anchor="end">max {max(values):.2f} us; {clipped} samples &gt; {vmax:.1f} us</text>\n'
+            f'<text class="small" x="{w - mr}" y="{mt + 34}" text-anchor="end">最大值 {max(values):.2f} us；{clipped} 个样本 &gt; {vmax:.1f} us</text>\n'
         )
 
     s.append(f'<text class="axis" x="{ml + pw / 2:.2f}" y="{h - 30}" text-anchor="middle">{x_label}</text>\n')
-    s.append(f'<text class="axis" x="26" y="{mt + ph / 2:.2f}" transform="rotate(-90 26 {mt + ph / 2:.2f})">Count</text>\n')
+    s.append(f'<text class="axis" x="26" y="{mt + ph / 2:.2f}" transform="rotate(-90 26 {mt + ph / 2:.2f})">计数</text>\n')
     s.append(svg_footer())
 
     with open(out_path, "w", encoding="utf-8") as f:
@@ -263,8 +263,8 @@ def main() -> int:
         os.path.join(data_dir, "channel_latency_us.csv"),
         os.path.join(data_dir, "channel_latency_summary.csv"),
         os.path.join(fig_dir, "channel_latency_distribution.svg"),
-        "Thread Channel One-Way Latency Distribution",
-        "Latency (microseconds, one-way)",
+        "线程通道单向延迟分布（thread channel latency）",
+        "延迟（微秒，单向）",
         "one_way_latency_us",
         "#0ea5e9",
     )
@@ -272,8 +272,8 @@ def main() -> int:
         os.path.join(data_dir, "frame_time_us.csv"),
         os.path.join(data_dir, "frame_time_summary.csv"),
         os.path.join(fig_dir, "frame_time_distribution.svg"),
-        "Frame Time Distribution",
-        "Frame time (microseconds)",
+        "帧耗时分布（frame time）",
+        "帧耗时（微秒）",
         "frame_time_us",
         "#7c3aed",
     )
