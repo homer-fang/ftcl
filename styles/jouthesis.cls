@@ -22,6 +22,15 @@
 \RequirePackage[backend=biber,style=numeric,sorting=none]{biblatex}
 \addbibresource{contents/references.bib}
 
+% Use thesis-style superscript numeric citations instead of inline [1,2].
+\newcommand{\JOUCitationSuperscript}[1]{\textsuperscript{\scriptsize #1}}
+\DeclareDelimFormat{multicitedelim}{\addcomma}
+\DeclareCiteCommand{\cite}[\JOUCitationSuperscript]
+  {\unskip\bibopenbracket}
+  {\usebibmacro{citeindex}\usebibmacro{cite}}
+  {\multicitedelim}
+  {\bibclosebracket}
+
 \graphicspath{{contents/figures/}{docs/figures/}{docs/figures/architecture/}{docs/figures/geometry/}{docs/figures/benchmarks/}}
 
 \hypersetup{
@@ -52,6 +61,15 @@
   \newfontfamily\JOUCoverEnglishFont{TeX Gyre Termes}
 }{
   \newfontfamily\JOUCoverEnglishFont{Latin Modern Roman}
+}
+\IfFontExistsTF{Times New Roman}{
+  \newfontfamily\JOUAbstractEnglishFont{Times New Roman}
+}{
+  \IfFontExistsTF{TeX Gyre Termes}{
+    \newfontfamily\JOUAbstractEnglishFont{TeX Gyre Termes}
+  }{
+    \newfontfamily\JOUAbstractEnglishFont{Latin Modern Roman}
+  }
 }
 
 \SetAlgoCaptionSeparator{:}
@@ -318,47 +336,74 @@
 
 \newenvironment{cnabstract}{%
   \clearpage
+  \newgeometry{left=2.35cm,right=2.35cm,top=0.8cm,bottom=1.0cm}
   \thispagestyle{empty}
   \begin{center}
     {\sffamily\bfseries\fontsize{18pt}{30pt}\selectfont 毕业设计（论文）中文摘要\par}
   \end{center}
-  \vspace{0.35cm}
+  \vspace{0.25cm}
   \setlength{\fboxrule}{0.8pt}
-  \setlength{\fboxsep}{0.45cm}
-  \setlength{\JOUAbstractInnerWidth}{\dimexpr\textwidth-0.9cm-2\fboxrule\relax}
+  \setlength{\fboxsep}{0.35cm}
+  \setlength{\JOUAbstractInnerWidth}{\dimexpr\textwidth-0.7cm-2\fboxrule\relax}
   \begin{lrbox}{\JOUAbstractSaveBox}%
-    \begin{minipage}[t][21.5cm][t]{\JOUAbstractInnerWidth}
-      \setlength{\parindent}{2em}%
-      \fontsize{10.5pt}{15.8pt}\selectfont%
+    \begin{minipage}[t][25.1cm][t]{\JOUAbstractInnerWidth}
+      \setlength{\parindent}{0pt}%
+      \setlength{\parskip}{0pt}%
+      \fontsize{10.5pt}{16pt}\selectfont%
+      \vspace*{0.95cm}%
+      \begin{center}
+        {\fontsize{14pt}{21pt}\selectfont\JOUThesisTitleCN\par}
+      \end{center}
+      \vspace{0.9cm}%
 }{%
     \end{minipage}%
   \end{lrbox}%
   \noindent\fbox{\usebox{\JOUAbstractSaveBox}}%
-  \clearpage
+  \restoregeometry
 }
-\newcommand{\cnkeywords}[1]{\par\vspace{1em}\noindent\textbf{关键字：}#1}
+\newcommand{\cnabstracttext}[1]{%
+  \noindent{\sffamily\bfseries\fontsize{12pt}{18pt}\selectfont 摘\quad 要：}%
+  {\fontsize{10.5pt}{16pt}\selectfont #1\par}%
+}
+\newcommand{\cnkeywords}[1]{%
+  \par\vspace{1em}\noindent{\sffamily\bfseries\fontsize{12pt}{18pt}\selectfont 关键字：}%
+  {\fontsize{10.5pt}{16pt}\selectfont #1}%
+}
 
 \newenvironment{enabstract}{%
   \clearpage
+  \newgeometry{left=2.35cm,right=2.35cm,top=0.8cm,bottom=1.0cm}
   \thispagestyle{empty}
   \begin{center}
     {\sffamily\bfseries\fontsize{18pt}{30pt}\selectfont 毕业设计（论文）外文摘要\par}
   \end{center}
-  \vspace{0.35cm}
+  \vspace{0.25cm}
   \setlength{\fboxrule}{0.8pt}
-  \setlength{\fboxsep}{0.45cm}
-  \setlength{\JOUAbstractInnerWidth}{\dimexpr\textwidth-0.9cm-2\fboxrule\relax}
+  \setlength{\fboxsep}{0.35cm}
+  \setlength{\JOUAbstractInnerWidth}{\dimexpr\textwidth-0.7cm-2\fboxrule\relax}
   \begin{lrbox}{\JOUAbstractSaveBox}%
-    \begin{minipage}[t][21.5cm][t]{\JOUAbstractInnerWidth}
-      \setlength{\parindent}{2em}%
-      \fontsize{9.4pt}{12.8pt}\selectfont%
+    \begin{minipage}[t][25.1cm][t]{\JOUAbstractInnerWidth}
+      \JOUAbstractEnglishFont%
+      \setlength{\parindent}{0pt}%
+      \setlength{\parskip}{0pt}%
+      \fontsize{10.5pt}{16pt}\selectfont%
+      \vspace*{1.05cm}%
+      \begin{center}
+        {\bfseries\fontsize{14pt}{21pt}\selectfont\JOUThesisTitleEN\par}
+      \end{center}
+      \vspace{1.0cm}%
 }{%
     \end{minipage}%
   \end{lrbox}%
   \noindent\fbox{\usebox{\JOUAbstractSaveBox}}%
-  \clearpage
+  \restoregeometry
 }
-\newcommand{\enkeywords}[1]{\par\vspace{1em}\noindent\textbf{Keywords: }#1}
+\newcommand{\enabstracttext}[1]{%
+  \noindent{\bfseries Abstract: }#1\par%
+}
+\newcommand{\enkeywords}[1]{%
+  \par\vspace{1em}\noindent{\bfseries Keywords: }#1%
+}
 
 \newcommand{\JOUListOfTablesAndFigures}{%
   \clearpage
