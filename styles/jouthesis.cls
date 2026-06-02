@@ -1,5 +1,5 @@
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesClass{styles/jouthesis}[2026/06/01 Thesis class for FTCL]
+\ProvidesClass{styles/jouthesis}[2026/05/28 Thesis class for FTCL]
 \LoadClass[12pt,a4paper,openany,oneside]{book}
 
 \RequirePackage[a4paper,left=3.0cm,right=2.6cm,top=2.8cm,bottom=2.8cm,headsep=0.55cm]{geometry}
@@ -179,7 +179,7 @@
 \newcommand{\JOUCollege}{计算机工程学院}
 \newcommand{\JOUMajor}{软件工程}
 \newcommand{\JOUAdvisor}{纪兆辉}
-\newcommand{\JOUDate}{2026 年 6 月 1 日}
+\newcommand{\JOUDate}{2026 年 5 月 28 日}
 
 \newcommand{\JOUTitleCN}[1]{%
   \gdef\JOUThesisTitleCN{#1}%

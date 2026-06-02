@@ -2,7 +2,7 @@
 title: "一种支持并发执行的脚本编程语言设计与编译器实现"
 subtitle: "Design and Implementation of a Concurrent Tcl-style CPU/CUDA Hybrid Computational Geometry Scripting System"
 author: "房鸿铭 · 软件工程 · 指导教师：纪兆辉"
-date: "June 1, 2026"
+date: "May 28, 2026"
 ---
 
 ## 研究动机：脚本表达与 GPU 执行之间存在断层
