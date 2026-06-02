@@ -1,5 +1,5 @@
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesClass{styles/jouthesis}[2026/05/26 Minimal English thesis class for FTCL]
+\ProvidesClass{styles/jouthesis}[2026/06/01 Thesis class for FTCL]
 \LoadClass[12pt,a4paper,openany,oneside]{book}
 
 \RequirePackage[a4paper,left=3.0cm,right=2.6cm,top=2.8cm,bottom=2.8cm,headsep=0.55cm]{geometry}
@@ -172,14 +172,14 @@
 
 \newcommand{\JOUThesisTitleCN}{一种支持并发执行的脚本编程语言设计与编译器实现}
 \newcommand{\JOUThesisTitleEN}{Design and Implementation of a Concurrent Tcl-style\\CPU/CUDA Hybrid Computational Geometry Scripting\\System}
-\newcommand{\JOUAbstractTitleCN}{一种支持并发执行的脚本编程语言\\设计与编译器实现}
+\newcommand{\JOUAbstractTitleCN}{一种支持并发执行的脚本编程语言设计与编译器实现}
 \newcommand{\JOUAbstractTitleEN}{Design and Implementation of a Concurrent Tcl-style\\CPU/CUDA Hybrid Computational Geometry Scripting\\System}
 \newcommand{\JOUAuthor}{房鸿铭}
 \newcommand{\JOUStudentID}{2022122407}
 \newcommand{\JOUCollege}{计算机工程学院}
 \newcommand{\JOUMajor}{软件工程}
 \newcommand{\JOUAdvisor}{纪兆辉}
-\newcommand{\JOUDate}{2026 年 5 月}
+\newcommand{\JOUDate}{2026 年 6 月 1 日}
 
 \newcommand{\JOUTitleCN}[1]{%
   \gdef\JOUThesisTitleCN{#1}%
@@ -291,7 +291,7 @@
   本人完全意识到本声明所涉及的法律后果由本人承担。\par}
   \vspace{0.75cm}
   {\fontsize{13pt}{23pt}\selectfont
-  作者签名：\JOUMySign\hfill 日期：\hspace{1.1cm}年\hspace{1.0cm}月\hspace{1.0cm}日\par}
+  作者签名：\JOUMySign\hfill 日期：\JOUDate\par}
   \vspace{1.45cm}
   \begin{center}
     {\sffamily\bfseries\fontsize{18pt}{28pt}\selectfont 江苏海洋大学\par}
@@ -306,8 +306,8 @@
   {\fontsize{13pt}{23pt}\selectfont
   作者签名：\JOUMySign\hfill 指导教师签名：\JOUTutorSign\par
   \vspace{0.45cm}
-  日期：\hspace{1.0cm}年\hspace{1.0cm}月\hspace{1.0cm}日\hfill
-  日期：\hspace{1.0cm}年\hspace{1.0cm}月\hspace{1.0cm}日\par}
+  日期：\JOUDate\hfill
+  日期：\JOUDate\par}
   \restoregeometry
   \clearpage
 }
@@ -348,7 +348,7 @@
       \JOUCoverLine{指导教师：}{\JOUAdvisor}
     \end{minipage}\par
     \vspace{1.02cm}
-    {\sffamily\bfseries\fontsize{16pt}{24pt}\selectfont 2026 年\qquad 5 月\par}
+    {\sffamily\bfseries\fontsize{16pt}{24pt}\selectfont \JOUDate\par}
     \restoregeometry
   \end{titlepage}
   \JOUDeclarationPage
@@ -396,26 +396,26 @@
 
 \newenvironment{enabstract}{%
   \clearpage
-  \newgeometry{left=2.35cm,right=2.35cm,top=0.8cm,bottom=1.0cm}
+  \newgeometry{left=2.35cm,right=2.35cm,top=0.65cm,bottom=0.85cm}
   \thispagestyle{empty}
   \begin{center}
-    {\sffamily\bfseries\fontsize{18pt}{30pt}\selectfont 毕业设计（论文）外文摘要\par}
+    {\sffamily\bfseries\fontsize{18pt}{28pt}\selectfont 毕业设计（论文）外文摘要\par}
   \end{center}
-  \vspace{0.25cm}
+  \vspace{0.1cm}
   \setlength{\fboxrule}{0.8pt}
-  \setlength{\fboxsep}{0.3cm}
-  \setlength{\JOUAbstractInnerWidth}{\dimexpr\textwidth-0.6cm-2\fboxrule\relax}
+  \setlength{\fboxsep}{0.26cm}
+  \setlength{\JOUAbstractInnerWidth}{\dimexpr\textwidth-0.52cm-2\fboxrule\relax}
   \begin{lrbox}{\JOUAbstractSaveBox}%
-    \begin{minipage}[t]{\JOUAbstractInnerWidth}
+    \begin{minipage}[t][25.5cm][t]{\JOUAbstractInnerWidth}
       \JOUAbstractEnglishFont%
       \setlength{\parindent}{0pt}%
       \setlength{\parskip}{0pt}%
-      \fontsize{10.5pt}{15pt}\selectfont%
-      \vspace*{0.85cm}%
+      \fontsize{9.6pt}{13.2pt}\selectfont%
+      \vspace*{0.42cm}%
       \begin{center}
-        {\bfseries\fontsize{12.5pt}{16pt}\selectfont\JOUAbstractTitleEN\par}
+        {\bfseries\fontsize{12pt}{14.5pt}\selectfont\JOUAbstractTitleEN\par}
       \end{center}
-      \vspace{0.65cm}%
+      \vspace{0.38cm}%
 }{%
     \end{minipage}%
   \end{lrbox}%
