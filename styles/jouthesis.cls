@@ -251,6 +251,13 @@
   }\par
 }
 
+\newcommand{\JOUMySign}{%
+  \raisebox{-0.4ex}{\includegraphics[height=1.15cm]{mysign.png}}%
+}
+\newcommand{\JOUTutorSign}{%
+  \raisebox{-0.4ex}{\includegraphics[height=1.15cm]{tutorsign.jpg}}%
+}
+
 \newcommand{\JOUDeclarationPage}{%
   \clearpage
   \thispagestyle{empty}
@@ -268,7 +275,7 @@
   本人完全意识到本声明所涉及的法律后果由本人承担。\par}
   \vspace{0.75cm}
   {\fontsize{13pt}{23pt}\selectfont
-  作者签名：\hspace{4.7cm}日期：\hspace{1.1cm}年\hspace{1.0cm}月\hspace{1.0cm}日\par}
+  作者签名：\JOUMySign\hfill 日期：\hspace{1.1cm}年\hspace{1.0cm}月\hspace{1.0cm}日\par}
   \vspace{1.45cm}
   \begin{center}
     {\sffamily\bfseries\fontsize{18pt}{28pt}\selectfont 江苏海洋大学\par}
@@ -281,7 +288,7 @@
   本人同意江苏海洋大学可以将本毕业设计（论文）的全部或部分内容编入有关数据库进行检索，可以采用影印、缩印或者扫描等复制手段保存和汇编本毕业设计（论文）。\par}
   \vspace{1.1cm}
   {\fontsize{13pt}{23pt}\selectfont
-  作者签名：\hfill 指导教师签名：\hspace{1.5cm}\par
+  作者签名：\JOUMySign\hfill 指导教师签名：\JOUTutorSign\par
   \vspace{0.45cm}
   日期：\hspace{1.0cm}年\hspace{1.0cm}月\hspace{1.0cm}日\hfill
   日期：\hspace{1.0cm}年\hspace{1.0cm}月\hspace{1.0cm}日\par}
