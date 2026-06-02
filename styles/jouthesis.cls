@@ -4,6 +4,7 @@
 
 \RequirePackage[a4paper,left=3.0cm,right=2.6cm,top=2.8cm,bottom=2.8cm,headsep=0.55cm]{geometry}
 \RequirePackage{amsmath,amssymb,amsthm}
+\renewcommand{\proofname}{证明}
 \RequirePackage{booktabs,longtable,tabularx,array,multirow}
 \RequirePackage{graphicx,float}
 \RequirePackage[ruled,vlined,linesnumbered]{algorithm2e}
