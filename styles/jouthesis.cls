@@ -43,6 +43,9 @@
 }
 
 \setstretch{1.45}
+\clubpenalty=10000
+\widowpenalty=10000
+\displaywidowpenalty=10000
 \setlength{\parindent}{2em}
 \setlength{\parskip}{0pt}
 \setlength{\headheight}{18pt}
@@ -387,19 +390,19 @@
   \end{center}
   \vspace{0.25cm}
   \setlength{\fboxrule}{0.8pt}
-  \setlength{\fboxsep}{0.35cm}
-  \setlength{\JOUAbstractInnerWidth}{\dimexpr\textwidth-0.7cm-2\fboxrule\relax}
+  \setlength{\fboxsep}{0.3cm}
+  \setlength{\JOUAbstractInnerWidth}{\dimexpr\textwidth-0.6cm-2\fboxrule\relax}
   \begin{lrbox}{\JOUAbstractSaveBox}%
-    \begin{minipage}[t][25.1cm][t]{\JOUAbstractInnerWidth}
+    \begin{minipage}[t]{\JOUAbstractInnerWidth}
       \JOUAbstractEnglishFont%
       \setlength{\parindent}{0pt}%
       \setlength{\parskip}{0pt}%
-      \fontsize{10.5pt}{16pt}\selectfont%
-      \vspace*{1.05cm}%
+      \fontsize{10.5pt}{15pt}\selectfont%
+      \vspace*{0.85cm}%
       \begin{center}
-        {\bfseries\fontsize{14pt}{21pt}\selectfont\JOUThesisTitleEN\par}
+        {\bfseries\fontsize{13pt}{18pt}\selectfont\JOUThesisTitleEN\par}
       \end{center}
-      \vspace{1.0cm}%
+      \vspace{0.65cm}%
 }{%
     \end{minipage}%
   \end{lrbox}%
@@ -410,7 +413,7 @@
   \noindent{\bfseries Abstract: }#1\par%
 }
 \newcommand{\enkeywords}[1]{%
-  \par\vspace{1em}\noindent{\bfseries Keywords: }#1%
+  \par\vspace{0.5em}\noindent{\bfseries Keywords: }#1%
 }
 
 \newcommand{\JOUListOfTablesAndFigures}{%
