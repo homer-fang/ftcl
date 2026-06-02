@@ -160,7 +160,7 @@ transform\_points & \(N\) 个点 & \(O(N)\) & 很高；点彼此独立 \\
 表 \ref{tab:algorithm-complexity} 解释了为什么并非每个几何命令都值得用 CUDA 加速。标量命令对脚本表达很有用，但计算量太小，难以摊销 kernel 启动开销。具有 \(O(NQ)\) 或 \(O(N)\) 个独立工作项的批量命令更适合 GPU。凸包这类算法需要排序与类栈的串行结构，因此本文将其保留为 CPU 优先算法。
 
 \section{CUDA 几何后端（CUDA Geometry Backend）}
-CUDA 后端实现在 \texttt{src/geometry\_cuda.cu} 中，对外声明位于 \texttt{include/geometry\_cuda.hpp}。它支持距离矩阵、最近点、圆形范围计数、点变换、批量方向判定、AABB 碰撞、多边形批量面积与折线距离等数据并行算法。
+CUDA 后端实现集中在 \path{src/geometry_cuda.cu}；其对外接口声明在 \path{include/geometry_cuda.hpp}。它支持距离矩阵、最近点、圆形范围计数、点变换、批量方向判定、AABB 碰撞、多边形批量面积与折线距离等数据并行算法。
 
 以 \(N\) 个源点与 \(Q\) 个查询点构成的距离矩阵为例，输出规模为 \(NQ\)。CUDA 映射非常直接：每个线程负责一个输出条目，读取一个源点与一个查询点，计算欧氏距离并写回结果。这类映射适合 GPU，因为每个输出元素彼此独立、控制分支少，且工作项数量可以快速增长。
 

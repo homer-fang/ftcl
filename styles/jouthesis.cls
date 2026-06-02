@@ -22,6 +22,9 @@
 \RequirePackage{hyperref}
 \RequirePackage[backend=biber,style=numeric,sorting=none]{biblatex}
 \addbibresource{contents/references.bib}
+\setcounter{biburlnumpenalty}{9000}
+\setcounter{biburlucpenalty}{9000}
+\setcounter{biburllcpenalty}{9000}
 
 % Use thesis-style superscript numeric citations instead of inline [1,2].
 \newcommand{\JOUCitationSuperscript}[1]{\textsuperscript{\scriptsize #1}}
@@ -167,17 +170,27 @@
 }
 \lstset{style=ftclstyle}
 
-\newcommand{\JOUThesisTitleCN}{A Tcl-style CPU/CUDA Hybrid Computational Geometry Scripting System}
-\newcommand{\JOUThesisTitleEN}{A Tcl-style CPU/CUDA Hybrid Computational Geometry Scripting System}
-\newcommand{\JOUAuthor}{Fang Hongming}
-\newcommand{\JOUStudentID}{To be filled}
-\newcommand{\JOUCollege}{To be filled}
-\newcommand{\JOUMajor}{Computer Science and Technology}
-\newcommand{\JOUAdvisor}{To be filled}
-\newcommand{\JOUDate}{May 2026}
+\newcommand{\JOUThesisTitleCN}{一种支持并发执行的脚本编程语言设计与编译器实现}
+\newcommand{\JOUThesisTitleEN}{Design and Implementation of a Concurrent Tcl-style\\CPU/CUDA Hybrid Computational Geometry Scripting\\System}
+\newcommand{\JOUAbstractTitleCN}{一种支持并发执行的脚本编程语言\\设计与编译器实现}
+\newcommand{\JOUAbstractTitleEN}{Design and Implementation of a Concurrent Tcl-style\\CPU/CUDA Hybrid Computational Geometry Scripting\\System}
+\newcommand{\JOUAuthor}{房鸿铭}
+\newcommand{\JOUStudentID}{2022122407}
+\newcommand{\JOUCollege}{计算机工程学院}
+\newcommand{\JOUMajor}{软件工程}
+\newcommand{\JOUAdvisor}{纪兆辉}
+\newcommand{\JOUDate}{2026 年 5 月}
 
-\newcommand{\JOUTitleCN}[1]{\gdef\JOUThesisTitleCN{#1}}
-\newcommand{\JOUTitleEN}[1]{\gdef\JOUThesisTitleEN{#1}}
+\newcommand{\JOUTitleCN}[1]{%
+  \gdef\JOUThesisTitleCN{#1}%
+  \gdef\JOUAbstractTitleCN{#1}%
+}
+\newcommand{\JOUTitleEN}[1]{%
+  \gdef\JOUThesisTitleEN{#1}%
+  \gdef\JOUAbstractTitleEN{#1}%
+}
+\newcommand{\JOUSetAbstractTitleCN}[1]{\gdef\JOUAbstractTitleCN{#1}}
+\newcommand{\JOUSetAbstractTitleEN}[1]{\gdef\JOUAbstractTitleEN{#1}}
 \newcommand{\JOUSetAuthor}[1]{\gdef\JOUAuthor{#1}}
 \newcommand{\JOUSetStudentID}[1]{\gdef\JOUStudentID{#1}}
 \newcommand{\JOUSetCollege}[1]{\gdef\JOUCollege{#1}}
@@ -363,7 +376,7 @@
       \fontsize{10.5pt}{16pt}\selectfont%
       \vspace*{0.95cm}%
       \begin{center}
-        {\fontsize{14pt}{21pt}\selectfont\JOUThesisTitleCN\par}
+        {\sffamily\bfseries\fontsize{12pt}{17pt}\selectfont\JOUAbstractTitleCN\par}
       \end{center}
       \vspace{0.9cm}%
 }{%
@@ -400,7 +413,7 @@
       \fontsize{10.5pt}{15pt}\selectfont%
       \vspace*{0.85cm}%
       \begin{center}
-        {\bfseries\fontsize{13pt}{18pt}\selectfont\JOUThesisTitleEN\par}
+        {\bfseries\fontsize{12.5pt}{16pt}\selectfont\JOUAbstractTitleEN\par}
       \end{center}
       \vspace{0.65cm}%
 }{%
