@@ -9,15 +9,23 @@
 \makecover
 
 \begin{cnabstract}
-\cnabstracttext{许多算法原型在脚本表达与 GPU 执行之间存在断层：脚本足够灵活，却难以触达设备计算；CUDA 足够强大，却要求使用者管理内存、指针和同步。本文设计并实现 FTCL，一个 Tcl 风格的算法实验脚本系统，并将其扩展为面向计算几何的 CPU/CUDA 混合执行平台。系统以 UVec 管理 CPU 与 CUDA 缓冲区，通过有效标记维护最新副本，并以 \texttt{geom} 命令暴露距离矩阵、最近点、范围计数和 AABB 碰撞等批量几何算法。实验从语义回归、CPU/GPU 等价、随机差分、单 GPU 与八卡 A800 扩展性等方面验证系统。结果表明，紧凑输出任务可获得明显 CUDA 与多 GPU 加速，而输出密集型距离矩阵受内存分配和带宽限制。最后，本文将 FTCL 应用于海洋牧场感知、智慧港口、无人机巡检和船舶碰撞检测，说明其可作为脚本驱动的异构空间计算原型平台。}
+\cnabstracttext{在海洋牧场监测、智慧港口安全、无人机巡检和船舶碰撞检测等场景中，常常需要处理大量点、区域、距离和碰撞关系。这类任务用脚本组织流程比较方便，但普通脚本程序很难直接利用 GPU 的并行计算能力；如果直接编写 CUDA 程序，虽然性能较高，却需要开发者手动管理设备内存、指针和同步，使用门槛较高。针对这一问题，本文设计并实现了 FTCL，一套 Tcl 风格的脚本系统，使用户可以用脚本描述几何计算任务，同时由系统负责 CPU 与 GPU 之间的数据管理和后端执行。
 
-\cnkeywords{脚本解释器；Tcl；计算几何；UVec；CUDA；多 GPU}
+本文的核心工作是设计跨设备向量 UVec。UVec 将同一份逻辑数据组织在 CPU 和 CUDA 设备上，并自动记录哪一份数据是最新的。当 CPU 或 GPU 需要访问数据时，UVec 会按需完成同步，从而减少用户手工编写内存拷贝代码的负担。基于 UVec，本文实现了面向脚本调用的几何命令库，支持距离矩阵、最近点查询、圆形范围计数、包围盒归约、仿射变换和 AABB 碰撞检测等批量几何任务。为了支持并发执行，系统还将 UVec 句柄管理从全局锁细化为按句柄加锁，减少多个独立任务之间不必要的等待。
+
+本文从正确性、性能和应用三个方面对系统进行验证。语义回归测试、CPU/GPU 等价测试、随机差分测试和边界测试表明系统结果可靠；单 GPU 和八卡 A800 实验表明，输出较小、计算量较大的任务能够获得明显 GPU 加速，并在多 GPU 环境下接近线性弱扩展；而输出规模很大的距离矩阵会暴露输出路径瓶颈。并发实验进一步说明，解释器调度、锁粒度和 GPU 资源竞争会影响系统吞吐量和尾延迟。最后，本文将 FTCL 应用于海洋牧场空间感知、智慧港口安全分析、无人机水面巡检和船舶碰撞检测等示例场景。实验结果表明，FTCL 不只是一个几何函数集合，而是一套能够把脚本表达、跨设备数据管理、GPU 加速和可复现实验连接起来的异构空间计算原型系统。}
+
+\cnkeywords{脚本解释器；Tcl；计算几何；UVec；CUDA；多 GPU；海洋空间计算}
 \end{cnabstract}
 
 \begin{enabstract}
-\enabstracttext{Algorithm prototypes often break at the boundary between expression and execution: scripts are flexible but rarely reach the GPU, while CUDA is powerful but forces users to manage memory, pointers, and synchronization by hand. This thesis designs FTCL, a Tcl-style scripting system for algorithm experiments, and extends it into a CPU/CUDA hybrid computational geometry platform. Its central abstraction is UVec, a cross-device vector that keeps CPU and CUDA buffers consistent through validity flags and on-demand synchronization. On top of UVec, FTCL exposes a script-facing \texttt{geom} command library for distance matrices, nearest-point queries, circle range counting, affine transformations, and AABB collision checks. The system is evaluated through semantic regression, CPU/GPU equivalence, random differential testing, single-GPU benchmarks, and eight-GPU A800 weak-scaling experiments. The results show that compact-output workloads obtain clear CUDA and multi-GPU speedups, whereas output-heavy distance matrices are limited by allocation and memory bandwidth. Finally, the thesis maps FTCL to marine ranch sensing, smart port safety, UAV water-surface inspection, and ship collision checking, showing that FTCL is a prototype heterogeneous spatial-computing platform rather than a standalone geometry library.}
+\enabstracttext{In scenarios such as marine ranch monitoring, smart port safety, UAV inspection, and ship collision checking, many tasks involve large numbers of points, regions, distances, and collision relations. Scripts are convenient for organizing such workflows, but ordinary scripting programs can hardly use GPU parallel computing directly. CUDA can provide high performance, but it also requires developers to manage device memory, pointers, and synchronization by hand. To address this gap, this thesis designs and implements FTCL, a Tcl-style scripting system that allows users to describe geometry computation tasks in scripts while the system manages data movement between CPU and GPU and dispatches the corresponding backend execution.
 
-\enkeywords{Scripting interpreter; Tcl; Computational geometry; UVec; CUDA; Multi-GPU}
+The core design of FTCL is UVec, a cross-device vector abstraction. UVec organizes the same logical data on both CPU and CUDA devices, records which copy is up to date, and performs synchronization on demand when the CPU or GPU needs to access the data. This reduces the burden of manually writing memory-copy code. Based on UVec, the thesis implements a script-facing geometry command library that supports batch geometry tasks such as distance matrices, nearest-point queries, circle range counting, bounding-box reduction, affine transformations, and AABB collision detection. To support concurrent execution, the system further refines UVec handle management from one global lock to per-handle locking, reducing unnecessary waiting among independent tasks.
+
+The system is evaluated from correctness, performance, and application perspectives. Semantic regression tests, CPU/GPU equivalence tests, random differential tests, and edge-case tests show that the system produces reliable results. Single-GPU and eight-GPU A800 experiments show that workloads with small outputs and large computation can obtain clear GPU acceleration and achieve near-linear weak scaling in a multi-GPU environment, while distance matrices with large outputs expose output-path bottlenecks. Concurrency experiments further show that interpreter scheduling, lock granularity, and GPU resource contention affect throughput and tail latency. Finally, FTCL is applied to example scenarios including marine ranch spatial sensing, smart port safety analysis, UAV water-surface inspection, and ship collision checking. The results show that FTCL is not merely a collection of geometry functions, but a prototype heterogeneous spatial-computing system that connects scripting, cross-device data management, GPU acceleration, and reproducible experiments.}
+
+\enkeywords{scripting interpreter; Tcl; computational geometry; UVec; CUDA; multi-GPU; marine spatial computing}
 \end{enabstract}
 
 \tableofcontents
