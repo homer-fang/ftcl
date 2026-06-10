@@ -285,7 +285,7 @@
   \end{center}
   \vspace{0.75cm}
   {\fontsize{13pt}{23pt}\selectfont
-  本人声明所提交的毕业设计（论文）是在导师的指导下，独立完成的研究成果。
+  \hspace*{2em}本人声明所提交的毕业设计（论文）是在导师的指导下，独立完成的研究成果。
   除文中已经注明引用的内容外，本论文不包含任何其他个人或者集体已经发表或者撰写过的成果。
   本文的研究成果是经过本人的辛勤劳动取得的，对本研究做出重要贡献的个人和集体，均已在文中明确表示出来。
   本人完全意识到本声明所涉及的法律后果由本人承担。\par}
@@ -300,7 +300,7 @@
   \end{center}
   \vspace{0.65cm}
   {\fontsize{13pt}{23pt}\selectfont
-  本毕业设计（论文）作者同意学校保存并送交国家有关部门或机构有关毕业设计（论文）的复印件、电子版，允许论文被查阅和借阅。
+  \hspace*{2em}本毕业设计（论文）作者同意学校保存并送交国家有关部门或机构有关毕业设计（论文）的复印件、电子版，允许论文被查阅和借阅。
   本人同意江苏海洋大学可以将本毕业设计（论文）的全部或部分内容编入有关数据库进行检索，可以采用影印、缩印或者扫描等复制手段保存和汇编本毕业设计（论文）。\par}
   \vspace{1.1cm}
   {\fontsize{13pt}{23pt}\selectfont
@@ -386,8 +386,11 @@
   \restoregeometry
 }
 \newcommand{\cnabstracttext}[1]{%
+  \begingroup
+  \setlength{\parindent}{2em}%
   \noindent{\sffamily\bfseries\fontsize{12pt}{18pt}\selectfont 摘\quad 要：}%
   {\fontsize{10.5pt}{16pt}\selectfont #1\par}%
+  \endgroup
 }
 \newcommand{\cnkeywords}[1]{%
   \par\vspace{1em}\noindent{\sffamily\bfseries\fontsize{12pt}{18pt}\selectfont 关键字：}%
