@@ -229,6 +229,9 @@
 % “本科毕业设计（论文）”与“毕业设计（论文）中文题目”之间的距离。
 \newcommand{\JOUCoverSubtitleVskip}{3.35cm}
 
+% 封面填写项（学院、姓名等）文字相对下划线的上移量。
+\newcommand{\JOUCoverValueRaise}{0.55ex}
+
 \newcommand{\JOUCoverIncludeHeaderImage}{%
   \includegraphics[
     width=12.2cm
@@ -241,6 +244,9 @@
 }
 
 \newcommand{\JOUCoverCJKBold}[1]{{\sffamily\bfseries #1}}
+\newcommand{\JOUCoverValueOnRule}[2]{%
+  \llap{\makebox[#1][c]{\raisebox{\JOUCoverValueRaise}{#2}}}%
+}
 \newcommand{\JOUCoverUnderline}[2]{%
   \makebox[#1][c]{#2}\leaders\hrule height 0.42pt\hfill\kern0pt%
 }
@@ -249,7 +255,7 @@
   \makebox[\JOUCoverLabelWidth][s]{\JOUCoverCJKBold{#1}}\quad
   \makebox[\JOUCoverValueWidth][l]{%
     \leaders\hrule height 0.42pt\hfill
-    \llap{\makebox[\JOUCoverValueWidth][c]{#2}}%
+    \JOUCoverValueOnRule{\JOUCoverValueWidth}{#2}%
   }\par
 }
 \newcommand{\JOUCoverStudentLine}{%
@@ -257,13 +263,13 @@
   \makebox[\JOUCoverLabelWidth][s]{\JOUCoverCJKBold{学生姓名：}}\quad
   \makebox[3.4cm][l]{%
     \leaders\hrule height 0.42pt\hfill
-    \llap{\makebox[3.4cm][c]{\JOUAuthor}}%
+    \JOUCoverValueOnRule{3.4cm}{\JOUAuthor}%
   }%
   \hspace{0.45cm}%
   \makebox[1.35cm][s]{\JOUCoverCJKBold{学号：}}%
   \makebox[3.0cm][l]{%
     \leaders\hrule height 0.42pt\hfill
-    \llap{\makebox[3.0cm][c]{\JOUStudentID}}%
+    \JOUCoverValueOnRule{3.0cm}{\JOUStudentID}%
   }\par
 }
 
