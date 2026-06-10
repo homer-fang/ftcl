@@ -55,13 +55,13 @@ def svg_header(w: int, h: int) -> str:
     return f'''<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" viewBox="0 0 {w} {h}" role="img">
 <style>
 text{{font-family:'AR PL UMing TW MBE','AR PL UMing CN','FandolHei','Microsoft YaHei','SimHei',Arial,Helvetica,sans-serif;fill:{COLORS['ink']};}}
-.title{{font-size:28px;font-weight:700;}}
-.subtitle{{font-size:15px;fill:#475569;}}
-.axis{{font-size:15px;fill:#374151;}}
-.small{{font-size:14px;fill:#475569;}}
-.tiny{{font-size:13px;fill:#64748b;}}
-.label{{font-size:16px;font-weight:700;}}
-.code{{font-family:Consolas,Monaco,'Courier New',monospace;font-size:10px;fill:#e2e8f0;}}
+.title{{font-size:42px;font-weight:700;}}
+.subtitle{{font-size:22px;fill:#475569;}}
+.axis{{font-size:22px;fill:#374151;}}
+.small{{font-size:20px;fill:#475569;}}
+.tiny{{font-size:18px;fill:#64748b;}}
+.label{{font-size:24px;font-weight:700;}}
+.code{{font-family:Consolas,Monaco,'Courier New',monospace;font-size:17px;fill:#e2e8f0;}}
 .box{{stroke:#1f2937;stroke-width:1.4;rx:14;ry:14;}}
 </style>
 <defs>
@@ -85,7 +85,7 @@ def multiline_text(x: float,
                    lines: Sequence[str],
                    cls: str = 'small',
                    anchor: str = 'middle',
-                   line_h: float = 16.0) -> str:
+                   line_h: float = 26.0) -> str:
     out = [f'<text class="{cls}" x="{x:.2f}" y="{y:.2f}" text-anchor="{anchor}">']
     for i, line in enumerate(lines):
         dy = 0 if i == 0 else line_h
@@ -127,7 +127,7 @@ def line_chart(out: Path,
                y_min: float = 0.0,
                y_ref: float = None) -> None:
     w, h = 1450, 760
-    ml, mr, mt, mb = 120, 380, 100, 120
+    ml, mr, mt, mb = 150, 430, 145, 150
     pw, ph = w - ml - mr, h - mt - mb
 
     xs = sorted({x for s in series for x, _ in s['values']})
@@ -143,8 +143,8 @@ def line_chart(out: Path,
 
     p = [svg_header(w, h)]
     p.append(f'<rect x="0" y="0" width="{w}" height="{h}" fill="{COLORS["paper"]}"/>\n')
-    p.append(text(70, 44, title, 'title', 'start'))
-    p.append(text(70, 66, subtitle, 'subtitle', 'start'))
+    p.append(text(70, 64, title, 'title', 'start'))
+    p.append(text(70, 108, subtitle, 'subtitle', 'start'))
 
     step = nice_step(y_max - y_min, 7)
     tick = math.ceil(y_min / step) * step
@@ -173,18 +173,18 @@ def line_chart(out: Path,
     for x in xs:
         xp = x_pos[x]
         p.append(f'<line x1="{xp:.2f}" y1="{mt + ph}" x2="{xp:.2f}" y2="{mt + ph + 6}" stroke="{COLORS["ink"]}"/>\n')
-        p.append(text(xp, mt + ph + 25, str(x), 'axis'))
+        p.append(text(xp, mt + ph + 44, str(x), 'axis'))
 
-    p.append(text(ml + pw / 2, h - 34, xlabel, 'axis'))
+    p.append(text(ml + pw / 2, h - 48, xlabel, 'axis'))
     p.append(text(ml, mt - 16, ylabel, 'axis', 'start'))
 
     lx, ly = ml + pw + 34, mt + 12
     for i, s in enumerate(series):
-        y = ly + i * 30
+        y = ly + i * 36
         color = str(s['color'])
         p.append(f'<line x1="{lx}" y1="{y}" x2="{lx + 36}" y2="{y}" stroke="{color}" stroke-width="4"/>\n')
         p.append(f'<circle cx="{lx + 18}" cy="{y}" r="5.5" fill="{color}"/>\n')
-        p.append(text(lx + 50, y + 5, str(s['name']), 'tiny', 'start'))
+        p.append(text(lx + 54, y + 6, str(s['name']), 'tiny', 'start'))
 
     p.append(svg_footer())
     write_text(out, ''.join(p))
@@ -545,8 +545,8 @@ def draw_uvec_state_machine(out: Path) -> None:
     w, h = 1280, 760
     p = [svg_header(w, h)]
     p.append(f'<rect x="0" y="0" width="{w}" height="{h}" fill="{COLORS["paper"]}"/>\n')
-    p.append(text(70, 44, 'UVec 状态机（state machine）', 'title', 'start'))
-    p.append(text(70, 66, '读取可进入共享可读状态；可变写入会回到单一最新写入者。', 'subtitle', 'start'))
+    p.append(text(70, 64, 'UVec 状态机（state machine）', 'title', 'start'))
+    p.append(text(70, 108, '读取可进入共享可读状态；可变写入会回到单一最新写入者。', 'subtitle', 'start'))
 
     states = {
         'cpu': (155, 230, 260, 96, ['CPU 最新', 'CPU valid = 1', 'CUDA valid = 0'], '#dbeafe'),
@@ -597,14 +597,14 @@ def draw_real_demo(out: Path) -> None:
     w, h = 1300, 780
     p = [svg_header(w, h)]
     p.append(f'<rect x="0" y="0" width="{w}" height="{h}" fill="{COLORS["paper"]}"/>\n')
-    p.append(text(70, 44, 'FTCL 海洋空间计算演示（ocean spatial computing demo）', 'title', 'start'))
-    p.append(text(70, 66, '海洋牧场感知 + 智慧港口安全 + 无人机巡检被组织到同一条脚本流水线中。', 'subtitle', 'start'))
+    p.append(text(70, 64, 'FTCL 海洋空间计算演示（ocean spatial computing demo）', 'title', 'start'))
+    p.append(text(70, 108, '海洋牧场感知 + 智慧港口安全 + 无人机巡检被组织到同一条脚本流水线中。', 'subtitle', 'start'))
 
     x0, y0, cw, ch = 90, 120, 620, 560
     p.append(f'<rect x="{x0}" y="{y0}" width="{cw}" height="{ch}" fill="#eff6ff" stroke="#94a3b8" stroke-width="2"/>\n')
     p.append(f'<path d="M{x0},{y0 + 92} C230,160 315,188 410,148 C510,112 590,132 {x0 + cw},{y0 + 95} L{x0 + cw},{y0} L{x0},{y0} Z" fill="#e2e8f0"/>\n')
     p.append(f'<path d="M{x0 + 430},{y0 + 70} L{x0 + cw},{y0 + 70} L{x0 + cw},{y0 + 185} L{x0 + 500},{y0 + 185} L{x0 + 500},{y0 + 130} L{x0 + 430},{y0 + 130} Z" fill="#cbd5e1"/>\n')
-    p.append(text(x0 + 540, y0 + 55, '智慧港口（smart port）', 'tiny'))
+    p.append(text(x0 + 540, y0 + 55, '智慧港口', 'tiny'))
 
     for i in range(11):
         gx = x0 + i * cw / 10
@@ -612,7 +612,7 @@ def draw_real_demo(out: Path) -> None:
         p.append(f'<line x1="{gx:.1f}" y1="{y0}" x2="{gx:.1f}" y2="{y0 + ch}" stroke="#dbeafe"/>\n')
         p.append(f'<line x1="{x0}" y1="{gy:.1f}" x2="{x0 + cw}" y2="{gy:.1f}" stroke="#dbeafe"/>\n')
 
-    coverage = [(250, 420, 108, '声呐 A（sonar A）'), (530, 455, 128, '声呐 B（sonar B）'), (620, 220, 86, '港口雷达（radar）')]
+    coverage = [(250, 420, 108, '声呐A'), (530, 455, 128, '声呐B'), (620, 220, 86, '雷达')]
     for cx, cy, r, label in coverage:
         p.append(f'<circle cx="{cx}" cy="{cy}" r="{r}" fill="#dcfce7"/>\n')
         p.append(f'<circle cx="{cx}" cy="{cy}" r="{r}" fill="none" stroke="#22c55e" stroke-width="2"/>\n')
@@ -621,44 +621,44 @@ def draw_real_demo(out: Path) -> None:
     cages = [(185, 330, 90, 60), (300, 330, 90, 60), (185, 415, 90, 60), (300, 415, 90, 60)]
     for x, y, bw, bh in cages:
         p.append(f'<rect x="{x}" y="{y}" width="{bw}" height="{bh}" fill="#bae6fd" stroke="#0284c7" stroke-width="2" rx="8"/>\n')
-    p.append(text(287, 315, '海洋牧场网箱（cages）', 'tiny'))
+    p.append(text(287, 320, '海洋牧场网箱', 'tiny'))
 
     obstacles = [(505, 165, 74, 52), (600, 150, 58, 90), (450, 565, 88, 36)]
     for ox, oy, ow, oh in obstacles:
         p.append(f'<rect x="{ox}" y="{oy}" width="{ow}" height="{oh}" fill="#334155" opacity="0.86" rx="7"/>\n')
-    p.append(text(614, 145, '泊位/障碍物（obstacles）', 'tiny'))
+    p.append(text(612, 155, '障碍物', 'tiny'))
 
     ship_path = [(145, 615), (250, 570), (370, 530), (500, 500), (645, 475)]
     path_pts = ' '.join(f'{x},{y}' for x, y in ship_path)
     p.append(f'<polyline points="{path_pts}" fill="none" stroke="#f59e0b" stroke-width="4" stroke-dasharray="9 6"/>\n')
     p.append(f'<polygon points="640,463 665,475 640,487" fill="#f59e0b"/>\n')
-    p.append(text(378, 516, '船舶规划路径（route）', 'tiny'))
+    p.append(text(382, 516, '船舶规划路径', 'tiny'))
 
     uav = (155, 235)
     p.append(f'<path d="M{uav[0]},{uav[1] - 13} L{uav[0] + 18},{uav[1] + 10} L{uav[0]},{uav[1] + 4} L{uav[0] - 18},{uav[1] + 10} Z" fill="#2563eb"/>\n')
-    p.append(text(uav[0] + 34, uav[1] + 6, '无人机（UAV）', 'tiny', 'start'))
+    p.append(text(uav[0] + 34, uav[1] + 6, '无人机', 'tiny', 'start'))
 
     sensors = [(220, 250), (340, 235), (255, 520), (535, 325)]
     for sx, sy in sensors:
         p.append(f'<circle cx="{sx}" cy="{sy}" r="7" fill="#0ea5e9" stroke="#075985" stroke-width="1.5"/>\n')
-    p.append(text(300, 220, '传感浮标（sensor buoys）', 'tiny'))
+    p.append(text(325, 220, '传感浮标', 'tiny'))
 
     floats = [(440, 265), (575, 360), (615, 512), (350, 600), (465, 455), (690, 300)]
     for fx, fy in floats:
         p.append(f'<circle cx="{fx}" cy="{fy}" r="8" fill="#dc2626"/>\n')
     nearest = min(floats, key=lambda pt: (pt[0] - uav[0]) ** 2 + (pt[1] - uav[1]) ** 2)
     p.append(f'<line x1="{uav[0]}" y1="{uav[1]}" x2="{nearest[0]}" y2="{nearest[1]}" stroke="#ef4444" stroke-width="2.5" stroke-dasharray="5 5"/>\n')
-    p.append(text((uav[0] + nearest[0]) / 2 + 4, (uav[1] + nearest[1]) / 2 - 8, '最近异常目标（nearest anomaly）', 'tiny', 'start'))
+    p.append(text(360, 245, '最近异常目标', 'tiny', 'start'))
 
     p.append(text(760, 150, 'FTCL 脚本片段（script excerpt）', 'label', 'start'))
     script_lines = [
-        'set sensors [geom uvec_points $buoys cuda:0]',
-        'set targets [geom uvec_points $floating_objects cuda:0]',
-        'set uav [geom uvec_points {{$ux $uy}} cuda:0]',
-        'set near [geom nearest_point $targets $uav cuda:0]',
-        'set cover [geom range_count_circle $targets $sonar 120 cuda:0]',
-        'set risk [geom collision_aabb $ship_box $restricted cuda:0]',
-        'set dist [geom batch_distance_matrix $sensors $targets cuda:0]',
+        'set S [geom uvec_points $buoys cuda:0]',
+        'set T [geom uvec_points $objects cuda:0]',
+        'set U [geom uvec_points {{$ux $uy}} cuda:0]',
+        'set near [geom nearest_point $T $U cuda:0]',
+        'set cover [geom range_count_circle $T $sonar cuda:0]',
+        'set risk [geom collision_aabb $ship $zone cuda:0]',
+        'set D [geom batch_distance_matrix $S $T cuda:0]',
     ]
     p.append('<rect x="740" y="160" width="540" height="378" rx="14" fill="#0f172a"/>\n')
     for i, line in enumerate(script_lines):
@@ -809,8 +809,6 @@ def main() -> int:
 
 if __name__ == '__main__':
     raise SystemExit(main())
-
-
 
 
 

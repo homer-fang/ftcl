@@ -1,13 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1280" height="760" viewBox="0 0 1280 760" role="img">
 <style>
 text{font-family:'AR PL UMing TW MBE','AR PL UMing CN','FandolHei','Microsoft YaHei','SimHei',Arial,Helvetica,sans-serif;fill:#111827;}
-.title{font-size:28px;font-weight:700;}
-.subtitle{font-size:15px;fill:#475569;}
-.axis{font-size:15px;fill:#374151;}
-.small{font-size:14px;fill:#475569;}
-.tiny{font-size:13px;fill:#64748b;}
-.label{font-size:16px;font-weight:700;}
-.code{font-family:Consolas,Monaco,'Courier New',monospace;font-size:10px;fill:#e2e8f0;}
+.title{font-size:42px;font-weight:700;}
+.subtitle{font-size:22px;fill:#475569;}
+.axis{font-size:22px;fill:#374151;}
+.small{font-size:20px;fill:#475569;}
+.tiny{font-size:18px;fill:#64748b;}
+.label{font-size:24px;font-weight:700;}
+.code{font-family:Consolas,Monaco,'Courier New',monospace;font-size:17px;fill:#e2e8f0;}
 .box{stroke:#1f2937;stroke-width:1.4;rx:14;ry:14;}
 </style>
 <defs>
@@ -16,8 +16,8 @@ text{font-family:'AR PL UMing TW MBE','AR PL UMing CN','FandolHei','Microsoft Ya
 </marker>
 </defs>
 <rect x="0" y="0" width="1280" height="760" fill="#ffffff"/>
-<text class="title" x="70.00" y="44.00" text-anchor="start">UVec 状态机（state machine）</text>
-<text class="subtitle" x="70.00" y="66.00" text-anchor="start">读取可进入共享可读状态；可变写入会回到单一最新写入者。</text>
+<text class="title" x="70.00" y="64.00" text-anchor="start">UVec 状态机（state machine）</text>
+<text class="subtitle" x="70.00" y="108.00" text-anchor="start">读取可进入共享可读状态；可变写入会回到单一最新写入者。</text>
 <rect class="box" x="155" y="230" width="260" height="96" fill="#dbeafe" filter="url(#shadow)"/>
 <text class="small" x="285.00" y="260.00" text-anchor="middle"><tspan x="285.00" dy="0.00">CPU 最新</tspan><tspan x="285.00" dy="18.00">CPU valid = 1</tspan><tspan x="285.00" dy="18.00">CUDA valid = 0</tspan></text>
 <rect class="box" x="510" y="465" width="260" height="96" fill="#dcfce7" filter="url(#shadow)"/>

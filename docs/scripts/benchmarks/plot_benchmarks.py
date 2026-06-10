@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 import csv
 import math
 import os
@@ -34,9 +34,9 @@ def svg_header(w: int, h: int) -> str:
         f'viewBox="0 0 {w} {h}" role="img">\n'
         '<style>'
         "text{font-family:'AR PL UMing TW MBE','AR PL UMing CN','FandolHei','Microsoft YaHei','SimHei',Arial,sans-serif;fill:#1f2937;}"
-        '.title{font-size:22px;font-weight:700;}'
-        '.axis{font-size:12px;}'
-        '.small{font-size:11px;}'
+        '.title{font-size:38px;font-weight:700;}'
+        '.axis{font-size:20px;}'
+        '.small{font-size:18px;}'
         '</style>\n'
     )
 
@@ -51,7 +51,7 @@ def draw_semantic_pass_rate(csv_path: str, out_path: str) -> None:
     rates = [float(r["pass_rate_pct"]) for r in rows]
 
     w, h = 1100, 620
-    ml, mr, mt, mb = 90, 40, 80, 120
+    ml, mr, mt, mb = 120, 70, 125, 150
     pw = w - ml - mr
     ph = h - mt - mb
     n = max(1, len(suites))
@@ -63,8 +63,8 @@ def draw_semantic_pass_rate(csv_path: str, out_path: str) -> None:
 
     s = [svg_header(w, h)]
     s.append(f'<rect x="0" y="0" width="{w}" height="{h}" fill="#ffffff"/>\n')
-    s.append(f'<text class="title" x="{ml}" y="42">语义通过率（semantic pass rate）</text>\n')
-    s.append(f'<text class="small" x="{ml}" y="62">数据来源：semantic_pass_rate.csv</text>\n')
+    s.append(f'<text class="title" x="{ml}" y="56">语义通过率（semantic pass rate）</text>\n')
+    s.append(f'<text class="small" x="{ml}" y="94">数据来源：semantic_pass_rate.csv</text>\n')
 
     # grid + y ticks
     for i in range(int(y_max / y_step) + 1):
@@ -83,9 +83,9 @@ def draw_semantic_pass_rate(csv_path: str, out_path: str) -> None:
         bh = (rate / y_max) * ph
         y = mt + ph - bh
         s.append(f'<rect x="{x:.2f}" y="{y:.2f}" width="{bar_w:.2f}" height="{bh:.2f}" fill="#2563eb"/>\n')
-        s.append(f'<text class="axis" x="{x + bar_w/2:.2f}" y="{y - 6:.2f}" text-anchor="middle">{rate:.2f}</text>\n')
+        s.append(f'<text class="axis" x="{x + bar_w/2:.2f}" y="{y - 12:.2f}" text-anchor="middle">{rate:.2f}</text>\n')
         s.append(
-            f'<text class="axis" x="{x + bar_w/2:.2f}" y="{mt + ph + 18:.2f}" text-anchor="middle">{name}</text>\n'
+            f'<text class="axis" x="{x + bar_w/2:.2f}" y="{mt + ph + 34:.2f}" text-anchor="middle">{name}</text>\n'
         )
 
     s.append(svg_footer())
@@ -162,7 +162,7 @@ def draw_distribution(
     max_count = max(max_count, 1)
 
     w, h = 1100, 620
-    ml, mr, mt, mb = 90, 40, 80, 120
+    ml, mr, mt, mb = 120, 70, 125, 150
     pw = w - ml - mr
     ph = h - mt - mb
 
@@ -176,11 +176,11 @@ def draw_distribution(
 
     s = [svg_header(w, h)]
     s.append(f'<rect x="0" y="0" width="{w}" height="{h}" fill="#ffffff"/>\n')
-    s.append(f'<text class="title" x="{ml}" y="42">{title}</text>\n')
+    s.append(f'<text class="title" x="{ml}" y="56">{title}</text>\n')
     subtitle = "直方图包含分位数标记（P50/P95/P99）"
     if clipped:
         subtitle += f"；横轴聚焦主体分布，尾部截断样本数：{clipped}"
-    s.append(f'<text class="small" x="{ml}" y="62">{subtitle}</text>\n')
+    s.append(f'<text class="small" x="{ml}" y="94">{subtitle}</text>\n')
 
     # grid y
     y_step = nice_tick_step(float(max_count), 6)
@@ -214,30 +214,44 @@ def draw_distribution(
     while x_tick <= vmax + 1e-9:
         x = x_of(x_tick)
         s.append(f'<line x1="{x:.2f}" y1="{mt + ph}" x2="{x:.2f}" y2="{mt + ph + 6}" stroke="#374151"/>\n')
-        s.append(f'<text class="axis" x="{x:.2f}" y="{mt + ph + 22}" text-anchor="middle">{x_tick:.1f}</text>\n')
+        s.append(f'<text class="axis" x="{x:.2f}" y="{mt + ph + 38}" text-anchor="middle">{x_tick:.1f}</text>\n')
         x_tick += x_step
 
-    # percentile lines
-    for val, label, clr in [
+    # percentile lines.  Keep the markers on the plot, but put the text in a
+    # small stacked legend so close percentile values do not overlap.
+    percentile_marks = [
         (p50, "P50", "#16a34a"),
         (p95, "P95", "#f59e0b"),
         (p99, "P99", "#dc2626"),
-    ]:
+    ]
+    for val, _label, clr in percentile_marks:
         if val > vmax:
             continue
         x = x_of(val)
         s.append(f'<line x1="{x:.2f}" y1="{mt}" x2="{x:.2f}" y2="{mt + ph}" stroke="{clr}" stroke-width="2"/>\n')
+
+    legend_x = w - mr - 315
+    legend_y = mt + 30
+    legend_w = 300
+    legend_h = 100
+    s.append(
+        f'<rect x="{legend_x - 18:.2f}" y="{legend_y - 34:.2f}" width="{legend_w:.2f}" height="{legend_h:.2f}" '
+        f'rx="10" fill="#ffffff" opacity="0.92" stroke="#e5e7eb" stroke-width="1"/>\n'
+    )
+    for idx, (val, label, clr) in enumerate(percentile_marks):
+        y = legend_y + idx * 30
+        s.append(f'<line x1="{legend_x:.2f}" y1="{y - 7:.2f}" x2="{legend_x + 34:.2f}" y2="{y - 7:.2f}" stroke="{clr}" stroke-width="3"/>\n')
         s.append(
-            f'<text class="axis" x="{x + 4:.2f}" y="{mt + 14:.2f}" text-anchor="start" fill="{clr}">{label} {val:.2f} us</text>\n'
+            f'<text class="axis" x="{legend_x + 46:.2f}" y="{y:.2f}" text-anchor="start" fill="{clr}">{label} {val:.2f} us</text>\n'
         )
 
     if clipped:
         s.append(
-            f'<text class="small" x="{w - mr}" y="{mt + 34}" text-anchor="end">最大值 {max(values):.2f} us；{clipped} 个样本 &gt; {vmax:.1f} us</text>\n'
+            f'<text class="small" x="{legend_x - 18:.2f}" y="{legend_y + legend_h + 22:.2f}" text-anchor="start">最大值 {max(values):.2f} us；{clipped} 个样本 &gt; {vmax:.1f} us</text>\n'
         )
 
-    s.append(f'<text class="axis" x="{ml + pw / 2:.2f}" y="{h - 30}" text-anchor="middle">{x_label}</text>\n')
-    s.append(f'<text class="axis" x="26" y="{mt + ph / 2:.2f}" transform="rotate(-90 26 {mt + ph / 2:.2f})">计数</text>\n')
+    s.append(f'<text class="axis" x="{ml + pw / 2:.2f}" y="{h - 44}" text-anchor="middle">{x_label}</text>\n')
+    s.append(f'<text class="axis" x="34" y="{mt + ph / 2:.2f}" transform="rotate(-90 34 {mt + ph / 2:.2f})">计数</text>\n')
     s.append(svg_footer())
 
     with open(out_path, "w", encoding="utf-8") as f:
@@ -284,3 +298,4 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+

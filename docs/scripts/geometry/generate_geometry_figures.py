@@ -57,12 +57,12 @@ def svg_header(w: int, h: int) -> str:
     return f'''<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" viewBox="0 0 {w} {h}" role="img">
 <style>
 text{{font-family:'AR PL UMing TW MBE','AR PL UMing CN','FandolHei','Microsoft YaHei','SimHei',Arial,Helvetica,sans-serif;fill:#111827;}}
-.title{{font-size:24px;font-weight:700;}}
-.subtitle{{font-size:13px;fill:#475569;}}
-.label{{font-size:14px;font-weight:700;}}
-.small{{font-size:12px;fill:#475569;}}
-.tiny{{font-size:10px;fill:#64748b;}}
-.axis{{font-size:12px;fill:#374151;}}
+.title{{font-size:40px;font-weight:700;}}
+.subtitle{{font-size:20px;fill:#475569;}}
+.label{{font-size:22px;font-weight:700;}}
+.small{{font-size:18px;fill:#475569;}}
+.tiny{{font-size:16px;fill:#64748b;}}
+.axis{{font-size:18px;fill:#374151;}}
 .box{{stroke:#1f2937;stroke-width:1.4;rx:14;ry:14;}}
 </style>
 <defs>
@@ -84,7 +84,7 @@ def text(x: float, y: float, body: str, cls: str = "small", anchor: str = "middl
     return f'<text class="{cls}" x="{x:.2f}" y="{y:.2f}" text-anchor="{anchor}">{esc(body)}</text>\n'
 
 
-def multiline_text(x: float, y: float, lines: Sequence[str], cls: str = "small", anchor: str = "middle", line_h: float = 17.0) -> str:
+def multiline_text(x: float, y: float, lines: Sequence[str], cls: str = "small", anchor: str = "middle", line_h: float = 24.0) -> str:
     out = [f'<text class="{cls}" x="{x:.2f}" y="{y:.2f}" text-anchor="{anchor}">']
     for i, line in enumerate(lines):
         dy = 0 if i == 0 else line_h
@@ -95,7 +95,7 @@ def multiline_text(x: float, y: float, lines: Sequence[str], cls: str = "small",
 
 def box(x: float, y: float, w: float, h: float, lines: Sequence[str], fill: str, stroke: str = "#1f2937") -> str:
     cx = x + w / 2.0
-    start_y = y + h / 2.0 - (len(lines) - 1) * 8.5 + 5
+    start_y = y + h / 2.0 - (len(lines) - 1) * 12.0 + 7
     return (
         f'<rect class="box" x="{x:.2f}" y="{y:.2f}" width="{w:.2f}" height="{h:.2f}" fill="{fill}" stroke="{stroke}" filter="url(#shadow)"/>\n'
         + multiline_text(cx, start_y, lines, "label" if len(lines) == 1 else "small")
@@ -120,8 +120,8 @@ def draw_system_architecture(out: Path) -> None:
     w, h = 1280, 720
     p = [svg_header(w, h)]
     p.append(f'<rect x="0" y="0" width="{w}" height="{h}" fill="#ffffff"/>\n')
-    p.append(text(70, 44, "FTCL 几何系统架构（geometry system architecture）", "title", "start"))
-    p.append(text(70, 66, "脚本控制平面驱动 UVec 数据平面，并选择 CPU 或 CUDA 执行后端。", "subtitle", "start"))
+    p.append(text(70, 58, "FTCL 几何系统架构（geometry system architecture）", "title", "start"))
+    p.append(text(70, 96, "脚本控制平面驱动 UVec 数据平面，并选择 CPU 或 CUDA 执行后端。", "subtitle", "start"))
 
     lanes = [
         (80, 120, 1120, 150, "1  脚本控制平面（control plane）", "#eff6ff"),
@@ -158,7 +158,7 @@ def draw_system_architecture(out: Path) -> None:
     p.append(arrow(1070, 446, 990, 545, "分片句柄", COLORS["purple"], "7 5"))
 
     p.append(text(140, 680, "核心思想：", "label", "start"))
-    p.append(text(225, 680, "脚本只传递小句柄；UVec 让大型几何数组驻留在设备端，直到最终读回。", "subtitle", "start"))
+    p.append(text(330, 680, "脚本只传递小句柄；UVec 让大型几何数组驻留在设备端，直到最终读回。", "subtitle", "start"))
     p.append(svg_footer())
     write_text(out, "".join(p))
 
@@ -167,8 +167,8 @@ def draw_uvec_sync(out: Path) -> None:
     w, h = 1280, 720
     p = [svg_header(w, h)]
     p.append(f'<rect x="0" y="0" width="{w}" height="{h}" fill="#ffffff"/>\n')
-    p.append(text(70, 44, "UVec 跨设备同步（cross-device synchronization）", "title", "start"))
-    p.append(text(70, 66, "读取会让目标设备副本变为有效；可写访问会让其他副本失效。", "subtitle", "start"))
+    p.append(text(70, 58, "UVec 跨设备同步（cross-device synchronization）", "title", "start"))
+    p.append(text(70, 96, "读取会让目标设备副本变为有效；可写访问会让其他副本失效。", "subtitle", "start"))
 
     panels = [
         (80, 115, 1120, 245, "读取路径：在不破坏其他有效副本的情况下让目标设备可读"),
@@ -199,8 +199,8 @@ def draw_geom_flow(out: Path) -> None:
     w, h = 1200, 760
     p = [svg_header(w, h)]
     p.append(f'<rect x="0" y="0" width="{w}" height="{h}" fill="#ffffff"/>\n')
-    p.append(text(70, 44, "geom 命令执行流程（command execution flow）", "title", "start"))
-    p.append(text(70, 66, "示例：geom nearest_point $dataset $queries cuda:0", "subtitle", "start"))
+    p.append(text(70, 58, "geom 命令执行流程（command execution flow）", "title", "start"))
+    p.append(text(70, 96, "示例：geom nearest_point $dataset $queries cuda:0", "subtitle", "start"))
 
     nodes = [
         (90, 125, 250, 76, ["FTCL 脚本", "geom nearest_point ..."], "#dbeafe"),
@@ -336,7 +336,7 @@ def group_perf(rows: List[Dict[str, str]]) -> Dict[Tuple[str, str, int], Dict[st
 
 def draw_line_chart(out: Path, title: str, subtitle: str, ylabel: str, series: List[Dict[str, object]], y_min: float = 0.0, ref_line: float = None) -> None:
     w, h = 1450, 700
-    ml, mr, mt, mb = 95, 380, 90, 105
+    ml, mr, mt, mb = 120, 420, 130, 135
     pw, ph = w - ml - mr, h - mt - mb
     xs = sorted({x for s in series for x, _ in s["values"]})
     y_values = [y for s in series for _, y in s["values"]]
@@ -351,8 +351,8 @@ def draw_line_chart(out: Path, title: str, subtitle: str, ylabel: str, series: L
 
     p = [svg_header(w, h)]
     p.append(f'<rect x="0" y="0" width="{w}" height="{h}" fill="#ffffff"/>\n')
-    p.append(text(70, 44, title, "title", "start"))
-    p.append(text(70, 66, subtitle, "subtitle", "start"))
+    p.append(text(70, 58, title, "title", "start"))
+    p.append(text(70, 96, subtitle, "subtitle", "start"))
 
     step = nice_step(y_max - y_min, 7)
     tick = math.ceil(y_min / step) * step
@@ -382,8 +382,8 @@ def draw_line_chart(out: Path, title: str, subtitle: str, ylabel: str, series: L
     for x in xs:
         xp = x_pos[x]
         p.append(f'<line x1="{xp:.2f}" y1="{mt + ph}" x2="{xp:.2f}" y2="{mt + ph + 6}" stroke="#111827"/>\n')
-        p.append(text(xp, mt + ph + 25, str(x), "axis"))
-    p.append(text(ml + pw / 2, h - 34, "点数量 N（point count）", "axis"))
+        p.append(text(xp, mt + ph + 42, str(x), "axis"))
+    p.append(text(ml + pw / 2, h - 44, "点数量 N（point count）", "axis"))
     p.append(f'<text class="axis" x="28" y="{mt + ph/2:.2f}" transform="rotate(-90 28 {mt + ph/2:.2f})">{esc(ylabel)}</text>\n')
 
     lx, ly = ml + pw + 34, mt + 10
@@ -436,7 +436,7 @@ def draw_time_bars(rows: List[Dict[str, str]], out: Path) -> None:
     selected_n = ns[-1]
     algos = [m for m in ALGO_LABELS if (m, "cpu", selected_n) in perf]
     w, h = 1200, 700
-    ml, mr, mt, mb = 95, 60, 90, 130
+    ml, mr, mt, mb = 120, 90, 130, 150
     pw, ph = w - ml - mr, h - mt - mb
     values = []
     for a in algos:
@@ -450,8 +450,8 @@ def draw_time_bars(rows: List[Dict[str, str]], out: Path) -> None:
 
     p = [svg_header(w, h)]
     p.append(f'<rect x="0" y="0" width="{w}" height="{h}" fill="#ffffff"/>\n')
-    p.append(text(70, 44, "执行时间对比（execution time）", "title", "start"))
-    p.append(text(70, 66, f"本次论文模式最大规模：N={selected_n}；数值越低越好。", "subtitle", "start"))
+    p.append(text(70, 58, "执行时间对比（execution time）", "title", "start"))
+    p.append(text(70, 96, f"本次论文模式最大规模：N={selected_n}；数值越低越好。", "subtitle", "start"))
 
     step = nice_step(y_max, 7)
     tick = 0.0
@@ -476,7 +476,7 @@ def draw_time_bars(rows: List[Dict[str, str]], out: Path) -> None:
             color = "#94a3b8" if d == "cpu" else ALGO_COLORS[a]
             p.append(f'<rect x="{x:.2f}" y="{y:.2f}" width="{bar_w}" height="{mt + ph - y:.2f}" fill="{color}" rx="5"/>\n')
             p.append(text(x + bar_w / 2, y - 7, format_axis(v), "tiny"))
-        p.append(multiline_text(cx, mt + ph + 28, [ALGO_LABELS[a]], "axis"))
+        p.append(multiline_text(cx, mt + ph + 46, [ALGO_LABELS[a]], "axis"))
     p.append(f'<text class="axis" x="28" y="{mt + ph/2:.2f}" transform="rotate(-90 28 {mt + ph/2:.2f})">时间（微秒，us）</text>\n')
     p.append(f'<rect x="930" y="98" width="18" height="12" fill="#94a3b8"/><text class="tiny" x="956" y="109">CPU</text>\n')
     p.append(f'<rect x="930" y="122" width="18" height="12" fill="{COLORS["blue"]}"/><text class="tiny" x="956" y="133">CUDA（颜色按算法区分）</text>\n')
@@ -487,7 +487,7 @@ def draw_time_bars(rows: List[Dict[str, str]], out: Path) -> None:
 def draw_error_hist(rows: List[Dict[str, str]], out: Path) -> None:
     values = [float(r["max_abs_error"]) for r in rows]
     w, h = 1100, 620
-    ml, mr, mt, mb = 95, 50, 90, 100
+    ml, mr, mt, mb = 120, 70, 130, 130
     pw, ph = w - ml - mr, h - mt - mb
     if not values:
         values = [0.0]
@@ -513,8 +513,8 @@ def draw_error_hist(rows: List[Dict[str, str]], out: Path) -> None:
 
     p = [svg_header(w, h)]
     p.append(f'<rect x="0" y="0" width="{w}" height="{h}" fill="#ffffff"/>\n')
-    p.append(text(70, 44, "CPU/CUDA 数值误差分布（error distribution）", "title", "start"))
-    p.append(text(70, 66, "每次等价性检查的最大绝对误差直方图；数值越低越好。", "subtitle", "start"))
+    p.append(text(70, 58, "CPU/CUDA 数值误差分布（error distribution）", "title", "start"))
+    p.append(text(70, 96, "每次等价性检查的最大绝对误差直方图；数值越低越好。", "subtitle", "start"))
     for i in range(max_count + 1):
         y = y_of(i)
         p.append(f'<line x1="{ml}" y1="{y:.2f}" x2="{ml + pw}" y2="{y:.2f}" stroke="{COLORS["grid"]}"/>\n')
@@ -528,7 +528,7 @@ def draw_error_hist(rows: List[Dict[str, str]], out: Path) -> None:
         y = y_of(counts[0])
         p.append(f'<rect x="{x:.2f}" y="{y:.2f}" width="{bar_w:.2f}" height="{mt + ph - y:.2f}" fill="#16a34a" opacity="0.78" rx="6"/>\n')
         p.append(text(x + bar_w / 2, y - 10, str(counts[0]), "small"))
-        p.append(text(x + bar_w / 2, mt + ph + 25, format_axis(values[0]), "axis"))
+        p.append(text(x + bar_w / 2, mt + ph + 42, format_axis(values[0]), "axis"))
         p.append(
             f'<rect x="{ml + pw - 270}" y="{mt + 22}" width="250" height="62" rx="12" fill="#ecfdf5" stroke="#16a34a" stroke-width="1.2"/>\n'
         )
@@ -540,7 +540,7 @@ def draw_error_hist(rows: List[Dict[str, str]], out: Path) -> None:
             y = y_of(c)
             p.append(f'<rect x="{x0:.2f}" y="{y:.2f}" width="{max(2, x1 - x0 - 2):.2f}" height="{mt + ph - y:.2f}" fill="#16a34a" opacity="0.78"/>\n')
 
-    p.append(text(ml + pw / 2, h - 34, "最大绝对误差（max absolute error）", "axis"))
+    p.append(text(ml + pw / 2, h - 44, "最大绝对误差（max absolute error）", "axis"))
     p.append(f'<text class="axis" x="28" y="{mt + ph/2:.2f}" transform="rotate(-90 28 {mt + ph/2:.2f})">检查次数</text>\n')
     p.append(text(ml + pw - 8, mt + 20, f"样本数={len(values)}, 最大值={max(values):.3g}", "small", "end"))
     p.append(svg_footer())
@@ -556,8 +556,8 @@ def draw_geometry_visualization(out: Path) -> None:
     w, h = 1200, 820
     p = [svg_header(w, h)]
     p.append(f'<rect x="0" y="0" width="{w}" height="{h}" fill="#ffffff"/>\n')
-    p.append(text(70, 44, "几何算法可视化（algorithm visualization）", "title", "start"))
-    p.append(text(70, 66, "展示 FTCL 脚本接口中四类代表性 geom 命令。", "subtitle", "start"))
+    p.append(text(70, 58, "几何算法可视化（algorithm visualization）", "title", "start"))
+    p.append(text(70, 96, "展示 FTCL 脚本接口中四类代表性 geom 命令。", "subtitle", "start"))
 
     panels = [(70, 110, 500, 300, "点在多边形内（point in polygon）"), (630, 110, 500, 300, "最近点（nearest point）"), (70, 460, 500, 300, "圆形范围计数（range count circle）"), (630, 460, 500, 300, "AABB 碰撞（collision）")]
     for args in panels:

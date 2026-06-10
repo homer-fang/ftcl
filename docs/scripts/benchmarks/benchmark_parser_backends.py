@@ -102,10 +102,10 @@ def svg_header(w: int, h: int) -> str:
         f'viewBox="0 0 {w} {h}" role="img">\n'
         "<style>"
         "text{font-family:'AR PL UMing TW MBE','AR PL UMing CN','FandolHei','Microsoft YaHei','SimHei',Arial,sans-serif;fill:#111827;}"
-        ".title{font-size:24px;font-weight:700;}"
-        ".subtitle{font-size:13px;fill:#4b5563;}"
-        ".axis{font-size:12px;}"
-        ".tick{font-size:11px;fill:#374151;}"
+        ".title{font-size:40px;font-weight:700;}"
+        ".subtitle{font-size:22px;fill:#4b5563;}"
+        ".axis{font-size:20px;}"
+        ".tick{font-size:18px;fill:#374151;}"
         "</style>\n"
     )
 
@@ -132,7 +132,7 @@ def draw_figure(path: str, raw_rows: List[Dict[str, str]], summary: Dict[str, Di
         ymax = 1.0
 
     w, h = 1100, 680
-    ml, mr, mt, mb = 100, 40, 90, 110
+    ml, mr, mt, mb = 130, 70, 135, 145
     pw, ph = w - ml - mr, h - mt - mb
 
     def y_of(v: float) -> float:
@@ -146,9 +146,9 @@ def draw_figure(path: str, raw_rows: List[Dict[str, str]], summary: Dict[str, Di
 
     parts = [svg_header(w, h)]
     parts.append(f'<rect x="0" y="0" width="{w}" height="{h}" fill="#ffffff"/>\n')
-    parts.append('<text class="title" x="100" y="44">解析器后端运行时间对比（Parser Backend）</text>\n')
+    parts.append('<text class="title" x="100" y="58">解析器后端运行时间对比（Parser Backend）</text>\n')
     parts.append(
-        f'<text class="subtitle" x="100" y="66">负载：test_ftcl_subset；每个后端轮数：{rounds}；数值越低越好</text>\n'
+        f'<text class="subtitle" x="100" y="96">负载：test_ftcl_subset；每个后端轮数：{rounds}；数值越低越好</text>\n'
     )
 
     # Grid and y-axis ticks.
@@ -202,20 +202,20 @@ def draw_figure(path: str, raw_rows: List[Dict[str, str]], summary: Dict[str, Di
             parts.append(f'<circle cx="{x:.2f}" cy="{y:.2f}" r="3.2" fill="#0f172a" opacity="0.45"/>\n')
 
         parts.append(
-            f'<text class="axis" x="{cx:.2f}" y="{mt + ph + 28:.2f}" text-anchor="middle">{backend}</text>\n'
+            f'<text class="axis" x="{cx:.2f}" y="{mt + ph + 46:.2f}" text-anchor="middle">{backend}</text>\n'
         )
         parts.append(
-            f'<text class="tick" x="{cx:.2f}" y="{y_bar - 8:.2f}" text-anchor="middle">均值={mean:.2f} ms</text>\n'
+            f'<text class="tick" x="{cx:.2f}" y="{y_bar - 16:.2f}" text-anchor="middle">均值={mean:.2f} ms</text>\n'
         )
 
     # Legend
     lx, ly = w - 320, mt + 12
     parts.append(f'<rect x="{lx}" y="{ly}" width="16" height="12" fill="#2563eb" opacity="0.86"/>\n')
     parts.append(f'<text class="tick" x="{lx + 24}" y="{ly + 11}">legacy</text>\n')
-    parts.append(f'<rect x="{lx}" y="{ly + 20}" width="16" height="12" fill="#f59e0b" opacity="0.86"/>\n')
-    parts.append(f'<text class="tick" x="{lx + 24}" y="{ly + 31}">token_stream</text>\n')
-    parts.append(f'<text class="tick" x="{lx}" y="{ly + 52}">误差线：95% 置信区间</text>\n')
-    parts.append(f'<text class="tick" x="{lx}" y="{ly + 69}">散点：单次试验</text>\n')
+    parts.append(f'<rect x="{lx}" y="{ly + 34}" width="16" height="12" fill="#f59e0b" opacity="0.86"/>\n')
+    parts.append(f'<text class="tick" x="{lx + 24}" y="{ly + 48}">token_stream</text>\n')
+    parts.append(f'<text class="tick" x="{lx}" y="{ly + 82}">误差线：95% 置信区间</text>\n')
+    parts.append(f'<text class="tick" x="{lx}" y="{ly + 104}">散点：单次试验</text>\n')
 
     parts.append("</svg>\n")
 

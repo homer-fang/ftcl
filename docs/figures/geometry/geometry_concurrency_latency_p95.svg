@@ -1,13 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1450" height="760" viewBox="0 0 1450 760" role="img">
 <style>
 text{font-family:'AR PL UMing TW MBE','AR PL UMing CN','FandolHei','Microsoft YaHei','SimHei',Arial,Helvetica,sans-serif;fill:#111827;}
-.title{font-size:28px;font-weight:700;}
-.subtitle{font-size:15px;fill:#475569;}
-.axis{font-size:15px;fill:#374151;}
-.small{font-size:14px;fill:#475569;}
-.tiny{font-size:13px;fill:#64748b;}
-.label{font-size:16px;font-weight:700;}
-.code{font-family:Consolas,Monaco,'Courier New',monospace;font-size:10px;fill:#e2e8f0;}
+.title{font-size:42px;font-weight:700;}
+.subtitle{font-size:22px;fill:#475569;}
+.axis{font-size:22px;fill:#374151;}
+.small{font-size:20px;fill:#475569;}
+.tiny{font-size:18px;fill:#64748b;}
+.label{font-size:24px;font-weight:700;}
+.code{font-family:Consolas,Monaco,'Courier New',monospace;font-size:17px;fill:#e2e8f0;}
 .box{stroke:#1f2937;stroke-width:1.4;rx:14;ry:14;}
 </style>
 <defs>
@@ -16,42 +16,42 @@ text{font-family:'AR PL UMing TW MBE','AR PL UMing CN','FandolHei','Microsoft Ya
 </marker>
 </defs>
 <rect x="0" y="0" width="1450" height="760" fill="#ffffff"/>
-<text class="title" x="70.00" y="44.00" text-anchor="start">并发几何尾延迟（latency tail）</text>
-<text class="subtitle" x="70.00" y="66.00" text-anchor="start">同一 worker/channel 实验中的单请求 P95 延迟；数值越低越好。</text>
-<line x1="120" y1="640.00" x2="1070" y2="640.00" stroke="#e5e7eb"/>
-<text class="axis" x="108.00" y="644.00" text-anchor="end">0.00</text>
-<line x1="120" y1="489.90" x2="1070" y2="489.90" stroke="#e5e7eb"/>
-<text class="axis" x="108.00" y="493.90" text-anchor="end">10.0k</text>
-<line x1="120" y1="339.80" x2="1070" y2="339.80" stroke="#e5e7eb"/>
-<text class="axis" x="108.00" y="343.80" text-anchor="end">20.0k</text>
-<line x1="120" y1="189.69" x2="1070" y2="189.69" stroke="#e5e7eb"/>
-<text class="axis" x="108.00" y="193.69" text-anchor="end">30.0k</text>
-<line x1="120" y1="100" x2="120" y2="640" stroke="#111827" stroke-width="1.4"/>
-<line x1="120" y1="640" x2="1070" y2="640" stroke="#111827" stroke-width="1.4"/>
-<polyline points="120.00,571.90 436.67,590.64 753.33,584.01 1070.00,463.48" fill="none" stroke="#16a34a" stroke-width="3"/>
-<circle cx="120.00" cy="571.90" r="4.5" fill="#16a34a"/>
-<circle cx="436.67" cy="590.64" r="4.5" fill="#16a34a"/>
-<circle cx="753.33" cy="584.01" r="4.5" fill="#16a34a"/>
-<circle cx="1070.00" cy="463.48" r="4.5" fill="#16a34a"/>
-<polyline points="120.00,585.35 436.67,531.35 753.33,365.69 1070.00,182.37" fill="none" stroke="#dc2626" stroke-width="3"/>
-<circle cx="120.00" cy="585.35" r="4.5" fill="#dc2626"/>
-<circle cx="436.67" cy="531.35" r="4.5" fill="#dc2626"/>
-<circle cx="753.33" cy="365.69" r="4.5" fill="#dc2626"/>
-<circle cx="1070.00" cy="182.37" r="4.5" fill="#dc2626"/>
-<line x1="120.00" y1="640" x2="120.00" y2="646" stroke="#111827"/>
-<text class="axis" x="120.00" y="665.00" text-anchor="middle">1</text>
-<line x1="436.67" y1="640" x2="436.67" y2="646" stroke="#111827"/>
-<text class="axis" x="436.67" y="665.00" text-anchor="middle">2</text>
-<line x1="753.33" y1="640" x2="753.33" y2="646" stroke="#111827"/>
-<text class="axis" x="753.33" y="665.00" text-anchor="middle">4</text>
-<line x1="1070.00" y1="640" x2="1070.00" y2="646" stroke="#111827"/>
-<text class="axis" x="1070.00" y="665.00" text-anchor="middle">8</text>
-<text class="axis" x="595.00" y="726.00" text-anchor="middle">工作线程数（worker threads）</text>
-<text class="axis" x="120.00" y="84.00" text-anchor="start">延迟（微秒，us）</text>
-<line x1="1104" y1="112" x2="1140" y2="112" stroke="#16a34a" stroke-width="4"/>
-<circle cx="1122" cy="112" r="5.5" fill="#16a34a"/>
-<text class="tiny" x="1154.00" y="117.00" text-anchor="start">CPU P95</text>
-<line x1="1104" y1="142" x2="1140" y2="142" stroke="#dc2626" stroke-width="4"/>
-<circle cx="1122" cy="142" r="5.5" fill="#dc2626"/>
-<text class="tiny" x="1154.00" y="147.00" text-anchor="start">CUDA cuda:0 P95</text>
+<text class="title" x="70.00" y="64.00" text-anchor="start">并发几何尾延迟（latency tail）</text>
+<text class="subtitle" x="70.00" y="108.00" text-anchor="start">同一 worker/channel 实验中的单请求 P95 延迟；数值越低越好。</text>
+<line x1="150" y1="610.00" x2="1020" y2="610.00" stroke="#e5e7eb"/>
+<text class="axis" x="138.00" y="614.00" text-anchor="end">0.00</text>
+<line x1="150" y1="480.75" x2="1020" y2="480.75" stroke="#e5e7eb"/>
+<text class="axis" x="138.00" y="484.75" text-anchor="end">10.0k</text>
+<line x1="150" y1="351.49" x2="1020" y2="351.49" stroke="#e5e7eb"/>
+<text class="axis" x="138.00" y="355.49" text-anchor="end">20.0k</text>
+<line x1="150" y1="222.24" x2="1020" y2="222.24" stroke="#e5e7eb"/>
+<text class="axis" x="138.00" y="226.24" text-anchor="end">30.0k</text>
+<line x1="150" y1="145" x2="150" y2="610" stroke="#111827" stroke-width="1.4"/>
+<line x1="150" y1="610" x2="1020" y2="610" stroke="#111827" stroke-width="1.4"/>
+<polyline points="150.00,551.36 440.00,567.50 730.00,561.79 1020.00,458.00" fill="none" stroke="#16a34a" stroke-width="3"/>
+<circle cx="150.00" cy="551.36" r="4.5" fill="#16a34a"/>
+<circle cx="440.00" cy="567.50" r="4.5" fill="#16a34a"/>
+<circle cx="730.00" cy="561.79" r="4.5" fill="#16a34a"/>
+<circle cx="1020.00" cy="458.00" r="4.5" fill="#16a34a"/>
+<polyline points="150.00,562.94 440.00,516.44 730.00,373.78 1020.00,215.93" fill="none" stroke="#dc2626" stroke-width="3"/>
+<circle cx="150.00" cy="562.94" r="4.5" fill="#dc2626"/>
+<circle cx="440.00" cy="516.44" r="4.5" fill="#dc2626"/>
+<circle cx="730.00" cy="373.78" r="4.5" fill="#dc2626"/>
+<circle cx="1020.00" cy="215.93" r="4.5" fill="#dc2626"/>
+<line x1="150.00" y1="610" x2="150.00" y2="616" stroke="#111827"/>
+<text class="axis" x="150.00" y="654.00" text-anchor="middle">1</text>
+<line x1="440.00" y1="610" x2="440.00" y2="616" stroke="#111827"/>
+<text class="axis" x="440.00" y="654.00" text-anchor="middle">2</text>
+<line x1="730.00" y1="610" x2="730.00" y2="616" stroke="#111827"/>
+<text class="axis" x="730.00" y="654.00" text-anchor="middle">4</text>
+<line x1="1020.00" y1="610" x2="1020.00" y2="616" stroke="#111827"/>
+<text class="axis" x="1020.00" y="654.00" text-anchor="middle">8</text>
+<text class="axis" x="585.00" y="712.00" text-anchor="middle">工作线程数（worker threads）</text>
+<text class="axis" x="150.00" y="129.00" text-anchor="start">延迟（微秒，us）</text>
+<line x1="1054" y1="157" x2="1090" y2="157" stroke="#16a34a" stroke-width="4"/>
+<circle cx="1072" cy="157" r="5.5" fill="#16a34a"/>
+<text class="tiny" x="1108.00" y="163.00" text-anchor="start">CPU P95</text>
+<line x1="1054" y1="193" x2="1090" y2="193" stroke="#dc2626" stroke-width="4"/>
+<circle cx="1072" cy="193" r="5.5" fill="#dc2626"/>
+<text class="tiny" x="1108.00" y="199.00" text-anchor="start">CUDA cuda:0 P95</text>
 </svg>

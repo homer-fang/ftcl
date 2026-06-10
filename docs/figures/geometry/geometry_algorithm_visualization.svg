@@ -1,12 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="820" viewBox="0 0 1200 820" role="img">
 <style>
 text{font-family:'AR PL UMing TW MBE','AR PL UMing CN','FandolHei','Microsoft YaHei','SimHei',Arial,Helvetica,sans-serif;fill:#111827;}
-.title{font-size:24px;font-weight:700;}
-.subtitle{font-size:13px;fill:#475569;}
-.label{font-size:14px;font-weight:700;}
-.small{font-size:12px;fill:#475569;}
-.tiny{font-size:10px;fill:#64748b;}
-.axis{font-size:12px;fill:#374151;}
+.title{font-size:40px;font-weight:700;}
+.subtitle{font-size:20px;fill:#475569;}
+.label{font-size:22px;font-weight:700;}
+.small{font-size:18px;fill:#475569;}
+.tiny{font-size:16px;fill:#64748b;}
+.axis{font-size:18px;fill:#374151;}
 .box{stroke:#1f2937;stroke-width:1.4;rx:14;ry:14;}
 </style>
 <defs>
@@ -18,8 +18,8 @@ text{font-family:'AR PL UMing TW MBE','AR PL UMing CN','FandolHei','Microsoft Ya
 </filter>
 </defs>
 <rect x="0" y="0" width="1200" height="820" fill="#ffffff"/>
-<text class="title" x="70.00" y="44.00" text-anchor="start">几何算法可视化（algorithm visualization）</text>
-<text class="subtitle" x="70.00" y="66.00" text-anchor="start">展示 FTCL 脚本接口中四类代表性 geom 命令。</text>
+<text class="title" x="70.00" y="58.00" text-anchor="start">几何算法可视化（algorithm visualization）</text>
+<text class="subtitle" x="70.00" y="96.00" text-anchor="start">展示 FTCL 脚本接口中四类代表性 geom 命令。</text>
 <rect x="70" y="110" width="500" height="300" rx="18" fill="#f8fafc" stroke="#cbd5e1"/>
 <text class="label" x="88.00" y="138.00" text-anchor="start">点在多边形内（point in polygon）</text>
 <rect x="630" y="110" width="500" height="300" rx="18" fill="#f8fafc" stroke="#cbd5e1"/>

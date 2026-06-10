@@ -1,12 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1450" height="700" viewBox="0 0 1450 700" role="img">
 <style>
 text{font-family:'AR PL UMing TW MBE','AR PL UMing CN','FandolHei','Microsoft YaHei','SimHei',Arial,Helvetica,sans-serif;fill:#111827;}
-.title{font-size:24px;font-weight:700;}
-.subtitle{font-size:13px;fill:#475569;}
-.label{font-size:14px;font-weight:700;}
-.small{font-size:12px;fill:#475569;}
-.tiny{font-size:10px;fill:#64748b;}
-.axis{font-size:12px;fill:#374151;}
+.title{font-size:40px;font-weight:700;}
+.subtitle{font-size:20px;fill:#475569;}
+.label{font-size:22px;font-weight:700;}
+.small{font-size:18px;fill:#475569;}
+.tiny{font-size:16px;fill:#64748b;}
+.axis{font-size:18px;fill:#374151;}
 .box{stroke:#1f2937;stroke-width:1.4;rx:14;ry:14;}
 </style>
 <defs>
@@ -18,66 +18,66 @@ text{font-family:'AR PL UMing TW MBE','AR PL UMing CN','FandolHei','Microsoft Ya
 </filter>
 </defs>
 <rect x="0" y="0" width="1450" height="700" fill="#ffffff"/>
-<text class="title" x="70.00" y="44.00" text-anchor="start">几何吞吐量曲线（throughput）</text>
-<text class="subtitle" x="70.00" y="66.00" text-anchor="start">虚线表示 CPU，实线表示 CUDA；单位为每秒点对/查询操作数。</text>
-<line x1="95" y1="595.00" x2="1070" y2="595.00" stroke="#e5e7eb"/>
-<text class="axis" x="83.00" y="599.00" text-anchor="end">0.00</text>
-<line x1="95" y1="464.01" x2="1070" y2="464.01" stroke="#e5e7eb"/>
-<text class="axis" x="83.00" y="468.01" text-anchor="end">10000.0M</text>
-<line x1="95" y1="333.02" x2="1070" y2="333.02" stroke="#e5e7eb"/>
-<text class="axis" x="83.00" y="337.02" text-anchor="end">20000.0M</text>
-<line x1="95" y1="202.04" x2="1070" y2="202.04" stroke="#e5e7eb"/>
-<text class="axis" x="83.00" y="206.04" text-anchor="end">30000.0M</text>
-<line x1="95" y1="90" x2="95" y2="595" stroke="#111827" stroke-width="1.4"/>
-<line x1="95" y1="595" x2="1070" y2="595" stroke="#111827" stroke-width="1.4"/>
-<polyline points="95.00,591.14 582.50,593.04 1070.00,593.09" fill="none" stroke="#2563eb" stroke-width="3" stroke-dasharray="7 5"/>
-<circle cx="95.00" cy="591.14" r="4.5" fill="#2563eb"/>
-<circle cx="582.50" cy="593.04" r="4.5" fill="#2563eb"/>
-<circle cx="1070.00" cy="593.09" r="4.5" fill="#2563eb"/>
-<polyline points="95.00,568.90 582.50,493.28 1070.00,167.03" fill="none" stroke="#2563eb" stroke-width="3"/>
-<circle cx="95.00" cy="568.90" r="4.5" fill="#2563eb"/>
-<circle cx="582.50" cy="493.28" r="4.5" fill="#2563eb"/>
-<circle cx="1070.00" cy="167.03" r="4.5" fill="#2563eb"/>
-<polyline points="95.00,588.17 582.50,587.93 1070.00,587.87" fill="none" stroke="#16a34a" stroke-width="3" stroke-dasharray="7 5"/>
-<circle cx="95.00" cy="588.17" r="4.5" fill="#16a34a"/>
-<circle cx="582.50" cy="587.93" r="4.5" fill="#16a34a"/>
-<circle cx="1070.00" cy="587.87" r="4.5" fill="#16a34a"/>
-<polyline points="95.00,580.97 582.50,535.63 1070.00,476.94" fill="none" stroke="#16a34a" stroke-width="3"/>
-<circle cx="95.00" cy="580.97" r="4.5" fill="#16a34a"/>
-<circle cx="582.50" cy="535.63" r="4.5" fill="#16a34a"/>
-<circle cx="1070.00" cy="476.94" r="4.5" fill="#16a34a"/>
-<polyline points="95.00,571.37 582.50,570.96 1070.00,570.90" fill="none" stroke="#f59e0b" stroke-width="3" stroke-dasharray="7 5"/>
-<circle cx="95.00" cy="571.37" r="4.5" fill="#f59e0b"/>
-<circle cx="582.50" cy="570.96" r="4.5" fill="#f59e0b"/>
-<circle cx="1070.00" cy="570.90" r="4.5" fill="#f59e0b"/>
-<polyline points="95.00,561.63 582.50,438.62 1070.00,278.67" fill="none" stroke="#f59e0b" stroke-width="3"/>
-<circle cx="95.00" cy="561.63" r="4.5" fill="#f59e0b"/>
-<circle cx="582.50" cy="438.62" r="4.5" fill="#f59e0b"/>
-<circle cx="1070.00" cy="278.67" r="4.5" fill="#f59e0b"/>
-<line x1="95.00" y1="595" x2="95.00" y2="601" stroke="#111827"/>
-<text class="axis" x="95.00" y="620.00" text-anchor="middle">2048</text>
-<line x1="582.50" y1="595" x2="582.50" y2="601" stroke="#111827"/>
-<text class="axis" x="582.50" y="620.00" text-anchor="middle">8192</text>
-<line x1="1070.00" y1="595" x2="1070.00" y2="601" stroke="#111827"/>
-<text class="axis" x="1070.00" y="620.00" text-anchor="middle">32768</text>
-<text class="axis" x="582.50" y="666.00" text-anchor="middle">点数量 N（point count）</text>
-<text class="axis" x="28" y="342.50" transform="rotate(-90 28 342.50)">吞吐量（items/s）</text>
-<line x1="1104" y1="100" x2="1136" y2="100" stroke="#2563eb" stroke-width="3" stroke-dasharray="7 5"/>
-<circle cx="1120" cy="100" r="4" fill="#2563eb"/>
-<text class="tiny" x="1146.00" y="104.00" text-anchor="start">距离矩阵（distance matrix） CPU</text>
-<line x1="1104" y1="124" x2="1136" y2="124" stroke="#2563eb" stroke-width="3"/>
-<circle cx="1120" cy="124" r="4" fill="#2563eb"/>
-<text class="tiny" x="1146.00" y="128.00" text-anchor="start">距离矩阵（distance matrix） CUDA cuda:0</text>
-<line x1="1104" y1="148" x2="1136" y2="148" stroke="#16a34a" stroke-width="3" stroke-dasharray="7 5"/>
-<circle cx="1120" cy="148" r="4" fill="#16a34a"/>
-<text class="tiny" x="1146.00" y="152.00" text-anchor="start">最近点（nearest point） CPU</text>
-<line x1="1104" y1="172" x2="1136" y2="172" stroke="#16a34a" stroke-width="3"/>
-<circle cx="1120" cy="172" r="4" fill="#16a34a"/>
-<text class="tiny" x="1146.00" y="176.00" text-anchor="start">最近点（nearest point） CUDA cuda:0</text>
-<line x1="1104" y1="196" x2="1136" y2="196" stroke="#f59e0b" stroke-width="3" stroke-dasharray="7 5"/>
-<circle cx="1120" cy="196" r="4" fill="#f59e0b"/>
-<text class="tiny" x="1146.00" y="200.00" text-anchor="start">圆形范围计数（circle range count） CPU</text>
-<line x1="1104" y1="220" x2="1136" y2="220" stroke="#f59e0b" stroke-width="3"/>
-<circle cx="1120" cy="220" r="4" fill="#f59e0b"/>
-<text class="tiny" x="1146.00" y="224.00" text-anchor="start">圆形范围计数（circle range count） CUDA cuda:0</text>
+<text class="title" x="70.00" y="58.00" text-anchor="start">几何吞吐量曲线（throughput）</text>
+<text class="subtitle" x="70.00" y="96.00" text-anchor="start">虚线表示 CPU，实线表示 CUDA；单位为每秒点对/查询操作数。</text>
+<line x1="120" y1="565.00" x2="1030" y2="565.00" stroke="#e5e7eb"/>
+<text class="axis" x="108.00" y="569.00" text-anchor="end">0.00</text>
+<line x1="120" y1="452.17" x2="1030" y2="452.17" stroke="#e5e7eb"/>
+<text class="axis" x="108.00" y="456.17" text-anchor="end">10000.0M</text>
+<line x1="120" y1="339.34" x2="1030" y2="339.34" stroke="#e5e7eb"/>
+<text class="axis" x="108.00" y="343.34" text-anchor="end">20000.0M</text>
+<line x1="120" y1="226.51" x2="1030" y2="226.51" stroke="#e5e7eb"/>
+<text class="axis" x="108.00" y="230.51" text-anchor="end">30000.0M</text>
+<line x1="120" y1="130" x2="120" y2="565" stroke="#111827" stroke-width="1.4"/>
+<line x1="120" y1="565" x2="1030" y2="565" stroke="#111827" stroke-width="1.4"/>
+<polyline points="120.00,561.68 575.00,563.31 1030.00,563.35" fill="none" stroke="#2563eb" stroke-width="3" stroke-dasharray="7 5"/>
+<circle cx="120.00" cy="561.68" r="4.5" fill="#2563eb"/>
+<circle cx="575.00" cy="563.31" r="4.5" fill="#2563eb"/>
+<circle cx="1030.00" cy="563.35" r="4.5" fill="#2563eb"/>
+<polyline points="120.00,542.52 575.00,477.38 1030.00,196.36" fill="none" stroke="#2563eb" stroke-width="3"/>
+<circle cx="120.00" cy="542.52" r="4.5" fill="#2563eb"/>
+<circle cx="575.00" cy="477.38" r="4.5" fill="#2563eb"/>
+<circle cx="1030.00" cy="196.36" r="4.5" fill="#2563eb"/>
+<polyline points="120.00,559.12 575.00,558.91 1030.00,558.86" fill="none" stroke="#16a34a" stroke-width="3" stroke-dasharray="7 5"/>
+<circle cx="120.00" cy="559.12" r="4.5" fill="#16a34a"/>
+<circle cx="575.00" cy="558.91" r="4.5" fill="#16a34a"/>
+<circle cx="1030.00" cy="558.86" r="4.5" fill="#16a34a"/>
+<polyline points="120.00,552.92 575.00,513.86 1030.00,463.31" fill="none" stroke="#16a34a" stroke-width="3"/>
+<circle cx="120.00" cy="552.92" r="4.5" fill="#16a34a"/>
+<circle cx="575.00" cy="513.86" r="4.5" fill="#16a34a"/>
+<circle cx="1030.00" cy="463.31" r="4.5" fill="#16a34a"/>
+<polyline points="120.00,544.64 575.00,544.29 1030.00,544.24" fill="none" stroke="#f59e0b" stroke-width="3" stroke-dasharray="7 5"/>
+<circle cx="120.00" cy="544.64" r="4.5" fill="#f59e0b"/>
+<circle cx="575.00" cy="544.29" r="4.5" fill="#f59e0b"/>
+<circle cx="1030.00" cy="544.24" r="4.5" fill="#f59e0b"/>
+<polyline points="120.00,536.26 575.00,430.30 1030.00,292.52" fill="none" stroke="#f59e0b" stroke-width="3"/>
+<circle cx="120.00" cy="536.26" r="4.5" fill="#f59e0b"/>
+<circle cx="575.00" cy="430.30" r="4.5" fill="#f59e0b"/>
+<circle cx="1030.00" cy="292.52" r="4.5" fill="#f59e0b"/>
+<line x1="120.00" y1="565" x2="120.00" y2="571" stroke="#111827"/>
+<text class="axis" x="120.00" y="607.00" text-anchor="middle">2048</text>
+<line x1="575.00" y1="565" x2="575.00" y2="571" stroke="#111827"/>
+<text class="axis" x="575.00" y="607.00" text-anchor="middle">8192</text>
+<line x1="1030.00" y1="565" x2="1030.00" y2="571" stroke="#111827"/>
+<text class="axis" x="1030.00" y="607.00" text-anchor="middle">32768</text>
+<text class="axis" x="575.00" y="656.00" text-anchor="middle">点数量 N（point count）</text>
+<text class="axis" x="28" y="347.50" transform="rotate(-90 28 347.50)">吞吐量（items/s）</text>
+<line x1="1064" y1="140" x2="1096" y2="140" stroke="#2563eb" stroke-width="3" stroke-dasharray="7 5"/>
+<circle cx="1080" cy="140" r="4" fill="#2563eb"/>
+<text class="tiny" x="1106.00" y="144.00" text-anchor="start">距离矩阵（distance matrix） CPU</text>
+<line x1="1064" y1="164" x2="1096" y2="164" stroke="#2563eb" stroke-width="3"/>
+<circle cx="1080" cy="164" r="4" fill="#2563eb"/>
+<text class="tiny" x="1106.00" y="168.00" text-anchor="start">距离矩阵（distance matrix） CUDA cuda:0</text>
+<line x1="1064" y1="188" x2="1096" y2="188" stroke="#16a34a" stroke-width="3" stroke-dasharray="7 5"/>
+<circle cx="1080" cy="188" r="4" fill="#16a34a"/>
+<text class="tiny" x="1106.00" y="192.00" text-anchor="start">最近点（nearest point） CPU</text>
+<line x1="1064" y1="212" x2="1096" y2="212" stroke="#16a34a" stroke-width="3"/>
+<circle cx="1080" cy="212" r="4" fill="#16a34a"/>
+<text class="tiny" x="1106.00" y="216.00" text-anchor="start">最近点（nearest point） CUDA cuda:0</text>
+<line x1="1064" y1="236" x2="1096" y2="236" stroke="#f59e0b" stroke-width="3" stroke-dasharray="7 5"/>
+<circle cx="1080" cy="236" r="4" fill="#f59e0b"/>
+<text class="tiny" x="1106.00" y="240.00" text-anchor="start">圆形范围计数（circle range count） CPU</text>
+<line x1="1064" y1="260" x2="1096" y2="260" stroke="#f59e0b" stroke-width="3"/>
+<circle cx="1080" cy="260" r="4" fill="#f59e0b"/>
+<text class="tiny" x="1106.00" y="264.00" text-anchor="start">圆形范围计数（circle range count） CUDA cuda:0</text>
 </svg>
